@@ -1,4 +1,4 @@
-PERSONALPRO - HISTORICO DE DESENVOLVIMENTO
+PRO FITNESS ACADEMIA - HISTORICO DE DESENVOLVIMENTO
 ==========================================
 
 Ultima atualizacao: 10/07/2026
@@ -24,7 +24,7 @@ D:\PersonalPro\
 HISTORICO
 ---------
 
-[08/07/2026] Base do PersonalPro criada
+[08/07/2026] Base do Pro Fitness criada
 - Criado o app do aluno em index.html com foco em celular e tablet.
 - Criado o painel administrativo em painel.html para uso no computador.
 - Criada camada local de dados em shared-data.js, com demonstracao, localStorage e sincronizacao opcional.
@@ -89,6 +89,31 @@ HISTORICO
 - GitHub Pages habilitado em modo workflow.
 - Site publicado em https://acecarmorj.github.io/personal/.
 - A publicacao da API no Google Apps Script permanece pendente de autenticacao da conta Google nesta maquina.
+
+[10/07/2026] Financeiro isolado em area principal
+- Criada navegacao principal entre Operacao e Financeiro, sempre abrindo em Operacao.
+- Removidos valores, cobrancas, vencimentos e receita dos indicadores da tela inicial.
+- Removido o status financeiro da lista de alunos, do resumo individual e da linha do tempo operacional.
+- Alertas de acesso e historico da tela inicial passaram a ocultar motivos e eventos financeiros.
+- Removido o valor mensal do cadastro operacional do aluno.
+- Criado dashboard financeiro reservado com receita confirmada, valores a receber, atrasos,
+  previsao mensal e indice de adimplencia.
+- Adicionado grafico financeiro dos ultimos seis meses com comparacao entre previsto e recebido.
+- Adicionados filtros por competencia, status e aluno, alem de formulario global para criar e editar cobrancas.
+- Acoes de receber e editar mensalidades ficaram concentradas exclusivamente na aba Financeiro.
+
+[10/07/2026] Personalizacao para Pro Fitness Academia de Carmo-RJ
+- O nome comercial do app e do painel foi alterado integralmente para Pro Fitness.
+- App do aluno e painel passaram a usar o monograma PF e a assinatura Academia - Carmo-RJ.
+- A identidade visual foi alinhada a fachada: grafite/preto, amarelo forte e superficies claras.
+- QR Codes, armazenamento local, configuracao do frontend e objetos globais foram rebatizados para Pro Fitness.
+- A planilha criada pela API passou a se chamar "Pro Fitness Academia - Database".
+- A funcao de instalacao da API passou a se chamar setupProFitnessSpreadsheet().
+- Configuracao inicial da planilha recebeu o nome Pro Fitness Academia e o telefone publico (22) 98823-3216.
+- A pesquisa publica confirmou atuacao em condicionamento fisico, registro ativo e presenca em Carmo desde 2003.
+- Diretorios publicos citam musculacao, ginastica, danca e atividades aquaticas.
+- O endereco nao foi gravado no sistema porque cadastros publicos antigos divergem da localizacao mostrada
+  na imagem atual enviada pelo cliente; aguardar confirmacao antes de publicar esse dado.
 
 ESTADO DA INTEGRACAO
 --------------------

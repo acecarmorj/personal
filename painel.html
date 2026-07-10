@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PersonalPro | Painel Desktop</title>
+    <title>Pro Fitness | Painel de Gestao</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,11 +16,11 @@
     <div class="dashboard-shell">
       <header class="admin-header">
         <div class="brand-row">
-          <span class="brand-mark">PP</span>
+          <span class="brand-mark">PF</span>
           <div>
-            <p class="header-kicker">PersonalPro / Operacao</p>
-            <h1>Central de performance</h1>
-            <p>Alunos, treinos, pagamentos e acesso em uma unica visao.</p>
+            <p class="header-kicker" id="sectionKicker">Pro Fitness Carmo / Operacao</p>
+            <h1 id="sectionTitle">Central Pro Fitness</h1>
+            <p id="sectionDescription">Alunos, treinos, agenda e acesso em uma unica visao.</p>
           </div>
         </div>
         <div class="header-actions">
@@ -32,9 +32,21 @@
         </div>
       </header>
 
-      <section class="overview-grid" id="metricGrid"></section>
+      <nav class="main-section-nav" aria-label="Areas do painel">
+        <button class="main-section-button active" type="button" data-main-section="operation" aria-pressed="true">
+          <span>Operacao</span>
+          <small>Alunos e performance</small>
+        </button>
+        <button class="main-section-button finance-nav-button" type="button" data-main-section="finance" aria-pressed="false">
+          <span>Financeiro</span>
+          <small>Area reservada</small>
+        </button>
+      </nav>
 
-      <section class="workspace-grid">
+      <section class="main-section" id="operationSection" data-main-panel="operation">
+        <section class="overview-grid" id="metricGrid"></section>
+
+        <section class="workspace-grid">
         <article class="dashboard-card list-card">
           <div class="section-head">
             <div>
@@ -60,7 +72,7 @@
           </div>
 
           <div id="workspaceEmpty" class="empty-state">
-            Selecione um aluno na lista para gerenciar matricula, mensalidade e QR de acesso.
+            Selecione um aluno na lista para gerenciar cadastro, treinos, agenda e QR de acesso.
           </div>
 
           <div id="workspaceContent" hidden>
@@ -70,7 +82,6 @@
               <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabTreinos" data-panel-tab="treinos">Treinos</button>
               <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabAvaliacoes" data-panel-tab="avaliacoes">Avaliacoes</button>
               <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabAgenda" data-panel-tab="agenda">Agenda</button>
-              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabFinanceiro" data-panel-tab="financeiro">Financeiro</button>
               <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabAcessos" data-panel-tab="acessos">Acessos</button>
             </div>
 
@@ -122,10 +133,6 @@
                     <input type="text" name="plan" placeholder="Ex.: 3x por semana" />
                   </label>
                   <label>
-                    Valor mensal
-                    <input type="number" step="0.01" min="0" name="monthlyFee" />
-                  </label>
-                  <label>
                     Status do aluno
                     <select name="status">
                       <option value="ativo">Ativo</option>
@@ -143,7 +150,7 @@
                   <label>
                     Politica de acesso
                     <select name="appAccessPolicy">
-                      <option value="auto">Automatico pelo financeiro</option>
+                      <option value="auto">Automatico pelas regras do sistema</option>
                       <option value="liberado">Liberado manualmente</option>
                       <option value="bloqueado">Bloqueado manualmente</option>
                     </select>
@@ -386,70 +393,6 @@
               </div>
             </section>
 
-            <section class="student-tab-panel" id="tabFinanceiro" data-panel="financeiro" role="tabpanel" hidden>
-              <div class="module-grid">
-                <section class="sub-card module-card">
-                  <div class="section-head compact-head">
-                    <div>
-                      <p class="eyebrow">Financeiro</p>
-                      <h3>Mensalidade selecionada</h3>
-                    </div>
-                    <button class="ghost-button" type="button" id="newPaymentButton">Nova mensalidade</button>
-                  </div>
-                  <form id="paymentForm" class="form-grid">
-                    <input type="hidden" name="id" />
-                    <input type="hidden" name="studentId" />
-                    <label>
-                      Competencia
-                      <input type="month" name="reference" required />
-                    </label>
-                    <label>
-                      Valor
-                      <input type="number" step="0.01" min="0" name="amount" required />
-                    </label>
-                    <label>
-                      Vencimento
-                      <input type="date" name="dueDate" required />
-                    </label>
-                    <label>
-                      Status
-                      <select name="status">
-                        <option value="pago">Pago</option>
-                        <option value="pendente">Pendente</option>
-                        <option value="vencido">Vencido</option>
-                      </select>
-                    </label>
-                    <label>
-                      Metodo
-                      <select name="method">
-                        <option value="pix">Pix</option>
-                        <option value="cartao">Cartao</option>
-                        <option value="boleto">Boleto</option>
-                        <option value="dinheiro">Dinheiro</option>
-                      </select>
-                    </label>
-                    <label class="full">
-                      Observacoes
-                      <textarea name="notes" rows="3"></textarea>
-                    </label>
-                    <div class="form-actions full">
-                      <button type="submit" class="primary-button">Salvar mensalidade</button>
-                    </div>
-                  </form>
-                </section>
-
-                <section class="sub-card module-card">
-                  <div class="section-head compact-head">
-                    <div>
-                      <p class="eyebrow">Historico financeiro</p>
-                      <h3>Cobrancas do aluno</h3>
-                    </div>
-                  </div>
-                  <div id="paymentHistory" class="record-list"></div>
-                </section>
-              </div>
-            </section>
-
             <section class="student-tab-panel" id="tabAcessos" data-panel="acessos" role="tabpanel" hidden>
               <div class="double-grid">
                 <section class="sub-card module-card">
@@ -482,12 +425,12 @@
         </article>
       </section>
 
-      <section class="footer-grid">
+        <section class="footer-grid">
         <article class="dashboard-card">
           <div class="section-head">
             <div>
               <p class="eyebrow">Alertas</p>
-              <h2>Financeiro e bloqueios</h2>
+              <h2>Acessos e cadastros</h2>
             </div>
           </div>
           <div id="alertBoard" class="timeline-list"></div>
@@ -502,6 +445,126 @@
           </div>
           <div id="logBoard" class="timeline-list"></div>
         </article>
+        </section>
+      </section>
+
+      <section class="main-section finance-section" id="financeSection" data-main-panel="finance" hidden>
+        <header class="dashboard-card finance-hero">
+          <div>
+            <p class="eyebrow">Area reservada</p>
+            <h2>Controle financeiro</h2>
+            <p>Recebimentos, pendencias e previsao mensal concentrados em um unico ambiente.</p>
+          </div>
+          <div class="finance-hero-actions">
+            <span class="privacy-label">Visivel somente nesta aba</span>
+            <button class="primary-button" type="button" id="newPaymentButton">Nova mensalidade</button>
+          </div>
+        </header>
+
+        <section class="finance-overview-grid" id="financeMetricGrid"></section>
+
+        <section class="finance-layout">
+          <div class="finance-main-column">
+            <article class="dashboard-card finance-chart-card">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Fluxo de caixa</p>
+                  <h2>Ultimos seis meses</h2>
+                </div>
+                <div class="finance-legend" aria-label="Legenda do grafico">
+                  <span><i class="legend-dot paid"></i> Recebido</span>
+                  <span><i class="legend-dot expected"></i> Previsto</span>
+                </div>
+              </div>
+              <div class="finance-chart" id="financeChart"></div>
+            </article>
+
+            <article class="dashboard-card finance-list-card">
+              <div class="section-head finance-list-head">
+                <div>
+                  <p class="eyebrow">Mensalidades</p>
+                  <h2>Controle de cobrancas</h2>
+                </div>
+                <span class="result-count" id="financeResultCount">0 registros</span>
+              </div>
+
+              <div class="finance-filters">
+                <label>
+                  Competencia
+                  <input type="month" id="financeMonthFilter" />
+                </label>
+                <label>
+                  Status
+                  <select id="financeStatusFilter">
+                    <option value="todos">Todos</option>
+                    <option value="pago">Pago</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="vencido">Vencido</option>
+                  </select>
+                </label>
+                <label class="finance-search-field">
+                  Buscar aluno
+                  <input type="search" id="financeSearchFilter" placeholder="Nome do aluno" />
+                </label>
+              </div>
+
+              <div class="finance-table" id="paymentHistory"></div>
+            </article>
+          </div>
+
+          <aside class="dashboard-card finance-editor">
+            <div class="section-head compact-head">
+              <div>
+                <p class="eyebrow">Lancamento</p>
+                <h2>Detalhes da mensalidade</h2>
+              </div>
+            </div>
+            <p class="finance-editor-copy">Selecione uma cobranca para editar ou crie um novo lancamento.</p>
+            <form id="paymentForm" class="form-grid finance-form">
+              <input type="hidden" name="id" />
+              <label class="full">
+                Aluno
+                <select name="studentId" id="financeStudentSelect" required></select>
+              </label>
+              <label>
+                Competencia
+                <input type="month" name="reference" required />
+              </label>
+              <label>
+                Valor
+                <input type="number" step="0.01" min="0" name="amount" required />
+              </label>
+              <label>
+                Vencimento
+                <input type="date" name="dueDate" required />
+              </label>
+              <label>
+                Status
+                <select name="status">
+                  <option value="pago">Pago</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="vencido">Vencido</option>
+                </select>
+              </label>
+              <label class="full">
+                Forma de pagamento
+                <select name="method">
+                  <option value="pix">Pix</option>
+                  <option value="cartao">Cartao</option>
+                  <option value="boleto">Boleto</option>
+                  <option value="dinheiro">Dinheiro</option>
+                </select>
+              </label>
+              <label class="full">
+                Observacoes
+                <textarea name="notes" rows="3"></textarea>
+              </label>
+              <div class="form-actions full">
+                <button type="submit" class="primary-button">Salvar mensalidade</button>
+              </div>
+            </form>
+          </aside>
+        </section>
       </section>
     </div>
 

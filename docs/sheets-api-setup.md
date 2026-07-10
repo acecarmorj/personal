@@ -10,7 +10,7 @@
 
 1. Crie um projeto no Google Apps Script.
 2. Cole o conteudo de [api.gs](../apps-script/api.gs).
-3. Execute `setupPersonalProSpreadsheet()` uma vez.
+3. Execute `setupProFitnessSpreadsheet()` uma vez.
 4. Publique como `Web App` com acesso para quem vai usar o sistema.
 5. Copie a URL publicada.
 6. Edite [app-config.js](../assets/js/app-config.js) e substitua `COLE_A_URL_DO_WEB_APP_AQUI`.

@@ -1,12 +1,12 @@
-# Estrutura sugerida da planilha PersonalPro
+# Estrutura sugerida da planilha Pro Fitness Academia
 
-O arquivo [api.gs](D:\PersonalPro\api.gs) ja pode criar a estrutura automaticamente.
+O arquivo [api.gs](../apps-script/api.gs) ja pode criar a estrutura automaticamente.
 
 ## Inicializacao automatica
 
 Use uma destas opcoes:
 
-- Executar manualmente a funcao `setupPersonalProSpreadsheet()` no editor do Google Apps Script.
+- Executar manualmente a funcao `setupProFitnessSpreadsheet()` no editor do Google Apps Script.
 - Chamar `GET ?action=setup` na URL publicada do Web App.
 - Chamar `POST` com `{ "action": "setup" }`.
 

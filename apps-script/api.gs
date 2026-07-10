@@ -1,10 +1,10 @@
 /**
- * PersonalPro - Google Apps Script API
+ * Pro Fitness Academia - Google Apps Script API
  * API REST para Google Sheets.
  *
  * Fluxo recomendado:
  * 1. Cole este arquivo em um projeto Apps Script.
- * 2. Execute setupPersonalProSpreadsheet() uma vez.
+ * 2. Execute setupProFitnessSpreadsheet() uma vez.
  * 3. Publique como Web App.
  * 4. Cole a URL publicada em app-config.js no campo apiBaseUrl.
  *
@@ -20,8 +20,8 @@
  */
 
 const SPREADSHEET_ID = "COLE_O_ID_DA_PLANILHA_AQUI";
-const SPREADSHEET_ID_PROPERTY = "PERSONALPRO_SPREADSHEET_ID";
-const DEFAULT_SPREADSHEET_NAME = "PersonalPro Database";
+const SPREADSHEET_ID_PROPERTY = "PROFITNESS_SPREADSHEET_ID";
+const DEFAULT_SPREADSHEET_NAME = "Pro Fitness Academia - Database";
 
 const SHEETS = {
   students: {
@@ -194,9 +194,9 @@ function doPost(e) {
   }
 }
 
-function setupPersonalProSpreadsheet() {
+function setupProFitnessSpreadsheet() {
   const result = ensureSpreadsheetStructure();
-  Logger.log("PersonalPro pronto em: " + result.spreadsheetUrl);
+  Logger.log("Pro Fitness pronto em: " + result.spreadsheetUrl);
   return result;
 }
 
@@ -261,11 +261,11 @@ function seedConfigSheet(spreadsheet) {
 
   const row = [
     "CONFIG-001",
-    "PersonalPro",
+    "Pro Fitness Academia",
     Session.getScriptTimeZone() || "America/Sao_Paulo",
     "BRL",
     "",
-    "",
+    "(22) 98823-3216",
     "",
     ""
   ];
@@ -375,11 +375,11 @@ function touchConfigSnapshotMetadata(setup) {
 
   const updated = {
     id: first.id || "CONFIG-001",
-    appName: first.appName || "PersonalPro",
+    appName: first.appName || "Pro Fitness Academia",
     timezone: first.timezone || Session.getScriptTimeZone() || "America/Sao_Paulo",
     currency: first.currency || "BRL",
     logoUrl: first.logoUrl || "",
-    supportPhone: first.supportPhone || "",
+    supportPhone: first.supportPhone || "(22) 98823-3216",
     apiBaseUrl: first.apiBaseUrl || ScriptApp.getService().getUrl() || "",
     lastSnapshotAt: new Date().toISOString()
   };

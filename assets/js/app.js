@@ -1,4 +1,4 @@
-const Store = window.PersonalProStore;
+const Store = window.ProFitnessStore;
 
 let state = Store.loadData();
 let session = Store.loadStudentSession();
@@ -70,7 +70,7 @@ function renderQr(target, payload, size) {
     text: payload,
     width: size || 180,
     height: size || 180,
-    colorDark: "#163f32",
+    colorDark: "#1b1c18",
     colorLight: "#ffffff",
     correctLevel: window.QRCode.CorrectLevel.M
   });
@@ -82,7 +82,7 @@ function parseEnrollmentCode(rawValue) {
     return null;
   }
 
-  if (raw.startsWith("PERSONALPRO|ENROLL|")) {
+  if (raw.startsWith("PROFITNESS|ENROLL|")) {
     const parts = raw.split("|");
     if (parts.length >= 4) {
       return { studentId: parts[2], token: parts[3] };

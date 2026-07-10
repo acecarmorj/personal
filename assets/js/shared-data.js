@@ -1,7 +1,7 @@
 (function () {
-  const STORAGE_KEY = "personalpro-data-v2";
-  const LEGACY_STORAGE_KEY = "personalpro-data-v1";
-  const SESSION_KEY = "personalpro-student-session-v1";
+  const STORAGE_KEY = "profitness-data-v1";
+  const LEGACY_STORAGE_KEY = "profitness-data-v0";
+  const SESSION_KEY = "profitness-student-session-v1";
   const API_PLACEHOLDER = "COLE_A_URL_DO_WEB_APP_AQUI";
 
   function todayISO() {
@@ -50,7 +50,7 @@
   }
 
   function getRuntimeConfig() {
-    return window.PERSONALPRO_CONFIG || {};
+    return window.PROFITNESS_CONFIG || {};
   }
 
   function getApiBaseUrl() {
@@ -123,7 +123,7 @@
           id: "ALU-001",
           name: "Marina Costa",
           phone: "(11) 99888-2201",
-          email: "marina@personalpro.com",
+          email: "marina@exemplo.com",
           birthDate: "1992-06-14",
           goal: "Emagrecimento e condicionamento",
           restrictions: "Lombar sensivel",
@@ -139,7 +139,7 @@
           id: "ALU-002",
           name: "Lucas Pereira",
           phone: "(11) 97777-3102",
-          email: "lucas@personalpro.com",
+          email: "lucas@exemplo.com",
           birthDate: "1988-10-03",
           goal: "Hipertrofia",
           restrictions: "Nenhuma",
@@ -157,7 +157,7 @@
           id: "ALU-003",
           name: "Carla Mendes",
           phone: "(11) 96666-1203",
-          email: "carla@personalpro.com",
+          email: "carla@exemplo.com",
           birthDate: "1979-02-27",
           goal: "Reabilitacao e mobilidade",
           restrictions: "Joelho esquerdo",
@@ -303,10 +303,10 @@
         { id: "EX-002", name: "Prancha", muscleGroup: "Core", equipment: "Solo" }
       ],
       users: [
-        { id: "USR-001", name: "Personal Owner", email: "owner@personalpro.com", role: "admin" }
+        { id: "USR-001", name: "Equipe Pro Fitness", email: "gestao@exemplo.com", role: "admin" }
       ],
       config: [
-        { id: "CFG-001", timezone: "America/Sao_Paulo", currency: "BRL", appName: "PersonalPro" }
+        { id: "CFG-001", timezone: "America/Sao_Paulo", currency: "BRL", appName: "Pro Fitness Academia", supportPhone: "(22) 98823-3216" }
       ],
       log: []
     };
@@ -636,7 +636,7 @@
     if (!student || student.enrollmentStatus === "ativo" || !student.enrollmentToken) {
       return "";
     }
-    return `PERSONALPRO|ENROLL|${student.id}|${student.enrollmentToken}`;
+    return `PROFITNESS|ENROLL|${student.id}|${student.enrollmentToken}`;
   }
 
   function buildGatePayload(data, studentId) {
@@ -646,7 +646,7 @@
       return "";
     }
     const syncSeed = student.lastGateSyncAt || new Date().toISOString();
-    return `PERSONALPRO|GATE|${student.id}|${student.gateCode}|${syncSeed}|${access.status}`;
+    return `PROFITNESS|GATE|${student.id}|${student.gateCode}|${syncSeed}|${access.status}`;
   }
 
   function appendLog(data, entry) {
@@ -728,7 +728,7 @@
     });
   }
 
-  window.PersonalProStore = {
+  window.ProFitnessStore = {
     API_PLACEHOLDER: API_PLACEHOLDER,
     STORAGE_KEY: STORAGE_KEY,
     SESSION_KEY: SESSION_KEY,

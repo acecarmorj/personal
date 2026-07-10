@@ -1,9 +1,10 @@
-const Store = window.PersonalProStore;
+const Store = window.ProFitnessStore;
 
 let panelState = Store.loadData();
 let selectedStudentId = panelState.students[0] ? panelState.students[0].id : "";
 let activeFilter = "todos";
 let activePanelTab = "resumo";
+let activeMainSection = "operation";
 
 const studentForm = document.getElementById("studentForm");
 const paymentForm = document.getElementById("paymentForm");
@@ -13,6 +14,9 @@ const scheduleForm = document.getElementById("scheduleForm");
 const workspaceTitle = document.getElementById("workspaceTitle");
 const workspaceEmpty = document.getElementById("workspaceEmpty");
 const workspaceContent = document.getElementById("workspaceContent");
+const financeMonthFilter = document.getElementById("financeMonthFilter");
+const financeStatusFilter = document.getElementById("financeStatusFilter");
+const financeSearchFilter = document.getElementById("financeSearchFilter");
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (character) => {
@@ -48,6 +52,24 @@ function badge(status, label) {
   return `<span class="badge ${Store.getStatusTone(status)}">${escapeHtml(label || status)}</span>`;
 }
 
+function getOperationalAccessLabel(access) {
+  if (access.status === "liberado") {
+    return "Acesso liberado";
+  }
+  if (access.status === "bloqueado") {
+    return "Acesso bloqueado";
+  }
+  return "Verificar acesso";
+}
+
+function getOperationalAccessReason(access) {
+  const financialTerms = /mensalidade|pagamento|cobranca|atraso|financeir/i;
+  if (financialTerms.test(String(access.reason || ""))) {
+    return "Acesso indisponivel. Consulte os detalhes na area reservada.";
+  }
+  return access.reason || "Verifique as regras atuais de acesso.";
+}
+
 function savePanelState(nextState) {
   panelState = Store.migrateData(nextState);
   Store.saveData(panelState);
@@ -81,7 +103,7 @@ function renderQr(target, payload, size) {
     text: payload,
     width: size || 180,
     height: size || 180,
-    colorDark: "#163f32",
+    colorDark: "#1b1c18",
     colorLight: "#ffffff",
     correctLevel: window.QRCode.CorrectLevel.M
   });
@@ -157,27 +179,54 @@ function setActivePanelTab(tabName) {
   });
 }
 
+function setActiveMainSection(sectionName) {
+  activeMainSection = sectionName;
+  document.querySelectorAll("[data-main-section]").forEach((button) => {
+    const isActive = button.dataset.mainSection === sectionName;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+
+  document.querySelectorAll("[data-main-panel]").forEach((panel) => {
+    panel.hidden = panel.dataset.mainPanel !== sectionName;
+  });
+
+  const headings = sectionName === "finance"
+    ? {
+        kicker: "Pro Fitness Carmo / Financeiro",
+        title: "Gestao financeira",
+        description: "Receita, recebimentos e pendencias concentrados em uma area reservada."
+      }
+    : {
+        kicker: "Pro Fitness Carmo / Operacao",
+        title: "Central Pro Fitness",
+        description: "Alunos, treinos, agenda e acesso em uma unica visao."
+      };
+
+  document.getElementById("sectionKicker").textContent = headings.kicker;
+  document.getElementById("sectionTitle").textContent = headings.title;
+  document.getElementById("sectionDescription").textContent = headings.description;
+}
+
 function renderMetrics() {
   const today = Store.todayISO();
   const activeStudents = panelState.students.filter((student) => student.status === "ativo").length;
   const todayClasses = panelState.schedule.filter(
     (item) => item.date === today && !["cancelada", "falta"].includes(item.status)
   ).length;
-  const pendingPayments = panelState.payments.filter((payment) => payment.status === "pendente" || payment.status === "vencido").length;
-  const overduePayments = panelState.payments.filter((payment) => payment.status === "vencido").length;
-  const monthlyRevenue = panelState.payments
-    .filter((payment) => payment.reference === Store.currentMonth() && payment.status === "pago")
-    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const activeWorkouts = panelState.workouts.filter((workout) => workout.status === "ativo").length;
   const pendingAssessments = panelState.students.filter((student) => !Store.getLatestAssessment(panelState, student.id)).length;
+  const pendingEnrollments = panelState.students.filter((student) => student.enrollmentStatus !== "ativo").length;
+  const todayCheckins = panelState.checkins.filter((checkin) => checkin.date === today).length;
 
   const metrics = [
     ["Total de alunos", panelState.students.length],
     ["Alunos ativos", activeStudents],
     ["Aulas de hoje", todayClasses],
-    ["Cobrancas abertas", pendingPayments],
-    ["Mensalidades vencidas", overduePayments],
-    ["Receita do mes", Store.currency(monthlyRevenue)],
-    ["Avaliacoes pendentes", pendingAssessments]
+    ["Treinos ativos", activeWorkouts],
+    ["Avaliacoes pendentes", pendingAssessments],
+    ["Matriculas pendentes", pendingEnrollments],
+    ["Check-ins de hoje", todayCheckins]
   ];
 
   document.getElementById("metricGrid").innerHTML = metrics
@@ -204,7 +253,6 @@ function renderRoster() {
   list.innerHTML = students
     .map((student) => {
       const access = Store.getAccessState(panelState, student.id);
-      const payment = Store.getCurrentPayment(panelState, student.id);
       return `
         <article class="roster-item ${student.id === selectedStudentId ? "selected" : ""}">
           <div class="meta-row">
@@ -215,9 +263,8 @@ function renderRoster() {
             <button class="ghost-button" type="button" data-select-student="${escapeHtml(student.id)}">Abrir</button>
           </div>
           <div class="badge-row">
-            ${badge(access.status, access.label)}
+            ${badge(access.status, getOperationalAccessLabel(access))}
             ${badge(student.enrollmentStatus === "ativo" ? "ativo" : "pendente", student.enrollmentStatus)}
-            ${badge(payment ? payment.status : "aviso", payment ? payment.status : "sem cobranca")}
           </div>
         </article>
       `;
@@ -242,16 +289,33 @@ function populateStudentForm(student) {
 }
 
 function populatePaymentForm(student, payment) {
-  const record = payment || (student ? Store.getCurrentPayment(panelState, student.id) : null);
+  const record = payment || null;
   paymentForm.reset();
-  paymentForm.elements.studentId.value = student ? student.id : "";
+  renderFinanceStudentOptions();
+  paymentForm.elements.studentId.value = record ? record.studentId : student ? student.id : "";
   paymentForm.elements.reference.value = record ? record.reference : Store.currentMonth();
   paymentForm.elements.amount.value = record ? record.amount : student ? student.monthlyFee : "";
   paymentForm.elements.dueDate.value = record ? record.dueDate : Store.todayISO();
   paymentForm.elements.status.value = record ? record.status : "pendente";
   paymentForm.elements.method.value = record ? record.method : "pix";
   paymentForm.elements.notes.value = record ? record.notes || "" : "";
-  paymentForm.elements.id.value = record ? record.id : "";
+  paymentForm.elements.id.value = record?.id || "";
+}
+
+function renderFinanceStudentOptions() {
+  const select = paymentForm.elements.studentId;
+  const currentValue = select.value;
+  select.innerHTML = panelState.students.length
+    ? panelState.students
+        .map((student) => `<option value="${escapeHtml(student.id)}">${escapeHtml(student.name)}</option>`)
+        .join("")
+    : `<option value="">Nenhum aluno cadastrado</option>`;
+
+  if (panelState.students.some((student) => student.id === currentValue)) {
+    select.value = currentValue;
+  } else if (selectedStudentId && panelState.students.some((student) => student.id === selectedStudentId)) {
+    select.value = selectedStudentId;
+  }
 }
 
 function populateWorkoutForm(student, workout) {
@@ -325,13 +389,12 @@ function renderStudentSummary(student) {
   const upcomingClass = Store.getStudentSchedule(panelState, student.id).find(
     (item) => item.date >= Store.todayISO() && !["cancelada", "falta"].includes(item.status)
   );
-  const payment = Store.getCurrentPayment(panelState, student.id);
   const checkins = Store.getStudentCheckins(panelState, student.id);
   const cards = [
     {
       label: "Acesso",
-      value: access.label,
-      detail: access.reason,
+      value: getOperationalAccessLabel(access),
+      detail: access.allowsGate ? "Entrada autorizada para este aluno." : "Veja os detalhes na aba Acessos.",
       status: access.status
     },
     {
@@ -357,12 +420,6 @@ function renderStudentSummary(student) {
       value: String(activeWorkouts.length),
       detail: activeWorkouts.length ? activeWorkouts.map((workout) => workout.division).join(" / ") : "Nenhum treino liberado.",
       status: activeWorkouts.length ? "ativo" : "pendente"
-    },
-    {
-      label: "Mensalidade",
-      value: payment ? Store.currency(payment.amount) : "Sem cobranca",
-      detail: payment ? `${payment.reference} - venc. ${Store.formatDate(payment.dueDate)}` : "Crie a primeira mensalidade.",
-      status: payment ? payment.status : "aviso"
     },
     {
       label: "Treinos realizados",
@@ -412,15 +469,6 @@ function renderTimeline(student) {
       title: "Avaliacao",
       detail: `${Store.formatDate(item.date)} - ${formatNumber(item.weight, 1)} kg - IMC ${formatNumber(item.imc, 2)}`,
       status: "ativo"
-    });
-  });
-
-  getStudentRecords("payments", student.id).forEach((item) => {
-    events.push({
-      date: `${item.dueDate || ""}T00:00`,
-      title: "Mensalidade",
-      detail: `${item.reference} - ${Store.currency(item.amount)} - ${item.status}`,
-      status: item.status
     });
   });
 
@@ -578,36 +626,172 @@ function renderSchedule(student) {
     : `<div class="empty-state">Nenhuma aula agendada para este aluno.</div>`;
 }
 
-function renderPayments(student) {
-  const payments = Store.getStudentPayments(panelState, student.id);
+function getEffectivePaymentStatus(payment) {
+  if (payment.status === "pago") {
+    return "pago";
+  }
+  if (payment.status === "vencido" || (payment.dueDate && payment.dueDate < Store.todayISO())) {
+    return "vencido";
+  }
+  return "pendente";
+}
 
+function getRecentMonths(endMonth, count) {
+  const [year, month] = String(endMonth || Store.currentMonth()).split("-").map(Number);
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(year, month - 1 - (count - 1 - index), 1);
+    const monthValue = String(date.getMonth() + 1).padStart(2, "0");
+    return `${date.getFullYear()}-${monthValue}`;
+  });
+}
+
+function getFinanceMonthLabel(reference) {
+  const [year, month] = String(reference).split("-").map(Number);
+  if (!year || !month) {
+    return reference;
+  }
+  return new Intl.DateTimeFormat("pt-BR", { month: "short" })
+    .format(new Date(year, month - 1, 1))
+    .replace(".", "");
+}
+
+function renderFinanceMetrics(monthlyPayments) {
+  const paidPayments = monthlyPayments.filter((payment) => getEffectivePaymentStatus(payment) === "pago");
+  const pendingPayments = monthlyPayments.filter((payment) => getEffectivePaymentStatus(payment) === "pendente");
+  const overduePayments = monthlyPayments.filter((payment) => getEffectivePaymentStatus(payment) === "vencido");
+  const total = (payments) => payments.reduce((sum, payment) => sum + safeNumber(payment.amount), 0);
+  const expected = total(monthlyPayments);
+  const compliance = monthlyPayments.length ? Math.round((paidPayments.length / monthlyPayments.length) * 100) : 0;
+  const metrics = [
+    { label: "Receita confirmada", value: Store.currency(total(paidPayments)), note: `${paidPayments.length} pagamento(s)`, tone: "success" },
+    { label: "A receber", value: Store.currency(total(pendingPayments)), note: `${pendingPayments.length} cobranca(s)`, tone: "warning" },
+    { label: "Em atraso", value: Store.currency(total(overduePayments)), note: `${overduePayments.length} cobranca(s)`, tone: "danger" },
+    { label: "Previsto no mes", value: Store.currency(expected), note: `${monthlyPayments.length} lancamento(s)`, tone: "neutral" },
+    { label: "Adimplencia", value: `${compliance}%`, note: "Por quantidade de cobrancas", tone: compliance >= 80 ? "success" : compliance >= 50 ? "warning" : "danger" }
+  ];
+
+  document.getElementById("financeMetricGrid").innerHTML = metrics
+    .map(
+      (metric) => `
+        <article class="finance-metric-card ${metric.tone}">
+          <span>${escapeHtml(metric.label)}</span>
+          <strong>${escapeHtml(metric.value)}</strong>
+          <small>${escapeHtml(metric.note)}</small>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderFinanceChart() {
+  const months = getRecentMonths(financeMonthFilter.value, 6);
+  const summaries = months.map((reference) => {
+    const payments = panelState.payments.filter((payment) => payment.reference === reference);
+    return {
+      reference: reference,
+      expected: payments.reduce((sum, payment) => sum + safeNumber(payment.amount), 0),
+      paid: payments
+        .filter((payment) => getEffectivePaymentStatus(payment) === "pago")
+        .reduce((sum, payment) => sum + safeNumber(payment.amount), 0)
+    };
+  });
+  const maximum = Math.max(...summaries.map((item) => item.expected), 1);
+
+  document.getElementById("financeChart").innerHTML = summaries
+    .map((item) => {
+      const expectedHeight = (item.expected / maximum) * 100;
+      const paidHeight = (item.paid / maximum) * 100;
+      return `
+        <div class="finance-chart-column">
+          <div class="finance-chart-value">${escapeHtml(Store.currency(item.paid))}</div>
+          <div class="finance-bars" title="Previsto ${escapeHtml(Store.currency(item.expected))} | Recebido ${escapeHtml(Store.currency(item.paid))}">
+            <div class="finance-bar expected" style="--finance-bar-height: ${expectedHeight.toFixed(2)}%"></div>
+            <div class="finance-bar paid" style="--finance-bar-height: ${paidHeight.toFixed(2)}%"></div>
+          </div>
+          <strong>${escapeHtml(getFinanceMonthLabel(item.reference))}</strong>
+          <span>${escapeHtml(item.reference.slice(0, 4))}</span>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function getFilteredFinancePayments() {
+  const month = financeMonthFilter.value;
+  const status = financeStatusFilter.value;
+  const query = financeSearchFilter.value.trim().toLocaleLowerCase("pt-BR");
+
+  return panelState.payments
+    .filter((payment) => !month || payment.reference === month)
+    .filter((payment) => status === "todos" || getEffectivePaymentStatus(payment) === status)
+    .filter((payment) => {
+      if (!query) {
+        return true;
+      }
+      const student = Store.findStudent(panelState, payment.studentId);
+      return String(student?.name || "").toLocaleLowerCase("pt-BR").includes(query);
+    })
+    .sort((left, right) => {
+      const statusOrder = { vencido: 0, pendente: 1, pago: 2 };
+      const statusDifference = statusOrder[getEffectivePaymentStatus(left)] - statusOrder[getEffectivePaymentStatus(right)];
+      return statusDifference || String(right.dueDate || "").localeCompare(String(left.dueDate || ""));
+    });
+}
+
+function renderFinancePaymentList() {
+  const payments = getFilteredFinancePayments();
+  document.getElementById("financeResultCount").textContent = `${payments.length} registro${payments.length === 1 ? "" : "s"}`;
   document.getElementById("paymentHistory").innerHTML = payments.length
-    ? payments
-        .map(
-          (payment) => `
-            <article class="record-item">
-              <div class="record-head">
-                <div>
-                  <p class="eyebrow">Competencia ${escapeHtml(payment.reference)}</p>
-                  <h4>${Store.currency(payment.amount)}</h4>
-                </div>
-                ${badge(payment.status, payment.status)}
+    ? `
+      <div class="finance-table-header" aria-hidden="true">
+        <span>Aluno</span>
+        <span>Competencia</span>
+        <span>Vencimento</span>
+        <span>Valor</span>
+        <span>Status</span>
+        <span>Acoes</span>
+      </div>
+      ${payments
+        .map((payment) => {
+          const student = Store.findStudent(panelState, payment.studentId);
+          const effectiveStatus = getEffectivePaymentStatus(payment);
+          return `
+            <article class="finance-table-row">
+              <div class="finance-student-cell" data-label="Aluno">
+                <strong>${escapeHtml(student?.name || "Aluno nao encontrado")}</strong>
+                <small>${escapeHtml(student?.plan || "Plano nao informado")}</small>
               </div>
-              <div class="record-meta">
-                <span>Vencimento ${escapeHtml(Store.formatDate(payment.dueDate))}</span>
-                <span>${escapeHtml(payment.method || "pix")}</span>
-                ${payment.paidAt ? `<span>Pago em ${escapeHtml(Store.formatDate(payment.paidAt))}</span>` : ""}
-              </div>
-              ${payment.notes ? `<p class="record-note">${escapeText(payment.notes)}</p>` : ""}
-              <div class="record-actions">
+              <div data-label="Competencia"><span>${escapeHtml(payment.reference)}</span></div>
+              <div data-label="Vencimento"><span>${escapeHtml(Store.formatDate(payment.dueDate))}</span></div>
+              <div data-label="Valor"><strong class="finance-amount">${escapeHtml(Store.currency(payment.amount))}</strong></div>
+              <div data-label="Status">${badge(effectiveStatus, effectiveStatus)}</div>
+              <div class="finance-row-actions" data-label="Acoes">
                 <button class="ghost-button small-button" type="button" data-edit-payment="${escapeHtml(payment.id)}">Editar</button>
-                ${payment.status !== "pago" ? `<button class="ghost-button small-button" type="button" data-pay-payment="${escapeHtml(payment.id)}">Marcar como pago</button>` : ""}
+                ${effectiveStatus !== "pago" ? `<button class="ghost-button small-button pay-button" type="button" data-pay-payment="${escapeHtml(payment.id)}">Receber</button>` : ""}
               </div>
             </article>
-          `
-        )
-        .join("")
-    : `<div class="empty-state">Nenhuma mensalidade cadastrada para este aluno.</div>`;
+          `;
+        })
+        .join("")}
+    `
+    : `<div class="empty-state">Nenhuma cobranca encontrada para os filtros selecionados.</div>`;
+}
+
+function renderFinance() {
+  if (!financeMonthFilter.value) {
+    financeMonthFilter.value = Store.currentMonth();
+  }
+
+  renderFinanceStudentOptions();
+  const monthlyPayments = panelState.payments.filter((payment) => payment.reference === financeMonthFilter.value);
+  renderFinanceMetrics(monthlyPayments);
+  renderFinanceChart();
+  renderFinancePaymentList();
+
+  if (!paymentForm.elements.reference.value && panelState.students.length) {
+    const student = Store.findStudent(panelState, paymentForm.elements.studentId.value) || panelState.students[0];
+    populatePaymentForm(student);
+  }
 }
 
 function renderAccess(student) {
@@ -643,7 +827,9 @@ function renderAccess(student) {
     gateQr.innerHTML = `<div class="empty-state">QR bloqueado no momento.</div>`;
   }
 
-  gateStateBox.textContent = access.reason;
+  gateStateBox.textContent = access.allowsGate
+    ? "Acesso autorizado pelas regras atuais do sistema."
+    : getOperationalAccessReason(access);
 }
 
 function renderWorkspace() {
@@ -658,7 +844,6 @@ function renderWorkspace() {
 
   workspaceTitle.textContent = student.name;
   populateStudentForm(student);
-  populatePaymentForm(student);
   populateWorkoutForm(student);
   populateAssessmentForm(student);
   populateScheduleForm(student);
@@ -667,7 +852,6 @@ function renderWorkspace() {
   renderWorkouts(student);
   renderAssessments(student);
   renderSchedule(student);
-  renderPayments(student);
   renderAccess(student);
   setActivePanelTab(activePanelTab);
 }
@@ -687,9 +871,9 @@ function renderAlertBoard() {
             <article class="timeline-item">
               <div class="meta-row">
                 <strong>${escapeHtml(item.student.name)}</strong>
-                ${badge(item.access.status, item.access.label)}
+                ${badge(item.access.status, getOperationalAccessLabel(item.access))}
               </div>
-              <p>${escapeHtml(item.access.reason)}</p>
+              <p>${escapeHtml(getOperationalAccessReason(item.access))}</p>
             </article>
           `
         )
@@ -699,7 +883,10 @@ function renderAlertBoard() {
 
 function renderLogBoard() {
   const logBoard = document.getElementById("logBoard");
-  const logs = panelState.log.slice(0, 8);
+  const financialTerms = /payment|mensalidade|pagamento|cobranca|financeir/i;
+  const logs = panelState.log
+    .filter((entry) => !financialTerms.test(`${entry.action || ""} ${entry.message || ""}`))
+    .slice(0, 8);
 
   logBoard.innerHTML = logs.length
     ? logs
@@ -726,15 +913,18 @@ function renderPanel() {
   renderWorkspace();
   renderAlertBoard();
   renderLogBoard();
+  renderFinance();
+  setActiveMainSection(activeMainSection);
 }
 
 function handleStudentSave(event) {
   event.preventDefault();
   const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  const existingStudent = Store.findStudent(panelState, payload.id);
   const nextStudent = Store.createStudentRecord({
-    ...Store.findStudent(panelState, payload.id),
+    ...existingStudent,
     ...payload,
-    monthlyFee: safeNumber(payload.monthlyFee)
+    monthlyFee: existingStudent ? existingStudent.monthlyFee : 0
   });
 
   const nextState = Store.upsertStudent(panelState, nextStudent);
@@ -766,7 +956,9 @@ function handlePaymentSave(event) {
     paidAt: payload.status === "pago" ? existing?.paidAt || Store.todayISO() : ""
   });
 
-  const nextState = Store.upsertPayment(panelState, nextPayment);
+  paymentForm.elements.id.value = nextPayment.id;
+  let nextState = Store.upsertPayment(panelState, nextPayment);
+  nextState = Store.updateStudent(nextState, payload.studentId, { monthlyFee: nextPayment.amount });
   saveWithLog(nextState, "payment-updated", payload.studentId, `Mensalidade ${nextPayment.reference} atualizada para ${nextPayment.status}.`);
 }
 
@@ -893,6 +1085,7 @@ function createNewStudent() {
   });
   selectedStudentId = student.id;
   activePanelTab = "cadastro";
+  activeMainSection = "operation";
   saveWithLog(Store.upsertStudent(panelState, student), "student-created", student.id, "Novo aluno criado para matricula.");
 }
 
@@ -918,11 +1111,14 @@ function createNewSchedule() {
 }
 
 function createNewPayment() {
-  const student = getSelectedStudent();
+  const preferredStudentId = paymentForm.elements.studentId.value || selectedStudentId;
+  const student = Store.findStudent(panelState, preferredStudentId) || panelState.students[0] || null;
   if (student) {
+    const latestPayment = Store.getStudentPayments(panelState, student.id)[0];
     populatePaymentForm(student, {
+      studentId: student.id,
       reference: Store.currentMonth(),
-      amount: student.monthlyFee,
+      amount: student.monthlyFee || latestPayment?.amount || 0,
       dueDate: Store.todayISO(),
       status: "pendente",
       method: "pix"
@@ -1001,23 +1197,33 @@ function handleWorkspaceAction(event) {
     return;
   }
 
-  if (button.dataset.editPayment) {
-    populatePaymentForm(student, findRecord("payments", button.dataset.editPayment));
+}
+
+function handleFinanceAction(event) {
+  const button = event.target.closest("button");
+  if (!button) {
     return;
   }
 
-  if (button.dataset.payPayment) {
-    const payment = findRecord("payments", button.dataset.payPayment);
-    if (!payment) {
-      return;
-    }
-    saveWithLog(
-      updateRecord("payments", payment.id, (record) => ({ ...record, status: "pago", paidAt: Store.todayISO() })),
-      "payment-paid",
-      student.id,
-      `Mensalidade ${payment.reference} marcada como paga.`
-    );
+  const paymentId = button.dataset.editPayment || button.dataset.payPayment;
+  const payment = findRecord("payments", paymentId);
+  if (!payment) {
+    return;
   }
+
+  if (button.dataset.editPayment) {
+    const student = Store.findStudent(panelState, payment.studentId);
+    populatePaymentForm(student, payment);
+    document.querySelector(".finance-editor").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  saveWithLog(
+    updateRecord("payments", payment.id, (record) => ({ ...record, status: "pago", paidAt: Store.todayISO() })),
+    "payment-paid",
+    payment.studentId,
+    `Mensalidade ${payment.reference} marcada como paga.`
+  );
 }
 
 function handleTabKeyboard(event) {
@@ -1063,6 +1269,7 @@ function attachPanelEvents() {
     panelState = Store.resetData();
     selectedStudentId = panelState.students[0] ? panelState.students[0].id : "";
     activePanelTab = "resumo";
+    activeMainSection = "operation";
     Store.syncSnapshotIfConfigured(panelState).catch(() => null);
     renderPanel();
   });
@@ -1098,6 +1305,23 @@ function attachPanelEvents() {
   document.getElementById("newAssessmentButton").addEventListener("click", createNewAssessment);
   document.getElementById("newScheduleButton").addEventListener("click", createNewSchedule);
   document.getElementById("newPaymentButton").addEventListener("click", createNewPayment);
+
+  document.querySelectorAll("[data-main-section]").forEach((button) => {
+    button.addEventListener("click", () => setActiveMainSection(button.dataset.mainSection));
+  });
+
+  financeMonthFilter.addEventListener("change", renderFinance);
+  financeStatusFilter.addEventListener("change", renderFinancePaymentList);
+  financeSearchFilter.addEventListener("input", renderFinancePaymentList);
+  document.getElementById("paymentHistory").addEventListener("click", handleFinanceAction);
+  paymentForm.elements.studentId.addEventListener("change", () => {
+    if (paymentForm.elements.id.value) {
+      return;
+    }
+    const student = Store.findStudent(panelState, paymentForm.elements.studentId.value);
+    const latestPayment = student ? Store.getStudentPayments(panelState, student.id)[0] : null;
+    paymentForm.elements.amount.value = student ? student.monthlyFee || latestPayment?.amount || 0 : "";
+  });
 
   document.getElementById("studentRoster").addEventListener("click", (event) => {
     const trigger = event.target.closest("[data-select-student]");
