@@ -163,3 +163,14 @@ PROXIMOS PONTOS RECOMENDADOS
 - Corrigido o frontend para interpretar diretamente o snapshot retornado por exportAll.
 - Nova API configurada: https://script.google.com/macros/s/AKfycbxv5kc71SaSMhe10SQR0kqQQO11aFNInVAJFmH1zTif5SqefNDnZ1F60xBN_VrU0lFGIw/exec
 - API validada com health, setup e exportAll na planilha 1GgKofWojTW6EgrJCnA3Z4ZOZvgmzeyc1refIz2Inj8Y.
+
+[10/07/2026] Arquitetura oficial de modulos
+- O sistema Pro Fitness tera tres modulos independentes: Administracao, Alunos e Professores.
+- Administracao corresponde ao arquivo painel.html.
+- Alunos corresponde ao arquivo index.html.
+- Professores correspondera ao futuro arquivo prof.html, que ainda sera criado.
+- Ordem definida para o desenvolvimento: primeiro Administracao, depois Alunos e por ultimo Professores.
+- O foco atual permanece no painel administrativo.
+- O modulo Alunos sera aprofundado depois da conclusao do administrativo, incluindo matricula, treinos e acesso.
+- O modulo Professores sera desenvolvido na etapa seguinte, com funcoes e permissoes proprias.
+- Novas funcionalidades devem respeitar essa separacao para evitar misturar dados, telas e permissoes dos perfis.
