@@ -8,6 +8,19 @@
     return new Date().toISOString().slice(0, 10);
   }
 
+  function demoDateDaysAgo(days) {
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+    return date.toISOString().slice(0, 10);
+  }
+
+  function demoTimestampDaysAgo(days, hour, minute) {
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+    date.setHours(hour, minute, 0, 0);
+    return date.toISOString();
+  }
+
   function currentMonth() {
     return todayISO().slice(0, 7);
   }
@@ -288,10 +301,80 @@
       ],
       checkins: [
         {
+          id: "CK-ACCESS-001",
+          studentId: "ALU-002",
+          workoutId: "",
+          date: today,
+          time: new Date().toTimeString().slice(0, 5),
+          type: "access",
+          checkedInAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+          checkedOutAt: "",
+          source: "catraca",
+          presenceStatus: "inside",
+          usedLoad: "",
+          difficulty: "",
+          pain: "",
+          notes: "Entrada de demonstracao pela catraca."
+        },
+        {
+          id: "CK-ACCESS-002",
+          studentId: "ALU-002",
+          workoutId: "",
+          date: demoDateDaysAgo(1),
+          time: "18:10",
+          type: "access",
+          checkedInAt: demoTimestampDaysAgo(1, 18, 10),
+          checkedOutAt: demoTimestampDaysAgo(1, 19, 35),
+          source: "catraca",
+          presenceStatus: "outside",
+          usedLoad: "",
+          difficulty: "",
+          pain: "",
+          notes: ""
+        },
+        {
+          id: "CK-ACCESS-003",
+          studentId: "ALU-003",
+          workoutId: "",
+          date: demoDateDaysAgo(2),
+          time: "08:20",
+          type: "access",
+          checkedInAt: demoTimestampDaysAgo(2, 8, 20),
+          checkedOutAt: demoTimestampDaysAgo(2, 9, 30),
+          source: "catraca",
+          presenceStatus: "outside",
+          usedLoad: "",
+          difficulty: "",
+          pain: "",
+          notes: ""
+        },
+        {
+          id: "CK-ACCESS-004",
+          studentId: "ALU-002",
+          workoutId: "",
+          date: demoDateDaysAgo(4),
+          time: "19:05",
+          type: "access",
+          checkedInAt: demoTimestampDaysAgo(4, 19, 5),
+          checkedOutAt: demoTimestampDaysAgo(4, 20, 25),
+          source: "catraca",
+          presenceStatus: "outside",
+          usedLoad: "",
+          difficulty: "",
+          pain: "",
+          notes: ""
+        },
+        {
           id: "CK-001",
           studentId: "ALU-002",
           workoutId: "TR-001",
           date: "2026-04-22",
+          time: "19:10",
+          type: "workout",
+          checkedInAt: "",
+          checkedOutAt: "",
+          source: "app",
+          presenceStatus: "",
           usedLoad: "40 kg",
           difficulty: "alta",
           pain: "leve",
@@ -370,7 +453,6 @@
   }
 
   async function fetchRemoteSnapshot() {
-    const response = await requestRemote("GET", null);
     const exportUrl = `${getApiBaseUrl()}?action=exportAll`;
     const exportResponse = await fetch(exportUrl);
     const data = await exportResponse.json();
@@ -379,7 +461,8 @@
       throw new Error(data.message || "Falha ao exportar snapshot remoto.");
     }
 
-    return normalizeSnapshot(data.data && data.data.snapshot ? data.data.snapshot : {});
+    const snapshot = data.data && data.data.snapshot ? data.data.snapshot : data.data;
+    return normalizeSnapshot(snapshot || {});
   }
 
   async function setupRemoteSpreadsheet() {

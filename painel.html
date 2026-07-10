@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pro Fitness | Painel de Gestao</title>
+    <meta name="theme-color" content="#f4c928" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,27 +16,45 @@
   <body>
     <div class="dashboard-shell">
       <header class="admin-header">
-        <div class="brand-row">
-          <span class="brand-mark">PF</span>
-          <div>
-            <p class="header-kicker" id="sectionKicker">Pro Fitness Carmo / Operacao</p>
-            <h1 id="sectionTitle">Central Pro Fitness</h1>
-            <p id="sectionDescription">Alunos, treinos, agenda e acesso em uma unica visao.</p>
+        <div class="header-content">
+          <div class="brand-row">
+            <span class="brand-mark">PF</span>
+            <div>
+              <p class="header-kicker" id="sectionKicker">Pro Fitness Carmo / Visao geral</p>
+              <h1 id="sectionTitle">Visao geral da academia</h1>
+              <p id="sectionDescription">Indicadores gerais para acompanhar o movimento da Pro Fitness.</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <a class="ghost-button" href="index.html">App do aluno</a>
+            <button class="primary-button" id="newStudentButton">Novo aluno</button>
+            <details class="system-menu">
+              <summary>Ferramentas</summary>
+              <div class="system-menu-popover">
+                <button class="ghost-button" id="setupSheetsButton">Preparar Sheets</button>
+                <button class="ghost-button" id="syncSheetsButton">Sincronizar Sheets</button>
+                <button class="ghost-button danger-button" id="resetDemoButton">Restaurar demonstracao</button>
+              </div>
+            </details>
           </div>
         </div>
-        <div class="header-actions">
-          <a class="ghost-button" href="index.html">Abrir app do aluno</a>
-          <button class="ghost-button" id="newStudentButton">Novo aluno</button>
-          <button class="ghost-button" id="setupSheetsButton">Preparar Sheets</button>
-          <button class="ghost-button" id="syncSheetsButton">Sincronizar Sheets</button>
-          <button class="primary-button" id="resetDemoButton">Restaurar demo</button>
-        </div>
+        <figure class="academy-visual">
+          <img src="assets/images/pro-fitness-fachada.png" alt="Fachada estilizada da Pro Fitness Academia em Carmo" />
+          <figcaption>
+            <span>Pro Fitness Academia</span>
+            <small>Carmo, Rio de Janeiro</small>
+          </figcaption>
+        </figure>
       </header>
 
       <nav class="main-section-nav" aria-label="Areas do painel">
-        <button class="main-section-button active" type="button" data-main-section="operation" aria-pressed="true">
-          <span>Operacao</span>
-          <small>Alunos e performance</small>
+        <button class="main-section-button active" type="button" data-main-section="overview" aria-pressed="true">
+          <span>Visao geral</span>
+          <small>Indicadores da academia</small>
+        </button>
+        <button class="main-section-button" type="button" data-main-section="operation" aria-pressed="false">
+          <span>Alunos e treinos</span>
+          <small>Gestao individual</small>
         </button>
         <button class="main-section-button finance-nav-button" type="button" data-main-section="finance" aria-pressed="false">
           <span>Financeiro</span>
@@ -43,8 +62,67 @@
         </button>
       </nav>
 
-      <section class="main-section" id="operationSection" data-main-panel="operation">
+      <section class="main-section overview-section" id="overviewSection" data-main-panel="overview">
+        <article class="overview-lead">
+          <div>
+            <p class="eyebrow" id="overviewDate">Hoje na Pro Fitness</p>
+            <h2>Uma leitura rapida do seu dia.</h2>
+            <p>Movimento, crescimento e agenda em uma tela executiva sem expor informacoes individuais.</p>
+          </div>
+          <div class="overview-lead-actions">
+            <span class="privacy-chip">Visao agregada</span>
+            <button class="primary-button" type="button" id="openStudentsOverviewButton">Gerenciar alunos</button>
+          </div>
+        </article>
+
         <section class="overview-grid" id="metricGrid"></section>
+
+        <section class="insight-grid">
+          <article class="dashboard-card insight-card attendance-card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Frequencia</p>
+                <h2>Movimento nos ultimos 7 dias</h2>
+              </div>
+              <span class="insight-label" id="attendanceTotal">0 entradas</span>
+            </div>
+            <div class="attendance-chart" id="attendanceChart" aria-label="Grafico de entradas dos ultimos sete dias"></div>
+          </article>
+
+          <article class="dashboard-card insight-card agenda-summary-card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Agenda de hoje</p>
+                <h2>Panorama das atividades</h2>
+              </div>
+            </div>
+            <div class="agenda-summary" id="todayAgendaSummary"></div>
+          </article>
+
+          <article class="dashboard-card insight-card enrollment-chart-card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Crescimento</p>
+                <h2>Novas matriculas por mes</h2>
+              </div>
+              <span class="insight-label">Ultimos 6 meses</span>
+            </div>
+            <div class="enrollment-chart" id="enrollmentChart" aria-label="Grafico de novas matriculas dos ultimos seis meses"></div>
+          </article>
+
+          <article class="dashboard-card insight-card student-mix-card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Base de alunos</p>
+                <h2>Composicao atual</h2>
+              </div>
+            </div>
+            <div class="student-mix" id="studentMix"></div>
+          </article>
+        </section>
+      </section>
+
+      <section class="main-section operation-section" id="operationSection" data-main-panel="operation" hidden>
 
         <section class="workspace-grid">
         <article class="dashboard-card list-card">

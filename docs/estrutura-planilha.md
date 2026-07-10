@@ -4,14 +4,13 @@ O arquivo [api.gs](../apps-script/api.gs) ja pode criar a estrutura automaticame
 
 ## Inicializacao automatica
 
-Use uma destas opcoes:
+1. Abra a planilha que sera o banco de dados.
+2. Acesse `Extensoes > Apps Script` nessa propria planilha.
+3. Cole o arquivo `api.gs` e execute `setupProFitnessSpreadsheet()` uma vez.
 
-- Executar manualmente a funcao `setupProFitnessSpreadsheet()` no editor do Google Apps Script.
-- Chamar `GET ?action=setup` na URL publicada do Web App.
-- Chamar `POST` com `{ "action": "setup" }`.
-
-Se `SPREADSHEET_ID` continuar com o placeholder, a API cria uma nova planilha e salva o ID em `Script Properties`.
-Se `SPREADSHEET_ID` estiver preenchido, ela usa essa planilha e garante as abas e cabecalhos obrigatorios.
+A funcao registra em `Script Properties` o ID da planilha onde o script esta vinculado e cria as abas nela.
+Depois dessa primeira execucao, `GET ?action=setup` e `POST { "action": "setup" }` apenas conferem ou
+completam a estrutura da mesma planilha. A API nao cria outra planilha automaticamente.
 
 ## Fluxo novo de matricula e acesso
 
@@ -43,7 +42,10 @@ Se `SPREADSHEET_ID` estiver preenchido, ela usa essa planilha e garante as abas 
 `id`, `studentId`, `reference`, `amount`, `dueDate`, `status`, `method`, `paidAt`, `notes`
 
 ### `Checkins`
-`id`, `studentId`, `workoutId`, `date`, `usedLoad`, `difficulty`, `pain`, `notes`
+`id`, `studentId`, `workoutId`, `date`, `time`, `type`, `checkedInAt`, `checkedOutAt`, `source`, `presenceStatus`, `usedLoad`, `difficulty`, `pain`, `notes`
+
+- Use `type = access` para entradas da catraca e `type = workout` para treinos realizados.
+- `checkedInAt` e `checkedOutAt` usam data/hora ISO e alimentam o indicador "Na academia agora".
 
 ### `Usuarios`
 `id`, `name`, `email`, `passwordHash`, `role`, `status`, `lastLogin`

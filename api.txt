@@ -21,7 +21,6 @@
 
 const SPREADSHEET_ID = "COLE_O_ID_DA_PLANILHA_AQUI";
 const SPREADSHEET_ID_PROPERTY = "PROFITNESS_SPREADSHEET_ID";
-const DEFAULT_SPREADSHEET_NAME = "Pro Fitness Academia - Database";
 
 const SHEETS = {
   students: {
@@ -71,7 +70,22 @@ const SHEETS = {
   },
   checkins: {
     sheetName: "Checkins",
-    headers: ["id", "studentId", "workoutId", "date", "usedLoad", "difficulty", "pain", "notes"]
+    headers: [
+      "id",
+      "studentId",
+      "workoutId",
+      "date",
+      "time",
+      "type",
+      "checkedInAt",
+      "checkedOutAt",
+      "source",
+      "presenceStatus",
+      "usedLoad",
+      "difficulty",
+      "pain",
+      "notes"
+    ]
   },
   users: {
     sheetName: "Usuarios",
@@ -194,14 +208,33 @@ function doPost(e) {
   }
 }
 
+function onOpen() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (!spreadsheet) {
+    return;
+  }
+
+  rememberSpreadsheet(spreadsheet);
+  SpreadsheetApp.getUi()
+    .createMenu("Pro Fitness")
+    .addItem("Preparar banco de dados", "setupProFitnessSpreadsheet")
+    .addToUi();
+}
+
 function setupProFitnessSpreadsheet() {
-  const result = ensureSpreadsheetStructure();
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (!spreadsheet) {
+    throw new Error("Abra a planilha, acesse Extensoes > Apps Script e execute esta funcao pelo editor vinculado.");
+  }
+
+  rememberSpreadsheet(spreadsheet);
+  const result = ensureSpreadsheetStructure(spreadsheet);
   Logger.log("Pro Fitness pronto em: " + result.spreadsheetUrl);
   return result;
 }
 
-function ensureSpreadsheetStructure() {
-  const spreadsheet = getOrCreateSpreadsheet();
+function ensureSpreadsheetStructure(spreadsheetOverride) {
+  const spreadsheet = spreadsheetOverride || getOrCreateSpreadsheet();
   const summary = [];
 
   Object.keys(SHEETS).forEach((resource) => {
@@ -288,22 +321,36 @@ function cleanupUnknownEmptySheets(spreadsheet) {
 }
 
 function getOrCreateSpreadsheet() {
+  const activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (activeSpreadsheet) {
+    rememberSpreadsheet(activeSpreadsheet);
+    return activeSpreadsheet;
+  }
+
   const spreadsheetId = getResolvedSpreadsheetId();
 
   if (spreadsheetId) {
     return SpreadsheetApp.openById(spreadsheetId);
   }
 
-  const spreadsheet = SpreadsheetApp.create(DEFAULT_SPREADSHEET_NAME);
+  throw new Error(
+    "Planilha nao vinculada. Execute setupProFitnessSpreadsheet() uma vez no Apps Script aberto pela propria planilha."
+  );
+}
+
+function rememberSpreadsheet(spreadsheet) {
   PropertiesService.getScriptProperties().setProperty(SPREADSHEET_ID_PROPERTY, spreadsheet.getId());
-  return spreadsheet;
 }
 
 function getResolvedSpreadsheetId() {
+  const savedSpreadsheetId = PropertiesService.getScriptProperties().getProperty(SPREADSHEET_ID_PROPERTY);
+  if (savedSpreadsheetId) {
+    return savedSpreadsheetId;
+  }
   if (SPREADSHEET_ID && SPREADSHEET_ID !== "COLE_O_ID_DA_PLANILHA_AQUI") {
     return SPREADSHEET_ID;
   }
-  return PropertiesService.getScriptProperties().getProperty(SPREADSHEET_ID_PROPERTY) || "";
+  return "";
 }
 
 function validateResource(resource) {

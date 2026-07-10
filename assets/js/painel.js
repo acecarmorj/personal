@@ -4,7 +4,7 @@ let panelState = Store.loadData();
 let selectedStudentId = panelState.students[0] ? panelState.students[0].id : "";
 let activeFilter = "todos";
 let activePanelTab = "resumo";
-let activeMainSection = "operation";
+let activeMainSection = "overview";
 
 const studentForm = document.getElementById("studentForm");
 const paymentForm = document.getElementById("paymentForm");
@@ -191,54 +191,289 @@ function setActiveMainSection(sectionName) {
     panel.hidden = panel.dataset.mainPanel !== sectionName;
   });
 
-  const headings = sectionName === "finance"
-    ? {
-        kicker: "Pro Fitness Carmo / Financeiro",
-        title: "Gestao financeira",
-        description: "Receita, recebimentos e pendencias concentrados em uma area reservada."
-      }
-    : {
-        kicker: "Pro Fitness Carmo / Operacao",
-        title: "Central Pro Fitness",
-        description: "Alunos, treinos, agenda e acesso em uma unica visao."
-      };
+  const headings = {
+    overview: {
+      kicker: "Pro Fitness Carmo / Visao geral",
+      title: "Visao geral da academia",
+      description: "Indicadores gerais para acompanhar o movimento da Pro Fitness."
+    },
+    operation: {
+      kicker: "Pro Fitness Carmo / Alunos e treinos",
+      title: "Gestao de alunos",
+      description: "Cadastros, treinos, avaliacoes, agenda e acessos em uma area operacional."
+    },
+    finance: {
+      kicker: "Pro Fitness Carmo / Financeiro",
+      title: "Gestao financeira",
+      description: "Receita, recebimentos e pendencias concentrados em uma area reservada."
+    }
+  }[sectionName] || {};
 
-  document.getElementById("sectionKicker").textContent = headings.kicker;
-  document.getElementById("sectionTitle").textContent = headings.title;
-  document.getElementById("sectionDescription").textContent = headings.description;
+  document.getElementById("sectionKicker").textContent = headings.kicker || "Pro Fitness Carmo";
+  document.getElementById("sectionTitle").textContent = headings.title || "Painel Pro Fitness";
+  document.getElementById("sectionDescription").textContent = headings.description || "Gestao da academia.";
+
+  if (sectionName === "operation") {
+    renderOperation();
+  }
+  if (sectionName === "finance") {
+    renderFinance();
+  }
+
+  const systemMenu = document.querySelector(".system-menu");
+  if (systemMenu) {
+    systemMenu.open = false;
+  }
 }
 
-function renderMetrics() {
+function shiftISODate(dateValue, amount) {
+  const date = new Date(`${dateValue}T12:00:00`);
+  date.setDate(date.getDate() + amount);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function shiftMonthKey(amount) {
+  const today = new Date(`${Store.todayISO()}T12:00:00`);
+  today.setDate(1);
+  today.setMonth(today.getMonth() + amount);
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function getCheckinDate(checkin) {
+  const timestamp = checkin.checkedInAt || checkin.entryAt || "";
+  return timestamp ? String(timestamp).slice(0, 10) : String(checkin.date || "");
+}
+
+function isAccessCheckin(checkin) {
+  return checkin.type === "access" || Boolean(checkin.checkedInAt || checkin.entryAt);
+}
+
+function getCurrentPresenceCount() {
+  const now = Date.now();
   const today = Store.todayISO();
+  const presentStudents = new Set();
+
+  panelState.checkins.filter(isAccessCheckin).forEach((checkin) => {
+    const checkedInAt = checkin.checkedInAt || checkin.entryAt || "";
+    const checkedOutAt = checkin.checkedOutAt || checkin.exitAt || "";
+    const isMarkedInside = checkin.presenceStatus === "inside";
+    const elapsed = checkedInAt ? now - new Date(checkedInAt).getTime() : Number.POSITIVE_INFINITY;
+    const isRecentEntry = Number.isFinite(elapsed) && elapsed >= 0 && elapsed <= 6 * 60 * 60 * 1000;
+
+    const isCurrentSession = isRecentEntry || (isMarkedInside && !checkedInAt && getCheckinDate(checkin) === today);
+    if (!checkedOutAt && isCurrentSession) {
+      presentStudents.add(checkin.studentId || checkin.id);
+    }
+  });
+
+  return presentStudents.size;
+}
+
+function metricIcon(iconName) {
+  const icons = {
+    members: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    new: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M19 8v6M16 11h6"/></svg>',
+    live: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21v-2a7 7 0 0 1 14 0v2"/><circle cx="12" cy="7" r="4"/><path d="M18.5 3.5l2 2"/></svg>',
+    entries: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>',
+    classes: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h3M13 14h3"/></svg>'
+  };
+  return icons[iconName] || icons.members;
+}
+
+function renderOverviewMetrics() {
+  const today = Store.todayISO();
+  const currentMonth = Store.currentMonth();
+  const previousMonth = shiftMonthKey(-1);
+  const enrolledStudents = panelState.students.filter((student) => student.enrollmentStatus === "ativo").length;
   const activeStudents = panelState.students.filter((student) => student.status === "ativo").length;
+  const newStudents = panelState.students.filter((student) => String(student.createdAt || "").slice(0, 7) === currentMonth).length;
+  const previousNewStudents = panelState.students.filter((student) => String(student.createdAt || "").slice(0, 7) === previousMonth).length;
+  const currentPresence = getCurrentPresenceCount();
+  const todayEntries = panelState.checkins.filter(
+    (checkin) => isAccessCheckin(checkin) && getCheckinDate(checkin) === today
+  ).length;
   const todayClasses = panelState.schedule.filter(
     (item) => item.date === today && !["cancelada", "falta"].includes(item.status)
   ).length;
-  const activeWorkouts = panelState.workouts.filter((workout) => workout.status === "ativo").length;
-  const pendingAssessments = panelState.students.filter((student) => !Store.getLatestAssessment(panelState, student.id)).length;
-  const pendingEnrollments = panelState.students.filter((student) => student.enrollmentStatus !== "ativo").length;
-  const todayCheckins = panelState.checkins.filter((checkin) => checkin.date === today).length;
 
   const metrics = [
-    ["Total de alunos", panelState.students.length],
-    ["Alunos ativos", activeStudents],
-    ["Aulas de hoje", todayClasses],
-    ["Treinos ativos", activeWorkouts],
-    ["Avaliacoes pendentes", pendingAssessments],
-    ["Matriculas pendentes", pendingEnrollments],
-    ["Check-ins de hoje", todayCheckins]
+    {
+      label: "Alunos matriculados",
+      value: enrolledStudents,
+      note: `${activeStudents} ativos na base`,
+      icon: "members",
+      tone: "yellow"
+    },
+    {
+      label: "Alunos novos no mes",
+      value: newStudents,
+      note: `${previousNewStudents} no mes anterior`,
+      icon: "new",
+      tone: "green"
+    },
+    {
+      label: "Na academia agora",
+      value: currentPresence,
+      note: "Entradas recentes sem saida",
+      icon: "live",
+      tone: "blue"
+    },
+    {
+      label: "Entradas hoje",
+      value: todayEntries,
+      note: "Movimento registrado no dia",
+      icon: "entries",
+      tone: "orange"
+    },
+    {
+      label: "Aulas de hoje",
+      value: todayClasses,
+      note: "Marcadas ou realizadas",
+      icon: "classes",
+      tone: "rose"
+    }
   ];
 
   document.getElementById("metricGrid").innerHTML = metrics
     .map(
-      ([label, value]) => `
-        <article class="metric-card">
-          <span>${escapeHtml(label)}</span>
-          <strong>${escapeHtml(value)}</strong>
+      (metric, index) => `
+        <article class="metric-card tone-${metric.tone}" style="--card-delay: ${index * 55}ms">
+          <div class="metric-card-top">
+            <span class="metric-icon">${metricIcon(metric.icon)}</span>
+            ${metric.icon === "live" ? '<span class="live-indicator"><i></i> agora</span>' : ""}
+          </div>
+          <span class="metric-label">${escapeHtml(metric.label)}</span>
+          <strong>${escapeHtml(metric.value)}</strong>
+          <small>${escapeHtml(metric.note)}</small>
         </article>
       `
     )
     .join("");
+}
+
+function renderAttendanceChart() {
+  const today = Store.todayISO();
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = shiftISODate(today, index - 6);
+    return {
+      date: date,
+      count: panelState.checkins.filter((checkin) => isAccessCheckin(checkin) && getCheckinDate(checkin) === date).length
+    };
+  });
+  const maxValue = Math.max(1, ...days.map((day) => day.count));
+  const total = days.reduce((sum, day) => sum + day.count, 0);
+  const weekFormatter = new Intl.DateTimeFormat("pt-BR", { weekday: "short" });
+
+  document.getElementById("attendanceTotal").textContent = `${total} ${total === 1 ? "entrada" : "entradas"}`;
+  document.getElementById("attendanceChart").innerHTML = days
+    .map((day, index) => {
+      const date = new Date(`${day.date}T12:00:00`);
+      const weekday = weekFormatter.format(date).replace(".", "");
+      const height = day.count ? Math.max(14, Math.round((day.count / maxValue) * 100)) : 4;
+      return `
+        <div class="attendance-day ${index === days.length - 1 ? "today" : ""}">
+          <span>${day.count}</span>
+          <div class="attendance-track"><i style="--attendance-height: ${height}%"></i></div>
+          <strong>${escapeHtml(weekday)}</strong>
+          <small>${String(date.getDate()).padStart(2, "0")}</small>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderEnrollmentChart() {
+  const monthFormatter = new Intl.DateTimeFormat("pt-BR", { month: "short" });
+  const months = Array.from({ length: 6 }, (_, index) => {
+    const key = shiftMonthKey(index - 5);
+    const date = new Date(`${key}-01T12:00:00`);
+    return {
+      key: key,
+      label: monthFormatter.format(date).replace(".", ""),
+      count: panelState.students.filter((student) => String(student.createdAt || "").slice(0, 7) === key).length
+    };
+  });
+  const maxValue = Math.max(1, ...months.map((month) => month.count));
+
+  document.getElementById("enrollmentChart").innerHTML = months
+    .map((month, index) => {
+      const width = month.count ? Math.max(8, Math.round((month.count / maxValue) * 100)) : 2;
+      return `
+        <div class="enrollment-row ${index === months.length - 1 ? "current" : ""}">
+          <span>${escapeHtml(month.label)}</span>
+          <div class="enrollment-track"><i style="--enrollment-width: ${width}%"></i></div>
+          <strong>${month.count}</strong>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderStudentMix() {
+  const total = Math.max(1, panelState.students.length);
+  const mix = [
+    { label: "Ativos", value: panelState.students.filter((student) => student.status === "ativo").length, tone: "active" },
+    { label: "Pausados", value: panelState.students.filter((student) => student.status === "pausado").length, tone: "paused" },
+    { label: "Inativos", value: panelState.students.filter((student) => student.status === "inativo").length, tone: "inactive" }
+  ];
+  const activeAngle = (mix[0].value / total) * 360;
+  const pausedAngle = activeAngle + (mix[1].value / total) * 360;
+
+  document.getElementById("studentMix").innerHTML = `
+    <div class="student-mix-ring" style="--active-angle: ${activeAngle}deg; --paused-angle: ${pausedAngle}deg">
+      <div><strong>${panelState.students.length}</strong><span>alunos</span></div>
+    </div>
+    <div class="student-mix-legend">
+      ${mix
+        .map(
+          (item) => `
+            <div>
+              <span><i class="mix-dot ${item.tone}"></i>${item.label}</span>
+              <strong>${item.value}</strong>
+            </div>
+          `
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderTodayAgendaSummary() {
+  const todayItems = panelState.schedule.filter((item) => item.date === Store.todayISO());
+  const completed = todayItems.filter((item) => item.status === "realizada").length;
+  const scheduled = todayItems.filter((item) => ["marcada", "remarcada"].includes(item.status)).length;
+  const online = todayItems.filter((item) => item.type === "online").length;
+  const inPerson = todayItems.filter((item) => item.type !== "online").length;
+
+  document.getElementById("todayAgendaSummary").innerHTML = `
+    <div class="agenda-total">
+      <strong>${todayItems.length}</strong>
+      <span>${todayItems.length === 1 ? "atividade prevista" : "atividades previstas"}</span>
+    </div>
+    <div class="agenda-stat-grid">
+      <div><span class="agenda-dot scheduled"></span><strong>${scheduled}</strong><small>Agendadas</small></div>
+      <div><span class="agenda-dot completed"></span><strong>${completed}</strong><small>Realizadas</small></div>
+      <div><span class="agenda-dot in-person"></span><strong>${inPerson}</strong><small>Presenciais</small></div>
+      <div><span class="agenda-dot online"></span><strong>${online}</strong><small>Online</small></div>
+    </div>
+  `;
+}
+
+function renderOverview() {
+  const formattedDate = new Intl.DateTimeFormat("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long"
+  }).format(new Date(`${Store.todayISO()}T12:00:00`));
+  document.getElementById("overviewDate").textContent = formattedDate;
+  renderOverviewMetrics();
+  renderAttendanceChart();
+  renderEnrollmentChart();
+  renderStudentMix();
+  renderTodayAgendaSummary();
 }
 
 function renderRoster() {
@@ -389,7 +624,7 @@ function renderStudentSummary(student) {
   const upcomingClass = Store.getStudentSchedule(panelState, student.id).find(
     (item) => item.date >= Store.todayISO() && !["cancelada", "falta"].includes(item.status)
   );
-  const checkins = Store.getStudentCheckins(panelState, student.id);
+  const checkins = Store.getStudentCheckins(panelState, student.id).filter((item) => !isAccessCheckin(item));
   const cards = [
     {
       label: "Acesso",
@@ -454,7 +689,7 @@ function renderTimeline(student) {
     });
   });
 
-  getStudentRecords("checkins", student.id).forEach((item) => {
+  getStudentRecords("checkins", student.id).filter((item) => !isAccessCheckin(item)).forEach((item) => {
     events.push({
       date: `${item.date || ""}T00:00`,
       title: "Treino realizado",
@@ -500,7 +735,7 @@ function renderWorkouts(student) {
     }
     return String(right.createdAt || "").localeCompare(String(left.createdAt || ""));
   });
-  const checkins = Store.getStudentCheckins(panelState, student.id);
+  const checkins = Store.getStudentCheckins(panelState, student.id).filter((item) => !isAccessCheckin(item));
 
   document.getElementById("workoutList").innerHTML = workouts.length
     ? workouts
@@ -908,13 +1143,15 @@ function renderPanel() {
   if (selectedStudentId && !Store.findStudent(panelState, selectedStudentId)) {
     selectedStudentId = panelState.students[0] ? panelState.students[0].id : "";
   }
-  renderMetrics();
+  renderOverview();
+  setActiveMainSection(activeMainSection);
+}
+
+function renderOperation() {
   renderRoster();
   renderWorkspace();
   renderAlertBoard();
   renderLogBoard();
-  renderFinance();
-  setActiveMainSection(activeMainSection);
 }
 
 function handleStudentSave(event) {
@@ -1269,7 +1506,7 @@ function attachPanelEvents() {
     panelState = Store.resetData();
     selectedStudentId = panelState.students[0] ? panelState.students[0].id : "";
     activePanelTab = "resumo";
-    activeMainSection = "operation";
+    activeMainSection = "overview";
     Store.syncSnapshotIfConfigured(panelState).catch(() => null);
     renderPanel();
   });
@@ -1305,6 +1542,10 @@ function attachPanelEvents() {
   document.getElementById("newAssessmentButton").addEventListener("click", createNewAssessment);
   document.getElementById("newScheduleButton").addEventListener("click", createNewSchedule);
   document.getElementById("newPaymentButton").addEventListener("click", createNewPayment);
+  document.getElementById("openStudentsOverviewButton").addEventListener("click", () => {
+    setActiveMainSection("operation");
+    document.querySelector(".main-section-nav").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   document.querySelectorAll("[data-main-section]").forEach((button) => {
     button.addEventListener("click", () => setActiveMainSection(button.dataset.mainSection));

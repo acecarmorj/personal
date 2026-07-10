@@ -248,7 +248,7 @@ function renderAccess(student, accessState) {
 
 function renderWorkouts(student) {
   const workouts = Store.getStudentWorkouts(state, student.id).filter((item) => item.status === "ativo");
-  const checkins = Store.getStudentCheckins(state, student.id);
+  const checkins = Store.getStudentCheckins(state, student.id).filter((item) => item.type !== "access");
   const container = document.getElementById("workoutCards");
 
   if (!workouts.length) {

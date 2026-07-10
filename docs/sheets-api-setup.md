@@ -8,16 +8,18 @@
 
 ## Como publicar
 
-1. Crie um projeto no Google Apps Script.
-2. Cole o conteudo de [api.gs](../apps-script/api.gs).
-3. Execute `setupProFitnessSpreadsheet()` uma vez.
-4. Publique como `Web App` com acesso para quem vai usar o sistema.
-5. Copie a URL publicada.
-6. Edite [app-config.js](../assets/js/app-config.js) e substitua `COLE_A_URL_DO_WEB_APP_AQUI`.
+1. Abra a planilha que sera usada como banco de dados.
+2. Nessa planilha, acesse `Extensoes > Apps Script`.
+3. Cole o conteudo de [api.gs](../apps-script/api.gs).
+4. Execute `setupProFitnessSpreadsheet()` uma vez e autorize o acesso.
+5. Confirme que as abas foram criadas na mesma planilha.
+6. Publique como `Web App` com acesso para quem vai usar o sistema.
+7. Copie a URL publicada.
+8. Edite [app-config.js](../assets/js/app-config.js) e substitua `COLE_A_URL_DO_WEB_APP_AQUI`.
 
 ## O que a API faz
 
-- `setup`: cria a planilha e todas as abas obrigatorias.
+- `setup`: cria ou completa as abas obrigatorias na planilha vinculada.
 - `health`: retorna status da API e da planilha.
 - `exportAll`: devolve um snapshot completo do banco.
 - `importAll`: grava um snapshot completo recebido do frontend.
@@ -31,4 +33,8 @@
 
 ## Observacao importante
 
+- A API nao cria uma planilha separada. O primeiro `setupProFitnessSpreadsheet()` precisa ser executado
+  pelo editor aberto em `Extensoes > Apps Script`, pois o Web App nao recebe o contexto da planilha ativa.
+- Se uma versao anterior criou outra planilha, execute novamente `setupProFitnessSpreadsheet()` dentro da
+  planilha correta e publique uma nova versao do Web App.
 - Se estiver abrindo os arquivos HTML diretamente do disco e houver bloqueio de requisicoes do navegador, rode o frontend por um servidor local simples.

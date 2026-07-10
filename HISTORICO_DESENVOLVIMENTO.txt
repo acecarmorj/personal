@@ -128,3 +128,38 @@ PROXIMOS PONTOS RECOMENDADOS
 - Criar uma area de check-in manual no painel, se o personal quiser registrar treino realizado pelo desktop.
 - Adicionar autenticacao real antes de uso publico com dados de alunos.
 - Substituir armazenamento local por controle de permissao no backend quando houver mais de um usuario.
+
+[10/07/2026] Pagina inicial executiva e privacidade
+- Criada a nova area principal "Visao geral", que agora e a entrada padrao do painel.
+- A tela inicial passou a mostrar somente dados agregados: matriculados, novos no mes, pessoas na academia,
+  entradas do dia, aulas, frequencia semanal, crescimento mensal, composicao da base e resumo da agenda.
+- Nenhum nome de aluno, estado de bloqueio/liberacao, motivo de acesso ou informacao financeira aparece na abertura.
+- Dados individuais e financeiros passaram a ser renderizados somente quando a respectiva area e aberta.
+- A gestao nominal foi movida para a area separada "Alunos e treinos" e manteve todos os modulos existentes.
+- A navegacao principal foi reorganizada em Visao geral, Alunos e treinos e Financeiro.
+
+[10/07/2026] Nova identidade visual da Pro Fitness
+- O painel deixou de usar grandes superficies escuras e adotou uma base clara em cinza arquitetonico.
+- A paleta foi consolidada em cinza da fachada, preto/grafite e amarelo Pro Fitness.
+- Cards, graficos, navegacao, lista de alunos, formularios e financeiro foram atualizados para o novo tema.
+- O app do aluno recebeu a mesma paleta e uma imagem institucional no cabecalho.
+- Criada a imagem assets/images/pro-fitness-fachada.png a partir da foto enviada pelo cliente.
+- A imagem recebeu limpeza da interface do Maps, tratamento editorial, letreiro "PRO FITNESS" na fachada,
+  retirada de carros e fios e acabamento do predio vizinho, sem tijolos ou areas aparentes de obra.
+- Foram adicionadas adaptacoes responsivas e reducao de animacoes conforme a preferencia do dispositivo.
+
+[10/07/2026] Presenca e catraca preparadas
+- A aba Checkins passou a aceitar type, time, checkedInAt, checkedOutAt, source e presenceStatus.
+- O indicador "Na academia agora" considera entradas recentes ainda sem registro de saida.
+- Entradas de catraca e registros de treino foram separados para nao alterar os historicos individuais de treino.
+- Os dados de demonstracao receberam movimentos genericos de catraca para validar os novos graficos.
+
+[10/07/2026] API corrigida para usar a planilha vinculada
+- A API deixou de criar automaticamente uma planilha separada quando nao encontra um ID.
+- setupProFitnessSpreadsheet() agora registra e prepara obrigatoriamente a planilha onde o script foi colado.
+- Adicionado menu "Pro Fitness" na planilha com a opcao "Preparar banco de dados".
+- Script Properties guarda o ID da planilha vinculada para uso posterior pelo Web App.
+- api.gs e api.txt foram sincronizados como copias identicas.
+- Corrigido o frontend para interpretar diretamente o snapshot retornado por exportAll.
+- Nova API configurada: https://script.google.com/macros/s/AKfycbxv5kc71SaSMhe10SQR0kqQQO11aFNInVAJFmH1zTif5SqefNDnZ1F60xBN_VrU0lFGIw/exec
+- API validada com health, setup e exportAll na planilha 1GgKofWojTW6EgrJCnA3Z4ZOZvgmzeyc1refIz2Inj8Y.

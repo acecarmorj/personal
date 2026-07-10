@@ -1,5 +1,5 @@
 window.PROFITNESS_CONFIG = {
-  apiBaseUrl: "https://script.google.com/macros/s/AKfycbzCDcbQLy7Pm3kX1X9h5KAbDlt013znFu8Ic5BTKYw_mEEFELuJ6O4OsnujMnyQhSdtrw/exec",
+  apiBaseUrl: "https://script.google.com/macros/s/AKfycbxv5kc71SaSMhe10SQR0kqQQO11aFNInVAJFmH1zTif5SqefNDnZ1F60xBN_VrU0lFGIw/exec",
   useRemoteOnLoad: true,
   autoSyncToRemote: true
 };
