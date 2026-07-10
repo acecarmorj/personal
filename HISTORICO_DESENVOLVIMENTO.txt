@@ -1,0 +1,98 @@
+PERSONALPRO - HISTORICO DE DESENVOLVIMENTO
+==========================================
+
+Ultima atualizacao: 10/07/2026
+Objetivo: manter um registro objetivo das mudancas para continuidade por outra IA ou desenvolvedor.
+
+REGRA DE CONTINUIDADE
+---------------------
+Ao finalizar qualquer nova alteracao, acrescente uma nova entrada com data, arquivos envolvidos,
+comportamento entregue e validacao realizada. Se apps-script/api.gs for alterado, atualize tambem api.txt.
+
+ESTRUTURA ATUAL
+---------------
+D:\PersonalPro\
+  index.html                         App do aluno, pensado para celular.
+  painel.html                        Painel administrativo, pensado para computador.
+  api.txt                            Copia textual da API do Google Apps Script.
+  HISTORICO_DESENVOLVIMENTO.txt      Este arquivo de continuidade.
+  assets\css\                       Estilos do app e do painel.
+  assets\js\                        Configuracao, dados compartilhados e logica das telas.
+  apps-script\api.gs                Fonte principal da API para Google Apps Script.
+  docs\                             Guia de planilha e guia de integracao.
+
+HISTORICO
+---------
+
+[08/07/2026] Base do PersonalPro criada
+- Criado o app do aluno em index.html com foco em celular e tablet.
+- Criado o painel administrativo em painel.html para uso no computador.
+- Criada camada local de dados em shared-data.js, com demonstracao, localStorage e sincronizacao opcional.
+- Criada configuracao de URL da API em app-config.js.
+
+[08/07/2026] Integracao com Google Sheets adicionada
+- Criado apps-script/api.gs como API REST em Google Apps Script.
+- A API cria ou completa automaticamente as abas: Alunos, Avaliacoes, Treinos, Exercicios,
+  Agenda, Pagamentos, Checkins, Usuarios, Config e Log.
+- Incluidos endpoints de setup, health, exportAll, importAll, upsert e delete.
+- Adicionados os guias docs/estrutura-planilha.md e docs/sheets-api-setup.md.
+
+[08/07/2026] Fluxo de matricula e acesso definido
+- A matricula do aluno nao inicia a camera automaticamente.
+- O aluno toca em "Fazer minha matricula" e entao escolhe ler o QR ou informar o codigo manualmente.
+- O QR de matricula e de uso unico; apos a conclusao, o token nao deve ser reutilizado.
+- O painel gera QR de matricula e QR de roleta por aluno.
+- Pagamento vencido, aluno pausado/inativo ou bloqueio manual impedem o QR de roleta.
+
+[08/07/2026] Recuperacao do diretorio
+- Os arquivos do projeto foram recriados em D:\PersonalPro apos exclusao acidental do diretorio original.
+- Validacao de sintaxe JavaScript realizada para os arquivos principais recuperados.
+
+[10/07/2026] Painel administrativo expandido
+- A ficha individual do aluno foi organizada em abas: Resumo, Cadastro, Treinos, Avaliacoes,
+  Agenda, Financeiro e Acessos.
+- Cadastro passou a registrar restricoes fisicas, plano, objetivo, politica de acesso e observacoes.
+- Treinos permitem criar, editar, duplicar, ativar e encerrar fichas A/B/C/D.
+- Avaliacoes calculam o IMC automaticamente, guardam medidas, links de fotos e exibem tendencia de peso.
+- Agenda permite marcar aulas presenciais/online, editar e marcar uma aula como realizada.
+- Financeiro permite criar mensalidades, editar cobrancas e marcar pagamento como pago.
+- Resumo individual mostra situacao de acesso, plano, proxima aula, avaliacao, treinos, mensalidade e check-ins.
+- O dashboard superior passou a mostrar alunos, ativos, aulas de hoje, cobrancas abertas, vencidos,
+  receita mensal e avaliacoes pendentes.
+
+[10/07/2026] Organizacao do projeto
+- Scripts movidos para assets/js.
+- Estilos movidos para assets/css.
+- API do Apps Script movida para apps-script/api.gs.
+- Guias movidos para docs.
+- index.html e painel.html foram atualizados para carregar os novos caminhos.
+- A raiz foi reservada para HTML e TXT, conforme solicitado.
+
+[10/07/2026] Redesign profissional do painel
+- O painel recebeu direcao visual de central de performance, com identidade em verde profundo e lima.
+- A tipografia foi atualizada para Sora e DM Mono, reforcando hierarquia de dados e leitura executiva.
+- O roster de alunos virou uma area operacional escura, com destaque claro para o aluno selecionado.
+- Indicadores, abas, formularios, registros, QR Codes e graficos receberam estados, espacos e contrastes refinados.
+- Foram adicionadas animacoes leves para entrada de cards e troca de abas, sem prejudicar a operacao.
+
+[10/07/2026] Validacao local
+- Verificada a sintaxe de todos os arquivos JavaScript em assets/js.
+- Verificado que api.txt e uma copia identica de apps-script/api.gs.
+- Verificados os caminhos de CSS e JavaScript nas duas paginas HTML.
+- O painel foi servido localmente e respondeu com status 200 para pagina, CSS e JavaScript.
+- A URL atualmente configurada do Google Apps Script respondeu 404 no teste de health. O frontend continua
+  funcional com dados locais, mas a integracao remota precisa de uma nova publicacao ou URL valida do Web App.
+
+ESTADO DA INTEGRACAO
+--------------------
+- A URL do Web App do Google Apps Script esta em assets/js/app-config.js.
+- O painel possui botoes para preparar a planilha e sincronizar os dados.
+- A demonstracao pode ser reiniciada pelos botoes "Restaurar demo".
+- Dados de demonstracao sao uteis para testar o fluxo completo antes de cadastrar alunos reais.
+
+PROXIMOS PONTOS RECOMENDADOS
+----------------------------
+- Implementar relatorios PDF de aluno, evolucao, frequencia e financeiro.
+- Criar uma area de check-in manual no painel, se o personal quiser registrar treino realizado pelo desktop.
+- Adicionar autenticacao real antes de uso publico com dados de alunos.
+- Substituir armazenamento local por controle de permissao no backend quando houver mais de um usuario.

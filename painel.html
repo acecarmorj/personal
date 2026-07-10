@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PersonalPro | Painel Desktop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/painel.css" />
+  </head>
+  <body>
+    <div class="dashboard-shell">
+      <header class="admin-header">
+        <div class="brand-row">
+          <span class="brand-mark">PP</span>
+          <div>
+            <p class="header-kicker">PersonalPro / Operacao</p>
+            <h1>Central de performance</h1>
+            <p>Alunos, treinos, pagamentos e acesso em uma unica visao.</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <a class="ghost-button" href="index.html">Abrir app do aluno</a>
+          <button class="ghost-button" id="newStudentButton">Novo aluno</button>
+          <button class="ghost-button" id="setupSheetsButton">Preparar Sheets</button>
+          <button class="ghost-button" id="syncSheetsButton">Sincronizar Sheets</button>
+          <button class="primary-button" id="resetDemoButton">Restaurar demo</button>
+        </div>
+      </header>
+
+      <section class="overview-grid" id="metricGrid"></section>
+
+      <section class="workspace-grid">
+        <article class="dashboard-card list-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Operacao</p>
+              <h2>Alunos e acessos</h2>
+            </div>
+            <div class="toolbar">
+              <button class="filter-button active" data-filter="todos">Todos</button>
+              <button class="filter-button" data-filter="ativos">Liberados</button>
+              <button class="filter-button" data-filter="bloqueados">Bloqueados</button>
+              <button class="filter-button" data-filter="pendentes">Matricula pendente</button>
+            </div>
+          </div>
+          <div id="studentRoster" class="roster-list"></div>
+        </article>
+
+        <article class="dashboard-card detail-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Gestao central</p>
+              <h2 id="workspaceTitle">Selecione um aluno</h2>
+            </div>
+          </div>
+
+          <div id="workspaceEmpty" class="empty-state">
+            Selecione um aluno na lista para gerenciar matricula, mensalidade e QR de acesso.
+          </div>
+
+          <div id="workspaceContent" hidden>
+            <div class="student-tabs" role="tablist" aria-label="Gestao do aluno">
+              <button class="student-tab active" type="button" role="tab" aria-selected="true" aria-controls="tabResumo" data-panel-tab="resumo">Resumo</button>
+              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabCadastro" data-panel-tab="cadastro">Cadastro</button>
+              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabTreinos" data-panel-tab="treinos">Treinos</button>
+              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabAvaliacoes" data-panel-tab="avaliacoes">Avaliacoes</button>
+              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabAgenda" data-panel-tab="agenda">Agenda</button>
+              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabFinanceiro" data-panel-tab="financeiro">Financeiro</button>
+              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabAcessos" data-panel-tab="acessos">Acessos</button>
+            </div>
+
+            <section class="student-tab-panel active" id="tabResumo" data-panel="resumo" role="tabpanel">
+              <div id="studentSummary" class="student-summary-grid"></div>
+              <section class="sub-card module-card">
+                <div class="section-head compact-head">
+                  <div>
+                    <p class="eyebrow">Linha do tempo</p>
+                    <h3>Treinos, agenda e acessos</h3>
+                  </div>
+                </div>
+                <div id="studentTimeline" class="timeline-list"></div>
+              </section>
+            </section>
+
+            <section class="student-tab-panel" id="tabCadastro" data-panel="cadastro" role="tabpanel" hidden>
+              <section class="sub-card module-card">
+                <div class="section-head compact-head">
+                  <div>
+                    <p class="eyebrow">Perfil do aluno</p>
+                    <h3>Cadastro e preferencias de acesso</h3>
+                  </div>
+                </div>
+                <form id="studentForm" class="form-grid">
+                  <input type="hidden" name="id" />
+                  <label>
+                    Nome
+                    <input type="text" name="name" required />
+                  </label>
+                  <label>
+                    Telefone
+                    <input type="tel" name="phone" required />
+                  </label>
+                  <label>
+                    E-mail
+                    <input type="email" name="email" required />
+                  </label>
+                  <label>
+                    Data de nascimento
+                    <input type="date" name="birthDate" />
+                  </label>
+                  <label>
+                    Objetivo
+                    <input type="text" name="goal" placeholder="Ex.: hipertrofia" />
+                  </label>
+                  <label>
+                    Plano
+                    <input type="text" name="plan" placeholder="Ex.: 3x por semana" />
+                  </label>
+                  <label>
+                    Valor mensal
+                    <input type="number" step="0.01" min="0" name="monthlyFee" />
+                  </label>
+                  <label>
+                    Status do aluno
+                    <select name="status">
+                      <option value="ativo">Ativo</option>
+                      <option value="pausado">Pausado</option>
+                      <option value="inativo">Inativo</option>
+                    </select>
+                  </label>
+                  <label>
+                    Status da matricula
+                    <select name="enrollmentStatus">
+                      <option value="pendente">Pendente</option>
+                      <option value="ativo">Ativo</option>
+                    </select>
+                  </label>
+                  <label>
+                    Politica de acesso
+                    <select name="appAccessPolicy">
+                      <option value="auto">Automatico pelo financeiro</option>
+                      <option value="liberado">Liberado manualmente</option>
+                      <option value="bloqueado">Bloqueado manualmente</option>
+                    </select>
+                  </label>
+                  <label class="full">
+                    Restricoes fisicas
+                    <textarea name="restrictions" rows="3" placeholder="Lesoes, dores, limitacoes e cuidados importantes."></textarea>
+                  </label>
+                  <label class="full">
+                    Motivo do bloqueio ou observacao
+                    <textarea name="accessBlockReason" rows="3"></textarea>
+                  </label>
+                  <label class="full">
+                    Observacoes gerais
+                    <textarea name="notes" rows="3"></textarea>
+                  </label>
+                  <div class="form-actions full">
+                    <button type="submit" class="primary-button">Salvar aluno</button>
+                  </div>
+                </form>
+              </section>
+            </section>
+
+            <section class="student-tab-panel" id="tabTreinos" data-panel="treinos" role="tabpanel" hidden>
+              <div class="module-grid">
+                <section class="sub-card module-card">
+                  <div class="section-head compact-head">
+                    <div>
+                      <p class="eyebrow">Ficha de treino</p>
+                      <h3>Criar ou editar treino</h3>
+                    </div>
+                    <button class="ghost-button" type="button" id="newWorkoutButton">Novo treino</button>
+                  </div>
+                  <form id="workoutForm" class="form-grid">
+                    <input type="hidden" name="id" />
+                    <input type="hidden" name="studentId" />
+                    <label>
+                      Nome do treino
+                      <input type="text" name="title" required placeholder="Ex.: Treino A - Superiores" />
+                    </label>
+                    <label>
+                      Divisao
+                      <select name="division">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                      </select>
+                    </label>
+                    <label>
+                      Grupo muscular
+                      <input type="text" name="muscleGroup" placeholder="Ex.: Peito e triceps" />
+                    </label>
+                    <label>
+                      Status
+                      <select name="status">
+                        <option value="ativo">Ativo</option>
+                        <option value="encerrado">Encerrado</option>
+                      </select>
+                    </label>
+                    <label class="full">
+                      Exercicios
+                      <textarea name="exercises" rows="4" required placeholder="Um exercicio por linha ou separado por virgula."></textarea>
+                    </label>
+                    <label>
+                      Series
+                      <input type="text" name="sets" placeholder="Ex.: 4x" />
+                    </label>
+                    <label>
+                      Repeticoes
+                      <input type="text" name="reps" placeholder="Ex.: 8-12" />
+                    </label>
+                    <label>
+                      Carga de referencia
+                      <input type="text" name="load" placeholder="Ex.: 30 kg" />
+                    </label>
+                    <label>
+                      Intervalo
+                      <input type="text" name="rest" placeholder="Ex.: 60 s" />
+                    </label>
+                    <label class="full">
+                      Observacoes
+                      <textarea name="notes" rows="3"></textarea>
+                    </label>
+                    <div class="form-actions full">
+                      <button type="submit" class="primary-button">Salvar treino</button>
+                    </div>
+                  </form>
+                </section>
+
+                <section class="sub-card module-card">
+                  <div class="section-head compact-head">
+                    <div>
+                      <p class="eyebrow">Biblioteca do aluno</p>
+                      <h3>Treinos cadastrados</h3>
+                    </div>
+                  </div>
+                  <div id="workoutList" class="record-list"></div>
+                </section>
+              </div>
+            </section>
+
+            <section class="student-tab-panel" id="tabAvaliacoes" data-panel="avaliacoes" role="tabpanel" hidden>
+              <div class="module-grid">
+                <section class="sub-card module-card">
+                  <div class="section-head compact-head">
+                    <div>
+                      <p class="eyebrow">Avaliacao fisica</p>
+                      <h3>Registrar medidas</h3>
+                    </div>
+                    <button class="ghost-button" type="button" id="newAssessmentButton">Nova avaliacao</button>
+                  </div>
+                  <form id="assessmentForm" class="form-grid">
+                    <input type="hidden" name="id" />
+                    <input type="hidden" name="studentId" />
+                    <label>
+                      Data
+                      <input type="date" name="date" required />
+                    </label>
+                    <label>
+                      Peso (kg)
+                      <input type="number" step="0.1" min="0" name="weight" required />
+                    </label>
+                    <label>
+                      Altura (m)
+                      <input type="number" step="0.01" min="0" name="height" required />
+                    </label>
+                    <label>
+                      IMC calculado
+                      <input type="number" step="0.01" name="imc" readonly />
+                    </label>
+                    <label>
+                      Gordura corporal (%)
+                      <input type="number" step="0.1" min="0" name="bodyFat" />
+                    </label>
+                    <label>
+                      Peitoral (cm)
+                      <input type="number" step="0.1" min="0" name="chest" />
+                    </label>
+                    <label>
+                      Cintura (cm)
+                      <input type="number" step="0.1" min="0" name="waist" />
+                    </label>
+                    <label>
+                      Quadril (cm)
+                      <input type="number" step="0.1" min="0" name="hip" />
+                    </label>
+                    <label>
+                      Braco (cm)
+                      <input type="number" step="0.1" min="0" name="arm" />
+                    </label>
+                    <label>
+                      Coxa (cm)
+                      <input type="number" step="0.1" min="0" name="thigh" />
+                    </label>
+                    <label class="full">
+                      Fotos de evolucao (links)
+                      <textarea name="photos" rows="2" placeholder="Cole links das fotos, separados por virgula."></textarea>
+                    </label>
+                    <label class="full">
+                      Observacoes
+                      <textarea name="notes" rows="3"></textarea>
+                    </label>
+                    <div class="form-actions full">
+                      <button type="submit" class="primary-button">Salvar avaliacao</button>
+                    </div>
+                  </form>
+                </section>
+
+                <section class="sub-card module-card">
+                  <div class="section-head compact-head">
+                    <div>
+                      <p class="eyebrow">Evolucao</p>
+                      <h3>Historico e tendencia</h3>
+                    </div>
+                  </div>
+                  <div id="assessmentEvolution" class="evolution-chart"></div>
+                  <div id="assessmentList" class="record-list"></div>
+                </section>
+              </div>
+            </section>
+
+            <section class="student-tab-panel" id="tabAgenda" data-panel="agenda" role="tabpanel" hidden>
+              <div class="module-grid">
+                <section class="sub-card module-card">
+                  <div class="section-head compact-head">
+                    <div>
+                      <p class="eyebrow">Agenda</p>
+                      <h3>Marcar aula</h3>
+                    </div>
+                    <button class="ghost-button" type="button" id="newScheduleButton">Nova aula</button>
+                  </div>
+                  <form id="scheduleForm" class="form-grid">
+                    <input type="hidden" name="id" />
+                    <input type="hidden" name="studentId" />
+                    <label>
+                      Data
+                      <input type="date" name="date" required />
+                    </label>
+                    <label>
+                      Horario
+                      <input type="time" name="time" required />
+                    </label>
+                    <label>
+                      Modalidade
+                      <select name="type">
+                        <option value="presencial">Presencial</option>
+                        <option value="online">Online</option>
+                      </select>
+                    </label>
+                    <label>
+                      Status
+                      <select name="status">
+                        <option value="marcada">Marcada</option>
+                        <option value="realizada">Realizada</option>
+                        <option value="falta">Falta</option>
+                        <option value="remarcada">Remarcada</option>
+                        <option value="cancelada">Cancelada</option>
+                      </select>
+                    </label>
+                    <label class="full">
+                      Observacoes
+                      <textarea name="notes" rows="4" placeholder="Detalhes da sessao, local ou lembretes."></textarea>
+                    </label>
+                    <div class="form-actions full">
+                      <button type="submit" class="primary-button">Salvar aula</button>
+                    </div>
+                  </form>
+                </section>
+
+                <section class="sub-card module-card">
+                  <div class="section-head compact-head">
+                    <div>
+                      <p class="eyebrow">Proximas aulas</p>
+                      <h3>Agenda do aluno</h3>
+                    </div>
+                  </div>
+                  <div id="scheduleList" class="record-list"></div>
+                </section>
+              </div>
+            </section>
+
+            <section class="student-tab-panel" id="tabFinanceiro" data-panel="financeiro" role="tabpanel" hidden>
+              <div class="module-grid">
+                <section class="sub-card module-card">
+                  <div class="section-head compact-head">
+                    <div>
+                      <p class="eyebrow">Financeiro</p>
+                      <h3>Mensalidade selecionada</h3>
+                    </div>
+                    <button class="ghost-button" type="button" id="newPaymentButton">Nova mensalidade</button>
+                  </div>
+                  <form id="paymentForm" class="form-grid">
+                    <input type="hidden" name="id" />
+                    <input type="hidden" name="studentId" />
+                    <label>
+                      Competencia
+                      <input type="month" name="reference" required />
+                    </label>
+                    <label>
+                      Valor
+                      <input type="number" step="0.01" min="0" name="amount" required />
+                    </label>
+                    <label>
+                      Vencimento
+                      <input type="date" name="dueDate" required />
+                    </label>
+                    <label>
+                      Status
+                      <select name="status">
+                        <option value="pago">Pago</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="vencido">Vencido</option>
+                      </select>
+                    </label>
+                    <label>
+                      Metodo
+                      <select name="method">
+                        <option value="pix">Pix</option>
+                        <option value="cartao">Cartao</option>
+                        <option value="boleto">Boleto</option>
+                        <option value="dinheiro">Dinheiro</option>
+                      </select>
+                    </label>
+                    <label class="full">
+                      Observacoes
+                      <textarea name="notes" rows="3"></textarea>
+                    </label>
+                    <div class="form-actions full">
+                      <button type="submit" class="primary-button">Salvar mensalidade</button>
+                    </div>
+                  </form>
+                </section>
+
+                <section class="sub-card module-card">
+                  <div class="section-head compact-head">
+                    <div>
+                      <p class="eyebrow">Historico financeiro</p>
+                      <h3>Cobrancas do aluno</h3>
+                    </div>
+                  </div>
+                  <div id="paymentHistory" class="record-list"></div>
+                </section>
+              </div>
+            </section>
+
+            <section class="student-tab-panel" id="tabAcessos" data-panel="acessos" role="tabpanel" hidden>
+              <div class="double-grid">
+                <section class="sub-card module-card">
+                  <div class="section-head compact-head">
+                    <div>
+                      <p class="eyebrow">Matricula</p>
+                      <h3>QR da primeira matricula</h3>
+                    </div>
+                    <button class="ghost-button" type="button" id="regenEnrollmentButton">Reemitir QR de matricula</button>
+                  </div>
+                  <div class="code-box" id="enrollmentCodeBox"></div>
+                  <div class="qr-box" id="enrollmentQr"></div>
+                </section>
+
+                <section class="sub-card module-card">
+                  <div class="section-head compact-head">
+                    <div>
+                      <p class="eyebrow">Roleta</p>
+                      <h3>QR de acesso do aluno</h3>
+                    </div>
+                    <button class="ghost-button" type="button" id="regenGateButton">Regenerar QR da roleta</button>
+                  </div>
+                  <div class="code-box" id="gateCodeBox"></div>
+                  <div class="qr-box" id="gateQr"></div>
+                  <div id="gateStateBox" class="helper-block"></div>
+                </section>
+              </div>
+            </section>
+          </div>
+        </article>
+      </section>
+
+      <section class="footer-grid">
+        <article class="dashboard-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Alertas</p>
+              <h2>Financeiro e bloqueios</h2>
+            </div>
+          </div>
+          <div id="alertBoard" class="timeline-list"></div>
+        </article>
+
+        <article class="dashboard-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Atividade recente</p>
+              <h2>Historico do sistema</h2>
+            </div>
+          </div>
+          <div id="logBoard" class="timeline-list"></div>
+        </article>
+      </section>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="assets/js/app-config.js"></script>
+    <script src="assets/js/shared-data.js"></script>
+    <script src="assets/js/painel.js"></script>
+  </body>
+</html>

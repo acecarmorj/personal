@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PersonalPro | App do Aluno</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+  </head>
+  <body>
+    <div class="student-shell">
+      <header class="mobile-header">
+        <div class="brand-lockup">
+          <span class="brand-mark">PP</span>
+          <div>
+            <strong>PersonalPro Aluno</strong>
+            <p>Matricula, acesso e rotina no celular</p>
+          </div>
+        </div>
+        <div class="header-links">
+          <button class="ghost-button" id="restoreDemoButton">Restaurar demo</button>
+          <a class="header-link" href="painel.html">Painel desktop</a>
+        </div>
+      </header>
+
+      <main class="student-main">
+        <section id="onboardingView" class="view-section">
+          <article class="hero-panel">
+            <div>
+              <p class="eyebrow">Matricula inteligente</p>
+              <h1>Primeiro acesso do aluno direto no celular.</h1>
+              <p>
+                Quando o aluno chega na academia pela primeira vez, ele toca em
+                <strong>Fazer minha matricula</strong> e segue o fluxo com QR Code
+                ou codigo manual. Nada abre automaticamente ao entrar no app.
+              </p>
+            </div>
+            <div class="hero-mini-cards">
+              <article class="mini-card">
+                <span>1</span>
+                <strong>Ler QR</strong>
+                <p>Use a camera para abrir a matricula.</p>
+              </article>
+              <article class="mini-card">
+                <span>2</span>
+                <strong>Confirmar dados</strong>
+                <p>Finalize seu cadastro em poucos campos.</p>
+              </article>
+              <article class="mini-card">
+                <span>3</span>
+                <strong>Liberar acesso</strong>
+                <p>Receba o QR para a roleta conforme o painel.</p>
+              </article>
+            </div>
+          </article>
+
+          <div class="stack-grid">
+            <article class="app-card">
+              <div class="section-title">
+                <div>
+                  <p class="eyebrow">Entrada</p>
+                  <h2>Comecar matricula</h2>
+                </div>
+              </div>
+              <p class="helper-text">
+                No primeiro acesso, o aluno escolhe iniciar a matricula. Depois disso,
+                aparecem as opcoes para ler o QR ou informar o codigo.
+              </p>
+              <div class="action-row">
+                <button class="primary-button" id="openEnrollmentButton">Fazer minha matricula</button>
+              </div>
+              <div id="enrollmentStartActions" hidden>
+                <p class="helper-note">
+                  Esse QR inicial funciona uma unica vez, apenas para a primeira matricula do aluno.
+                </p>
+                <div class="action-row">
+                  <button class="primary-button" id="startScanButton">Ler QR de matricula</button>
+                  <button class="ghost-button" id="stopScanButton" hidden>Fechar camera</button>
+                </div>
+                <form id="manualEnrollmentForm" class="compact-form">
+                  <label>
+                    Codigo de matricula
+                    <input type="text" name="enrollmentCode" placeholder="MAT-LUCAS02 ou payload do QR" required />
+                  </label>
+                  <button type="submit" class="primary-button">Validar codigo</button>
+                </form>
+                <p class="helper-note" id="onboardingHint">
+                  Dica de teste: abra o painel, selecione um aluno pendente e use o QR ou o codigo de matricula exibido la.
+                </p>
+              </div>
+            </article>
+
+            <article class="app-card" id="enrollmentCard" hidden>
+              <div class="section-title">
+                <div>
+                  <p class="eyebrow">Confirmacao</p>
+                  <h2>Finalizar matricula</h2>
+                </div>
+              </div>
+              <form id="enrollmentForm" class="compact-form">
+                <input type="hidden" name="studentId" />
+                <label>
+                  Nome
+                  <input type="text" name="name" required />
+                </label>
+                <label>
+                  Telefone
+                  <input type="tel" name="phone" required />
+                </label>
+                <label>
+                  E-mail
+                  <input type="email" name="email" required />
+                </label>
+                <label>
+                  Data de nascimento
+                  <input type="date" name="birthDate" required />
+                </label>
+                <label>
+                  Objetivo
+                  <input type="text" name="goal" required />
+                </label>
+                <label class="checkbox-row">
+                  <input type="checkbox" name="acceptTerms" required />
+                  <span>Confirmo meus dados e autorizo o uso deste celular para acesso.</span>
+                </label>
+                <div class="action-row">
+                  <button type="submit" class="primary-button">Concluir matricula</button>
+                  <button type="button" class="ghost-button" id="cancelEnrollmentButton">Cancelar</button>
+                </div>
+              </form>
+            </article>
+          </div>
+        </section>
+
+        <section id="studentView" class="view-section" hidden>
+          <article class="hero-panel status-hero" id="studentHero"></article>
+
+          <nav class="student-nav">
+            <button class="nav-pill active" data-screen="home">Inicio</button>
+            <button class="nav-pill" data-screen="access">Acesso</button>
+            <button class="nav-pill" data-screen="workouts">Treinos</button>
+            <button class="nav-pill" data-screen="agenda">Agenda</button>
+            <button class="nav-pill" data-screen="profile">Perfil</button>
+          </nav>
+
+          <section class="student-screen active" id="homeScreen">
+            <div class="stack-grid">
+              <article class="app-card">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">Resumo do dia</p>
+                    <h2>Seu painel rapido</h2>
+                  </div>
+                </div>
+                <div class="summary-grid" id="homeSummary"></div>
+              </article>
+
+              <article class="app-card" id="homeAlerts"></article>
+            </div>
+          </section>
+
+          <section class="student-screen" id="accessScreen">
+            <article class="app-card access-card">
+              <div class="section-title">
+                <div>
+                  <p class="eyebrow">Acesso na academia</p>
+                  <h2>QR Code da roleta</h2>
+                </div>
+                <button class="ghost-button" id="refreshGateQrButton">Atualizar QR</button>
+              </div>
+              <div class="qr-layout">
+                <div class="qr-box" id="gateQrContainer"></div>
+                <div class="qr-details" id="gateAccessDetails"></div>
+              </div>
+            </article>
+          </section>
+
+          <section class="student-screen" id="workoutsScreen">
+            <article class="app-card">
+              <div class="section-title">
+                <div>
+                  <p class="eyebrow">Rotina</p>
+                  <h2>Treinos ativos</h2>
+                </div>
+              </div>
+              <div class="card-stack" id="workoutCards"></div>
+            </article>
+          </section>
+
+          <section class="student-screen" id="agendaScreen">
+            <article class="app-card">
+              <div class="section-title">
+                <div>
+                  <p class="eyebrow">Compromissos</p>
+                  <h2>Agenda e presencas</h2>
+                </div>
+              </div>
+              <div class="card-stack" id="scheduleCards"></div>
+            </article>
+          </section>
+
+          <section class="student-screen" id="profileScreen">
+            <div class="stack-grid">
+              <article class="app-card" id="profileCard"></article>
+              <article class="app-card" id="financeCard"></article>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div class="scanner-modal" id="scannerModal" hidden>
+      <div class="scanner-card">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Camera</p>
+            <h2>Leia o QR de matricula</h2>
+          </div>
+          <button class="ghost-button" id="closeScannerButton">Fechar</button>
+        </div>
+        <video id="scannerVideo" autoplay playsinline muted></video>
+        <p class="helper-note" id="scannerHint">
+          Se a camera nao abrir ou o navegador nao suportar leitura nativa, use o campo manual.
+        </p>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="assets/js/app-config.js"></script>
+    <script src="assets/js/shared-data.js"></script>
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>
