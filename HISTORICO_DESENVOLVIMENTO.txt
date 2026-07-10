@@ -83,6 +83,13 @@ HISTORICO
 - A URL atualmente configurada do Google Apps Script respondeu 404 no teste de health. O frontend continua
   funcional com dados locais, mas a integracao remota precisa de uma nova publicacao ou URL valida do Web App.
 
+[10/07/2026] Repositorio e publicacao
+- Criado o repositorio publico https://github.com/acecarmorj/personal.
+- Criado o fluxo .github/workflows/deploy-pages.yml para publicar automaticamente a cada envio para main.
+- GitHub Pages habilitado em modo workflow.
+- Site publicado em https://acecarmorj.github.io/personal/.
+- A publicacao da API no Google Apps Script permanece pendente de autenticacao da conta Google nesta maquina.
+
 ESTADO DA INTEGRACAO
 --------------------
 - A URL do Web App do Google Apps Script esta em assets/js/app-config.js.
