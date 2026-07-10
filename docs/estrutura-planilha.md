@@ -36,7 +36,11 @@ completam a estrutura da mesma planilha. A API nao cria outra planilha automatic
 `id`, `name`, `muscleGroup`, `equipment`, `videoUrl`, `notes`
 
 ### `Agenda`
-`id`, `studentId`, `date`, `time`, `type`, `status`, `notes`
+`id`, `studentId`, `date`, `time`, `type`, `status`, `notes`, `title`, `category`, `dayOfWeek`, `startTime`, `endTime`, `teacherId`, `teacherName`, `location`, `capacity`, `recurring`, `scheduleKind`
+
+- Aulas individuais usam `studentId`, `date`, `time` e os status da agenda do aluno.
+- A grade fixa usa `scheduleKind = weekly-class`, `recurring = true` e `dayOfWeek` de `0` (domingo) a `6` (sabado).
+- `teacherId` fica preparado para o futuro modulo Professores; `teacherName` permite uso imediato no painel.
 
 ### `Pagamentos`
 `id`, `studentId`, `reference`, `amount`, `dueDate`, `status`, `method`, `paidAt`, `notes`

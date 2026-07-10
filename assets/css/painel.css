@@ -32,7 +32,10 @@ html {
 }
 
 body {
-  min-width: 320px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   margin: 0;
   color: var(--ink);
   font-family: "Sora", sans-serif;
@@ -250,7 +253,7 @@ button {
 .main-section-nav {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 5px;
   padding: 5px;
   border: 1px solid rgba(255, 255, 255, 0.82);
@@ -541,6 +544,419 @@ select:focus-visible {
   grid-column: span 5;
 }
 
+.section-description {
+  max-width: 680px;
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.weekly-overview-card {
+  min-width: 0;
+  padding: 23px;
+}
+
+.weekly-overview-head {
+  align-items: flex-start;
+}
+
+.weekly-overview-layout {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.weekly-calendar-panel {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: #f4f4f0;
+}
+
+.weekly-day-selector {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+  margin-bottom: 12px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.weekly-day-button {
+  min-width: 0;
+  min-height: 42px;
+  padding: 7px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+}
+
+.weekly-day-button span {
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+
+.weekly-day-button small {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: #64655f;
+  font-family: "DM Mono", monospace;
+  font-size: 0.57rem;
+  background: #eeeeea;
+}
+
+.weekly-day-button:hover,
+.weekly-day-button.active {
+  color: var(--lime-ink);
+  background: var(--lime);
+}
+
+.weekly-day-button.active small {
+  color: var(--lime);
+  background: var(--forest);
+}
+
+.weekly-calendar {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(145px, 1fr));
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scrollbar-width: thin;
+}
+
+.weekly-day-column {
+  min-width: 0;
+  min-height: 250px;
+  padding: 10px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.weekly-day-column > header {
+  display: grid;
+  gap: 3px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--line);
+}
+
+.weekly-day-column > header span {
+  color: var(--primary-deep);
+  font-family: "DM Mono", monospace;
+  font-size: 0.59rem;
+  text-transform: uppercase;
+}
+
+.weekly-day-column > header strong {
+  font-size: 0.72rem;
+}
+
+.weekly-day-classes,
+.upcoming-class-list,
+.weekly-admin-list {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.weekly-class-card {
+  min-width: 0;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  border: 1px solid rgba(221, 178, 0, 0.2);
+  border-radius: 12px;
+  background: linear-gradient(145deg, #fffdf1, #fff9d7);
+}
+
+.weekly-class-time {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  color: var(--primary-deep);
+  font-family: "DM Mono", monospace;
+}
+
+.weekly-class-time strong {
+  font-size: 0.66rem;
+}
+
+.weekly-class-time span {
+  color: var(--muted);
+  font-size: 0.55rem;
+}
+
+.weekly-class-info {
+  min-width: 0;
+}
+
+.weekly-class-info > span {
+  display: block;
+  color: var(--primary-deep);
+  font-family: "DM Mono", monospace;
+  font-size: 0.52rem;
+  text-transform: uppercase;
+}
+
+.weekly-class-info h4,
+.upcoming-class-item h4 {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.weekly-class-info p,
+.weekly-class-info small,
+.upcoming-class-item p {
+  display: block;
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.59rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.weekly-day-empty {
+  padding: 18px 8px;
+  color: #999a94;
+  font-size: 0.65rem;
+  text-align: center;
+}
+
+.upcoming-classes-panel {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(34, 35, 31, 0.14);
+  border-radius: var(--radius-lg);
+  color: #f8f8f5;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(244, 201, 40, 0.18), transparent 10rem),
+    linear-gradient(145deg, #23241f, #3c3d37);
+}
+
+.upcoming-panel-head {
+  margin-bottom: 14px;
+  display: grid;
+  gap: 7px;
+}
+
+.upcoming-panel-head h3 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.upcoming-classes-panel .live-indicator {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.upcoming-class-item {
+  min-width: 0;
+  padding: 11px;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.upcoming-class-date {
+  min-height: 46px;
+  display: grid;
+  place-content: center;
+  gap: 2px;
+  border-radius: 10px;
+  color: var(--lime-ink);
+  text-align: center;
+  background: var(--lime);
+}
+
+.upcoming-class-date strong {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+}
+
+.upcoming-class-date span {
+  font-family: "DM Mono", monospace;
+  font-size: 0.53rem;
+}
+
+.upcoming-class-item > div:last-child > span {
+  color: var(--lime);
+  font-family: "DM Mono", monospace;
+  font-size: 0.57rem;
+}
+
+.upcoming-class-item h4 {
+  color: #fff;
+}
+
+.upcoming-class-item p {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.weekly-management-section {
+  animation: panel-in 0.32s ease both;
+}
+
+.weekly-management-hero {
+  padding: 23px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background:
+    radial-gradient(circle at 85% 10%, rgba(244, 201, 40, 0.28), transparent 13rem),
+    linear-gradient(120deg, #fbfbf8, #fff4bd);
+}
+
+.weekly-management-hero h2 {
+  margin: 5px 0 0;
+  font-size: clamp(1.35rem, 2.8vw, 2rem);
+  letter-spacing: -0.05em;
+}
+
+.weekly-management-hero p:not(.eyebrow) {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.weekly-management-layout {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(340px, 410px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.weekly-editor-card,
+.weekly-admin-list-card {
+  min-width: 0;
+  padding: 22px;
+}
+
+.weekly-editor-card {
+  position: sticky;
+  top: 18px;
+}
+
+.weekly-form-actions {
+  gap: 8px;
+}
+
+.weekly-admin-filters {
+  display: grid;
+  grid-template-columns: 190px minmax(190px, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--surface-muted);
+}
+
+.weekly-admin-filters label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-family: "DM Mono", monospace;
+  font-size: 0.61rem;
+}
+
+.weekly-admin-filters input,
+.weekly-admin-filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.weekly-admin-item {
+  min-width: 0;
+  padding: 13px;
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 13px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #fbfbf8;
+}
+
+.weekly-admin-item.inactive {
+  opacity: 0.64;
+  background: #f0f0ec;
+}
+
+.weekly-admin-day {
+  min-height: 68px;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  border-radius: 12px;
+  color: var(--lime-ink);
+  text-align: center;
+  background: var(--lime);
+}
+
+.weekly-admin-day strong {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.weekly-admin-day span {
+  font-family: "DM Mono", monospace;
+  font-size: 0.62rem;
+}
+
+.weekly-admin-info {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.weekly-admin-info p,
+.weekly-admin-info small {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.danger-button {
+  color: #993d36;
+  border-color: rgba(178, 76, 68, 0.22);
+  background: #fff6f4;
+}
+
 .finance-section {
   animation: panel-in 0.32s ease both;
 }
@@ -674,6 +1090,8 @@ select:focus-visible {
 }
 
 .finance-layout {
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 390px);
   gap: 18px;
@@ -684,6 +1102,16 @@ select:focus-visible {
   min-width: 0;
   display: grid;
   gap: 18px;
+}
+
+.finance-section,
+.finance-layout > *,
+.finance-chart-card,
+.finance-list-card,
+.finance-editor,
+.finance-table {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .finance-chart-card,
@@ -1304,10 +1732,32 @@ select:focus-visible {
 }
 
 .workspace-grid {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   grid-template-columns: minmax(310px, 375px) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
+}
+
+.operation-section,
+.workspace-grid > *,
+.list-card,
+.detail-card,
+#workspaceContent,
+.student-tab-panel,
+.student-summary-grid,
+.module-grid,
+.double-grid,
+.module-grid > *,
+.double-grid > *,
+.sub-card,
+.record-list,
+.timeline-list,
+.roster-list {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .footer-grid {
@@ -1347,6 +1797,12 @@ select:focus-visible {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 17px;
+}
+
+.section-head > div,
+.meta-row > div,
+.record-head > div {
+  min-width: 0;
 }
 
 .compact-head {
@@ -1453,6 +1909,7 @@ select:focus-visible {
 .roster-item strong {
   color: var(--ink);
   font-size: 0.91rem;
+  overflow-wrap: anywhere;
 }
 
 .roster-item p,
@@ -1738,6 +2195,7 @@ select:focus-visible {
   color: var(--muted);
   font-size: 0.82rem;
   line-height: 1.58;
+  overflow-wrap: anywhere;
 }
 
 .record-meta span {
@@ -1783,6 +2241,8 @@ select:focus-visible {
 .code-box {
   font-size: 0.82rem;
   line-height: 1.55;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .detail-copy {
@@ -1957,10 +2417,18 @@ select:focus-visible {
   }
 
   .finance-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .finance-editor {
+    position: static;
+  }
+
+  .weekly-management-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .weekly-editor-card {
     position: static;
   }
 }
@@ -1972,6 +2440,10 @@ select:focus-visible {
 
   .academy-visual {
     min-height: 260px;
+  }
+
+  .weekly-overview-layout {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2003,6 +2475,41 @@ select:focus-visible {
   .footer-grid .dashboard-card,
   .list-card {
     padding: 17px;
+  }
+
+  .operation-section,
+  .operation-section .workspace-grid,
+  .operation-section .footer-grid,
+  .operation-section .detail-card,
+  .operation-section .list-card {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .operation-section .student-tabs {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .weekly-calendar {
+    display: block;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .weekly-day-column {
+    display: none;
+  }
+
+  .weekly-day-column.mobile-active {
+    min-height: 0;
+    display: grid;
+  }
+
+  .weekly-management-hero {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .overview-grid {
@@ -2078,6 +2585,12 @@ select:focus-visible {
   }
 }
 
+@media (max-width: 700px) {
+  .main-section-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 540px) {
   .brand-mark {
     width: 48px;
@@ -2122,6 +2635,44 @@ select:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .operation-section .toolbar,
+  .operation-section .form-actions {
+    width: 100%;
+  }
+
+  .operation-section .filter-button {
+    min-width: 0;
+    flex: 1 1 calc(50% - 4px);
+  }
+
+  .operation-section .form-actions .primary-button {
+    width: 100%;
+  }
+
+  .operation-section .student-summary-grid,
+  .operation-section .module-grid,
+  .operation-section .double-grid,
+  .operation-section .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .operation-section .sub-card,
+  .operation-section .detail-card,
+  .operation-section .list-card,
+  .operation-section .footer-grid .dashboard-card {
+    padding: 14px;
+  }
+
+  .operation-section .code-box,
+  .operation-section .helper-block {
+    font-size: 0.72rem;
+  }
+
+  .operation-section .qr-box {
+    min-height: 0;
+    padding: 12px;
+  }
+
   .overview-lead-actions,
   .overview-lead-actions .primary-button {
     width: 100%;
@@ -2139,10 +2690,58 @@ select:focus-visible {
     min-height: 52px;
   }
 
+  .weekly-overview-card,
+  .weekly-editor-card,
+  .weekly-admin-list-card,
+  .weekly-management-hero {
+    padding: 14px;
+  }
+
+  .weekly-day-selector {
+    gap: 3px;
+    padding: 4px;
+  }
+
+  .weekly-day-button {
+    min-height: 38px;
+    padding: 5px 2px;
+    gap: 3px;
+  }
+
+  .weekly-day-button span {
+    font-size: 0.6rem;
+  }
+
+  .weekly-day-button small {
+    width: 17px;
+    height: 17px;
+    font-size: 0.52rem;
+  }
+
+  .weekly-admin-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .weekly-admin-item {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .weekly-admin-day {
+    min-height: 58px;
+  }
+
+  .weekly-form-actions,
+  .weekly-form-actions .ghost-button,
+  .weekly-form-actions .primary-button {
+    width: 100%;
+  }
+
   .finance-overview-grid,
   .finance-filters,
   .finance-table-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .finance-search-field {

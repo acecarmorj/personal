@@ -174,3 +174,26 @@ PROXIMOS PONTOS RECOMENDADOS
 - O modulo Alunos sera aprofundado depois da conclusao do administrativo, incluindo matricula, treinos e acesso.
 - O modulo Professores sera desenvolvido na etapa seguinte, com funcoes e permissoes proprias.
 - Novas funcionalidades devem respeitar essa separacao para evitar misturar dados, telas e permissoes dos perfis.
+
+[10/07/2026] Correcao responsiva de Alunos e treinos
+- Corrigido o transbordamento lateral da area Alunos e treinos no celular.
+- Containers, fichas, formularios, listas, codigos de QR e textos longos passaram a respeitar 100% da largura.
+- Filtros e botoes de formulario foram reorganizados para telas pequenas.
+- Todas as abas internas foram testadas em 320 px: Resumo, Cadastro, Treinos, Avaliacoes, Agenda e Acessos.
+- A mesma auditoria removeu um limite interno do grafico financeiro que aparecia apenas em 320 px.
+- Visao geral, Alunos e treinos, Grade semanal e Financeiro ficaram sem rolagem lateral da pagina.
+
+[10/07/2026] Grade semanal de atividades
+- Criada a nova area principal Grade semanal no painel administrativo.
+- Adicionado cadastro de atividade, modalidade, dia, inicio, termino, professor, local, capacidade, status e observacoes.
+- Horarios podem ser criados, editados, ativados, desativados, filtrados, pesquisados e excluidos pelo painel.
+- A Visao geral recebeu calendario semanal e lista das proximas atividades.
+- No celular, os dias do calendario sao selecionaveis e apenas um dia e exibido por vez.
+- O resumo de aulas do dia passou a considerar tambem as atividades recorrentes da grade.
+- A colecao Agenda foi ampliada com title, category, dayOfWeek, startTime, endTime, teacherId,
+  teacherName, location, capacity, recurring e scheduleKind.
+- teacherId ficou preparado para integracao com o futuro modulo Professores (prof.html).
+- Mantida compatibilidade com a API ja publicada por meio de dados estruturados no campo notes.
+- Adicionados sete horarios ficticios de demonstracao; nomes e horarios devem ser substituidos pelos dados reais.
+- O texto de apresentacao da Visao geral foi atualizado para explicar os indicadores de forma mais natural.
+- Fluxo completo de criar, editar, desativar e excluir foi testado em navegador com largura de 320 px.

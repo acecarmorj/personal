@@ -62,7 +62,26 @@ const SHEETS = {
   },
   schedule: {
     sheetName: "Agenda",
-    headers: ["id", "studentId", "date", "time", "type", "status", "notes"]
+    headers: [
+      "id",
+      "studentId",
+      "date",
+      "time",
+      "type",
+      "status",
+      "notes",
+      "title",
+      "category",
+      "dayOfWeek",
+      "startTime",
+      "endTime",
+      "teacherId",
+      "teacherName",
+      "location",
+      "capacity",
+      "recurring",
+      "scheduleKind"
+    ]
   },
   payments: {
     sheetName: "Pagamentos",

@@ -5,6 +5,29 @@ let selectedStudentId = panelState.students[0] ? panelState.students[0].id : "";
 let activeFilter = "todos";
 let activePanelTab = "resumo";
 let activeMainSection = "overview";
+let activeWeeklyDay = new Date().getDay();
+
+const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
+const WEEK_DAYS = [
+  { value: 1, label: "Segunda-feira", short: "Seg" },
+  { value: 2, label: "Terca-feira", short: "Ter" },
+  { value: 3, label: "Quarta-feira", short: "Qua" },
+  { value: 4, label: "Quinta-feira", short: "Qui" },
+  { value: 5, label: "Sexta-feira", short: "Sex" },
+  { value: 6, label: "Sabado", short: "Sab" },
+  { value: 0, label: "Domingo", short: "Dom" }
+];
+
+const WEEKLY_CATEGORY_LABELS = {
+  natacao: "Natacao",
+  hidroginastica: "Hidroginastica",
+  karate: "Karate",
+  "jiu-jitsu": "Jiu-jitsu",
+  funcional: "Treino funcional",
+  danca: "Danca",
+  musculacao: "Musculacao orientada",
+  outra: "Outra atividade"
+};
 
 const studentForm = document.getElementById("studentForm");
 const paymentForm = document.getElementById("paymentForm");
@@ -17,6 +40,9 @@ const workspaceContent = document.getElementById("workspaceContent");
 const financeMonthFilter = document.getElementById("financeMonthFilter");
 const financeStatusFilter = document.getElementById("financeStatusFilter");
 const financeSearchFilter = document.getElementById("financeSearchFilter");
+const weeklyScheduleForm = document.getElementById("weeklyScheduleForm");
+const weeklyDayFilter = document.getElementById("weeklyDayFilter");
+const weeklySearchFilter = document.getElementById("weeklySearchFilter");
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (character) => {
@@ -202,6 +228,11 @@ function setActiveMainSection(sectionName) {
       title: "Gestao de alunos",
       description: "Cadastros, treinos, avaliacoes, agenda e acessos em uma area operacional."
     },
+    weekly: {
+      kicker: "Pro Fitness Carmo / Grade semanal",
+      title: "Programacao da academia",
+      description: "Aulas recorrentes, modalidades, professores e horarios em uma grade organizada."
+    },
     finance: {
       kicker: "Pro Fitness Carmo / Financeiro",
       title: "Gestao financeira",
@@ -215,6 +246,9 @@ function setActiveMainSection(sectionName) {
 
   if (sectionName === "operation") {
     renderOperation();
+  }
+  if (sectionName === "weekly") {
+    renderWeeklyManagement();
   }
   if (sectionName === "finance") {
     renderFinance();
@@ -295,9 +329,13 @@ function renderOverviewMetrics() {
   const todayEntries = panelState.checkins.filter(
     (checkin) => isAccessCheckin(checkin) && getCheckinDate(checkin) === today
   ).length;
-  const todayClasses = panelState.schedule.filter(
+  const datedClassesToday = panelState.schedule.filter(
     (item) => item.date === today && !["cancelada", "falta"].includes(item.status)
   ).length;
+  const weeklyClassesToday = getWeeklyClasses().filter(
+    (item) => item.status === "ativo" && item.dayOfWeek === new Date().getDay()
+  ).length;
+  const todayClasses = datedClassesToday + weeklyClassesToday;
 
   const metrics = [
     {
@@ -441,17 +479,330 @@ function renderStudentMix() {
   `;
 }
 
+function getWeekDay(dayValue) {
+  const numericValue = Number(dayValue);
+  return WEEK_DAYS.find((day) => day.value === numericValue) || WEEK_DAYS[0];
+}
+
+function decodeWeeklyNotes(notes) {
+  const value = String(notes || "");
+  if (!value.startsWith(WEEKLY_NOTE_PREFIX)) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(value.slice(WEEKLY_NOTE_PREFIX.length));
+  } catch (error) {
+    return {};
+  }
+}
+
+function normalizeWeeklyClass(record) {
+  const fallback = decodeWeeklyNotes(record.notes);
+  const recurringValue = String(record.recurring || "").toLowerCase();
+  const isRecurring = record.recurring === true || ["true", "1", "sim"].includes(recurringValue);
+  const isWeeklyClass = record.scheduleKind === "weekly-class" || record.type === "group" || isRecurring || Boolean(fallback.title);
+
+  if (!isWeeklyClass) {
+    return null;
+  }
+
+  return {
+    ...record,
+    title: record.title || fallback.title || "Atividade sem nome",
+    category: record.category || fallback.category || "outra",
+    dayOfWeek: Number(record.dayOfWeek ?? fallback.dayOfWeek ?? 1),
+    startTime: record.startTime || fallback.startTime || record.time || "00:00",
+    endTime: record.endTime || fallback.endTime || "",
+    teacherId: record.teacherId || fallback.teacherId || "",
+    teacherName: record.teacherName || fallback.teacherName || "Professor a definir",
+    location: record.location || fallback.location || "Local a definir",
+    capacity: safeNumber(record.capacity || fallback.capacity),
+    status: record.status || fallback.status || "ativo",
+    notes: fallback.userNotes ?? (String(record.notes || "").startsWith(WEEKLY_NOTE_PREFIX) ? "" : record.notes || ""),
+    recurring: true,
+    scheduleKind: "weekly-class"
+  };
+}
+
+function getWeeklyClasses() {
+  return panelState.schedule
+    .map(normalizeWeeklyClass)
+    .filter(Boolean)
+    .sort((left, right) => {
+      const leftDay = WEEK_DAYS.findIndex((day) => day.value === left.dayOfWeek);
+      const rightDay = WEEK_DAYS.findIndex((day) => day.value === right.dayOfWeek);
+      return leftDay - rightDay || String(left.startTime).localeCompare(String(right.startTime)) || left.title.localeCompare(right.title);
+    });
+}
+
+function encodeWeeklyNotes(payload) {
+  return `${WEEKLY_NOTE_PREFIX}${JSON.stringify({
+    title: payload.title,
+    category: payload.category,
+    dayOfWeek: Number(payload.dayOfWeek),
+    startTime: payload.startTime,
+    endTime: payload.endTime,
+    teacherId: payload.teacherId || "",
+    teacherName: payload.teacherName,
+    location: payload.location || "",
+    capacity: safeNumber(payload.capacity),
+    status: payload.status || "ativo",
+    userNotes: payload.notes || ""
+  })}`;
+}
+
+function buildWeeklyClassRecord(payload, existingRecord) {
+  const record = existingRecord || {};
+  const normalizedPayload = {
+    ...payload,
+    dayOfWeek: Number(payload.dayOfWeek),
+    capacity: safeNumber(payload.capacity),
+    status: payload.status || "ativo"
+  };
+
+  return {
+    ...record,
+    id: record.id || Store.uid("GRD"),
+    studentId: "",
+    date: "",
+    time: normalizedPayload.startTime,
+    type: "group",
+    status: normalizedPayload.status,
+    title: normalizedPayload.title,
+    category: normalizedPayload.category,
+    dayOfWeek: normalizedPayload.dayOfWeek,
+    startTime: normalizedPayload.startTime,
+    endTime: normalizedPayload.endTime,
+    teacherId: normalizedPayload.teacherId || record.teacherId || "",
+    teacherName: normalizedPayload.teacherName,
+    location: normalizedPayload.location || "",
+    capacity: normalizedPayload.capacity,
+    recurring: true,
+    scheduleKind: "weekly-class",
+    notes: encodeWeeklyNotes(normalizedPayload)
+  };
+}
+
+function getNextWeeklyOccurrence(weeklyClass, referenceDate) {
+  const now = referenceDate || new Date();
+  const occurrence = new Date(now);
+  const [hour, minute] = String(weeklyClass.startTime || "00:00").split(":").map(Number);
+  let daysAhead = (weeklyClass.dayOfWeek - now.getDay() + 7) % 7;
+
+  occurrence.setHours(hour || 0, minute || 0, 0, 0);
+  if (daysAhead === 0 && occurrence <= now) {
+    daysAhead = 7;
+  }
+  occurrence.setDate(now.getDate() + daysAhead);
+  return occurrence;
+}
+
+function weeklyClassMarkup(weeklyClass) {
+  const category = WEEKLY_CATEGORY_LABELS[weeklyClass.category] || WEEKLY_CATEGORY_LABELS.outra;
+  return `
+    <article class="weekly-class-card">
+      <div class="weekly-class-time">
+        <strong>${escapeHtml(weeklyClass.startTime)}</strong>
+        <span>${escapeHtml(weeklyClass.endTime || "-")}</span>
+      </div>
+      <div class="weekly-class-info">
+        <span>${escapeHtml(category)}</span>
+        <h4>${escapeHtml(weeklyClass.title)}</h4>
+        <p>${escapeHtml(weeklyClass.teacherName)}</p>
+        <small>${escapeHtml(weeklyClass.location)}</small>
+      </div>
+    </article>
+  `;
+}
+
+function renderWeeklyOverview() {
+  const weeklyClasses = getWeeklyClasses().filter((item) => item.status === "ativo");
+  const daySelector = document.getElementById("weeklyDaySelector");
+  const calendar = document.getElementById("weeklyScheduleCalendar");
+  const upcomingList = document.getElementById("upcomingClassList");
+
+  daySelector.innerHTML = WEEK_DAYS.map((day) => {
+    const count = weeklyClasses.filter((item) => item.dayOfWeek === day.value).length;
+    return `
+      <button class="weekly-day-button ${day.value === activeWeeklyDay ? "active" : ""}" type="button" data-weekly-day="${day.value}">
+        <span>${day.short}</span><small>${count}</small>
+      </button>
+    `;
+  }).join("");
+
+  calendar.innerHTML = WEEK_DAYS.map((day) => {
+    const dayClasses = weeklyClasses.filter((item) => item.dayOfWeek === day.value);
+    return `
+      <section class="weekly-day-column ${day.value === activeWeeklyDay ? "mobile-active" : ""}">
+        <header><span>${day.short}</span><strong>${day.label}</strong></header>
+        <div class="weekly-day-classes">
+          ${dayClasses.length ? dayClasses.map(weeklyClassMarkup).join("") : '<div class="weekly-day-empty">Sem atividade</div>'}
+        </div>
+      </section>
+    `;
+  }).join("");
+
+  const upcoming = weeklyClasses
+    .map((weeklyClass) => ({ weeklyClass, occurrence: getNextWeeklyOccurrence(weeklyClass) }))
+    .sort((left, right) => left.occurrence - right.occurrence)
+    .slice(0, 5);
+
+  upcomingList.innerHTML = upcoming.length
+    ? upcoming.map(({ weeklyClass, occurrence }) => {
+        const day = getWeekDay(weeklyClass.dayOfWeek);
+        const dateLabel = occurrence.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+        return `
+          <article class="upcoming-class-item">
+            <div class="upcoming-class-date"><strong>${day.short}</strong><span>${dateLabel}</span></div>
+            <div>
+              <span>${escapeHtml(weeklyClass.startTime)} - ${escapeHtml(weeklyClass.endTime || "-")}</span>
+              <h4>${escapeHtml(weeklyClass.title)}</h4>
+              <p>${escapeHtml(weeklyClass.teacherName)} · ${escapeHtml(weeklyClass.location)}</p>
+            </div>
+          </article>
+        `;
+      }).join("")
+    : '<div class="empty-state">Cadastre a primeira atividade da grade semanal.</div>';
+}
+
+function resetWeeklyScheduleForm() {
+  weeklyScheduleForm.reset();
+  weeklyScheduleForm.elements.id.value = "";
+  weeklyScheduleForm.elements.dayOfWeek.value = String(activeWeeklyDay);
+  weeklyScheduleForm.elements.startTime.value = "08:00";
+  weeklyScheduleForm.elements.endTime.value = "09:00";
+  weeklyScheduleForm.elements.status.value = "ativo";
+  document.getElementById("weeklyEditorTitle").textContent = "Nova atividade";
+}
+
+function populateWeeklyScheduleForm(weeklyClass) {
+  resetWeeklyScheduleForm();
+  Object.entries(weeklyClass).forEach(([key, value]) => {
+    if (weeklyScheduleForm.elements[key]) {
+      weeklyScheduleForm.elements[key].value = value ?? "";
+    }
+  });
+  document.getElementById("weeklyEditorTitle").textContent = `Editar ${weeklyClass.title}`;
+  weeklyScheduleForm.elements.title.focus();
+}
+
+function renderWeeklyManagement() {
+  const selectedDay = weeklyDayFilter.value;
+  const query = weeklySearchFilter.value.trim().toLocaleLowerCase("pt-BR");
+  const weeklyClasses = getWeeklyClasses().filter((weeklyClass) => {
+    const matchesDay = selectedDay === "todos" || weeklyClass.dayOfWeek === Number(selectedDay);
+    const searchable = `${weeklyClass.title} ${weeklyClass.teacherName} ${weeklyClass.location} ${weeklyClass.category}`.toLocaleLowerCase("pt-BR");
+    return matchesDay && (!query || searchable.includes(query));
+  });
+
+  document.getElementById("weeklyScheduleCount").textContent = `${weeklyClasses.length} ${weeklyClasses.length === 1 ? "horario" : "horarios"}`;
+  document.getElementById("weeklyScheduleAdminList").innerHTML = weeklyClasses.length
+    ? weeklyClasses.map((weeklyClass) => {
+        const day = getWeekDay(weeklyClass.dayOfWeek);
+        const category = WEEKLY_CATEGORY_LABELS[weeklyClass.category] || WEEKLY_CATEGORY_LABELS.outra;
+        return `
+          <article class="weekly-admin-item ${weeklyClass.status === "inativo" ? "inactive" : ""}">
+            <div class="weekly-admin-day"><strong>${day.short}</strong><span>${escapeHtml(weeklyClass.startTime)}</span></div>
+            <div class="weekly-admin-info">
+              <div class="record-head">
+                <div>
+                  <p class="eyebrow">${escapeHtml(category)} · ${escapeHtml(day.label)}</p>
+                  <h4>${escapeHtml(weeklyClass.title)}</h4>
+                </div>
+                ${badge(weeklyClass.status, weeklyClass.status)}
+              </div>
+              <p>${escapeHtml(weeklyClass.startTime)} - ${escapeHtml(weeklyClass.endTime || "-")} · ${escapeHtml(weeklyClass.teacherName)} · ${escapeHtml(weeklyClass.location)}</p>
+              ${weeklyClass.capacity ? `<small>Limite: ${weeklyClass.capacity} alunos</small>` : ""}
+              ${weeklyClass.notes ? `<small>${escapeHtml(weeklyClass.notes)}</small>` : ""}
+              <div class="record-actions">
+                <button class="ghost-button small-button" type="button" data-edit-weekly="${escapeHtml(weeklyClass.id)}">Editar</button>
+                <button class="ghost-button small-button" type="button" data-toggle-weekly="${escapeHtml(weeklyClass.id)}">${weeklyClass.status === "ativo" ? "Desativar" : "Ativar"}</button>
+                <button class="ghost-button small-button danger-button" type="button" data-delete-weekly="${escapeHtml(weeklyClass.id)}">Excluir</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("")
+    : '<div class="empty-state">Nenhum horario encontrado para os filtros selecionados.</div>';
+}
+
+function handleWeeklyScheduleSave(event) {
+  event.preventDefault();
+  const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+
+  if (payload.endTime <= payload.startTime) {
+    window.alert("O horario de termino precisa ser posterior ao inicio.");
+    return;
+  }
+
+  const existing = findRecord("schedule", payload.id);
+  const weeklyClass = buildWeeklyClassRecord(payload, existing);
+  activeWeeklyDay = weeklyClass.dayOfWeek;
+  activeMainSection = "weekly";
+  saveWithLog(
+    upsertRecord("schedule", weeklyClass),
+    existing ? "weekly-class-updated" : "weekly-class-created",
+    "",
+    `${weeklyClass.title} salva na grade semanal.`
+  );
+  resetWeeklyScheduleForm();
+}
+
+function handleWeeklyAdminAction(event) {
+  const button = event.target.closest("button");
+  if (!button) {
+    return;
+  }
+
+  const id = button.dataset.editWeekly || button.dataset.toggleWeekly || button.dataset.deleteWeekly;
+  const rawRecord = id ? findRecord("schedule", id) : null;
+  const weeklyClass = rawRecord ? normalizeWeeklyClass(rawRecord) : null;
+  if (!weeklyClass) {
+    return;
+  }
+
+  if (button.dataset.editWeekly) {
+    populateWeeklyScheduleForm(weeklyClass);
+    document.querySelector(".weekly-editor-card").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  if (button.dataset.toggleWeekly) {
+    const nextStatus = weeklyClass.status === "ativo" ? "inativo" : "ativo";
+    const updatedRecord = buildWeeklyClassRecord({ ...weeklyClass, status: nextStatus }, rawRecord);
+    saveWithLog(
+      updateRecord("schedule", weeklyClass.id, () => updatedRecord),
+      "weekly-class-status-updated",
+      "",
+      `${weeklyClass.title} marcada como ${nextStatus}.`
+    );
+    return;
+  }
+
+  if (button.dataset.deleteWeekly && window.confirm(`Excluir ${weeklyClass.title} da grade semanal?`)) {
+    const nextState = Store.clone(panelState);
+    nextState.schedule = nextState.schedule.filter((item) => item.id !== weeklyClass.id);
+    saveWithLog(nextState, "weekly-class-deleted", "", `${weeklyClass.title} removida da grade semanal.`);
+    if (weeklyScheduleForm.elements.id.value === weeklyClass.id) {
+      resetWeeklyScheduleForm();
+    }
+  }
+}
+
 function renderTodayAgendaSummary() {
   const todayItems = panelState.schedule.filter((item) => item.date === Store.todayISO());
+  const weeklyToday = getWeeklyClasses().filter((item) => item.status === "ativo" && item.dayOfWeek === new Date().getDay());
   const completed = todayItems.filter((item) => item.status === "realizada").length;
-  const scheduled = todayItems.filter((item) => ["marcada", "remarcada"].includes(item.status)).length;
+  const scheduled = todayItems.filter((item) => ["marcada", "remarcada"].includes(item.status)).length + weeklyToday.length;
   const online = todayItems.filter((item) => item.type === "online").length;
-  const inPerson = todayItems.filter((item) => item.type !== "online").length;
+  const inPerson = todayItems.filter((item) => item.type !== "online").length + weeklyToday.length;
+  const totalActivities = todayItems.length + weeklyToday.length;
 
   document.getElementById("todayAgendaSummary").innerHTML = `
     <div class="agenda-total">
-      <strong>${todayItems.length}</strong>
-      <span>${todayItems.length === 1 ? "atividade prevista" : "atividades previstas"}</span>
+      <strong>${totalActivities}</strong>
+      <span>${totalActivities === 1 ? "atividade prevista" : "atividades previstas"}</span>
     </div>
     <div class="agenda-stat-grid">
       <div><span class="agenda-dot scheduled"></span><strong>${scheduled}</strong><small>Agendadas</small></div>
@@ -474,6 +825,7 @@ function renderOverview() {
   renderEnrollmentChart();
   renderStudentMix();
   renderTodayAgendaSummary();
+  renderWeeklyOverview();
 }
 
 function renderRoster() {
@@ -1499,6 +1851,7 @@ function attachPanelEvents() {
   workoutForm.addEventListener("submit", handleWorkoutSave);
   assessmentForm.addEventListener("submit", handleAssessmentSave);
   scheduleForm.addEventListener("submit", handleScheduleSave);
+  weeklyScheduleForm.addEventListener("submit", handleWeeklyScheduleSave);
   assessmentForm.elements.weight.addEventListener("input", updateImcPreview);
   assessmentForm.elements.height.addEventListener("input", updateImcPreview);
 
@@ -1542,6 +1895,11 @@ function attachPanelEvents() {
   document.getElementById("newAssessmentButton").addEventListener("click", createNewAssessment);
   document.getElementById("newScheduleButton").addEventListener("click", createNewSchedule);
   document.getElementById("newPaymentButton").addEventListener("click", createNewPayment);
+  document.getElementById("manageWeeklyScheduleButton").addEventListener("click", () => {
+    setActiveMainSection("weekly");
+    document.querySelector(".main-section-nav").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  document.getElementById("clearWeeklyScheduleButton").addEventListener("click", resetWeeklyScheduleForm);
   document.getElementById("openStudentsOverviewButton").addEventListener("click", () => {
     setActiveMainSection("operation");
     document.querySelector(".main-section-nav").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1550,6 +1908,18 @@ function attachPanelEvents() {
   document.querySelectorAll("[data-main-section]").forEach((button) => {
     button.addEventListener("click", () => setActiveMainSection(button.dataset.mainSection));
   });
+
+  document.getElementById("weeklyDaySelector").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-weekly-day]");
+    if (!button) {
+      return;
+    }
+    activeWeeklyDay = Number(button.dataset.weeklyDay);
+    renderWeeklyOverview();
+  });
+  weeklyDayFilter.addEventListener("change", renderWeeklyManagement);
+  weeklySearchFilter.addEventListener("input", renderWeeklyManagement);
+  document.getElementById("weeklyScheduleAdminList").addEventListener("click", handleWeeklyAdminAction);
 
   financeMonthFilter.addEventListener("change", renderFinance);
   financeStatusFilter.addEventListener("change", renderFinancePaymentList);
@@ -1615,6 +1985,7 @@ function attachPanelEvents() {
 }
 
 attachPanelEvents();
+resetWeeklyScheduleForm();
 renderPanel();
 Store.hydrateFromRemoteIfConfigured().then((remoteState) => {
   panelState = remoteState;

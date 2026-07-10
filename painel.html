@@ -56,6 +56,10 @@
           <span>Alunos e treinos</span>
           <small>Gestao individual</small>
         </button>
+        <button class="main-section-button" type="button" data-main-section="weekly" aria-pressed="false">
+          <span>Grade semanal</span>
+          <small>Aulas e professores</small>
+        </button>
         <button class="main-section-button finance-nav-button" type="button" data-main-section="finance" aria-pressed="false">
           <span>Financeiro</span>
           <small>Area reservada</small>
@@ -66,11 +70,11 @@
         <article class="overview-lead">
           <div>
             <p class="eyebrow" id="overviewDate">Hoje na Pro Fitness</p>
-            <h2>Uma leitura rapida do seu dia.</h2>
-            <p>Movimento, crescimento e agenda em uma tela executiva sem expor informacoes individuais.</p>
+            <h2>A Pro Fitness hoje, em numeros.</h2>
+            <p>Acompanhe matriculas, presenca, frequencia e atividades programadas para manter a rotina da academia sob controle.</p>
           </div>
           <div class="overview-lead-actions">
-            <span class="privacy-chip">Visao agregada</span>
+            <span class="privacy-chip">Resumo operacional</span>
             <button class="primary-button" type="button" id="openStudentsOverviewButton">Gerenciar alunos</button>
           </div>
         </article>
@@ -120,6 +124,30 @@
             <div class="student-mix" id="studentMix"></div>
           </article>
         </section>
+
+        <article class="dashboard-card weekly-overview-card">
+          <div class="section-head weekly-overview-head">
+            <div>
+              <p class="eyebrow">Programacao da academia</p>
+              <h2>Agenda semanal</h2>
+              <p class="section-description">Horarios fixos de natacao, lutas e demais atividades coletivas.</p>
+            </div>
+            <button class="ghost-button" type="button" id="manageWeeklyScheduleButton">Atualizar grade</button>
+          </div>
+          <div class="weekly-overview-layout">
+            <section class="weekly-calendar-panel" aria-label="Calendario semanal de atividades">
+              <div class="weekly-day-selector" id="weeklyDaySelector"></div>
+              <div class="weekly-calendar" id="weeklyScheduleCalendar"></div>
+            </section>
+            <aside class="upcoming-classes-panel">
+              <div class="upcoming-panel-head">
+                <span class="live-indicator"><i></i> proximas</span>
+                <h3>O que vem por ai</h3>
+              </div>
+              <div class="upcoming-class-list" id="upcomingClassList"></div>
+            </aside>
+          </div>
+        </article>
       </section>
 
       <section class="main-section operation-section" id="operationSection" data-main-panel="operation" hidden>
@@ -523,6 +551,125 @@
           </div>
           <div id="logBoard" class="timeline-list"></div>
         </article>
+        </section>
+      </section>
+
+      <section class="main-section weekly-management-section" id="weeklyManagementSection" data-main-panel="weekly" hidden>
+        <header class="dashboard-card weekly-management-hero">
+          <div>
+            <p class="eyebrow">Programacao fixa</p>
+            <h2>Gerenciar grade semanal</h2>
+            <p>Cadastre aulas, professores e horarios que se repetem toda semana na Pro Fitness.</p>
+          </div>
+          <span class="privacy-chip">Administracao</span>
+        </header>
+
+        <section class="weekly-management-layout">
+          <article class="dashboard-card weekly-editor-card">
+            <div class="section-head compact-head">
+              <div>
+                <p class="eyebrow">Cadastro de horario</p>
+                <h2 id="weeklyEditorTitle">Nova atividade</h2>
+              </div>
+            </div>
+            <form id="weeklyScheduleForm" class="form-grid weekly-schedule-form">
+              <input type="hidden" name="id" />
+              <label class="full">
+                Nome da atividade
+                <input type="text" name="title" required placeholder="Ex.: Natacao infantil" />
+              </label>
+              <label>
+                Modalidade
+                <select name="category" required>
+                  <option value="natacao">Natacao</option>
+                  <option value="hidroginastica">Hidroginastica</option>
+                  <option value="karate">Karate</option>
+                  <option value="jiu-jitsu">Jiu-jitsu</option>
+                  <option value="funcional">Treino funcional</option>
+                  <option value="danca">Danca</option>
+                  <option value="musculacao">Musculacao orientada</option>
+                  <option value="outra">Outra atividade</option>
+                </select>
+              </label>
+              <label>
+                Dia da semana
+                <select name="dayOfWeek" required>
+                  <option value="1">Segunda-feira</option>
+                  <option value="2">Terca-feira</option>
+                  <option value="3">Quarta-feira</option>
+                  <option value="4">Quinta-feira</option>
+                  <option value="5">Sexta-feira</option>
+                  <option value="6">Sabado</option>
+                  <option value="0">Domingo</option>
+                </select>
+              </label>
+              <label>
+                Inicio
+                <input type="time" name="startTime" required />
+              </label>
+              <label>
+                Termino
+                <input type="time" name="endTime" required />
+              </label>
+              <label class="full">
+                Professor
+                <input type="text" name="teacherName" required placeholder="Nome do professor" />
+              </label>
+              <label>
+                Local
+                <input type="text" name="location" placeholder="Ex.: Piscina" />
+              </label>
+              <label>
+                Limite de alunos
+                <input type="number" name="capacity" min="0" step="1" placeholder="Ex.: 20" />
+              </label>
+              <label class="full">
+                Status
+                <select name="status">
+                  <option value="ativo">Ativa na grade</option>
+                  <option value="inativo">Oculta temporariamente</option>
+                </select>
+              </label>
+              <label class="full">
+                Observacoes
+                <textarea name="notes" rows="3" placeholder="Faixa etaria, nivel ou orientacoes importantes."></textarea>
+              </label>
+              <div class="form-actions full weekly-form-actions">
+                <button class="ghost-button" type="button" id="clearWeeklyScheduleButton">Limpar</button>
+                <button class="primary-button" type="submit">Salvar na grade</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="dashboard-card weekly-admin-list-card">
+            <div class="section-head weekly-admin-list-head">
+              <div>
+                <p class="eyebrow">Horarios cadastrados</p>
+                <h2>Programacao semanal</h2>
+              </div>
+              <span class="result-count" id="weeklyScheduleCount">0 horarios</span>
+            </div>
+            <div class="weekly-admin-filters">
+              <label>
+                Dia
+                <select id="weeklyDayFilter">
+                  <option value="todos">Todos os dias</option>
+                  <option value="1">Segunda-feira</option>
+                  <option value="2">Terca-feira</option>
+                  <option value="3">Quarta-feira</option>
+                  <option value="4">Quinta-feira</option>
+                  <option value="5">Sexta-feira</option>
+                  <option value="6">Sabado</option>
+                  <option value="0">Domingo</option>
+                </select>
+              </label>
+              <label>
+                Buscar
+                <input type="search" id="weeklySearchFilter" placeholder="Atividade ou professor" />
+              </label>
+            </div>
+            <div class="weekly-admin-list" id="weeklyScheduleAdminList"></div>
+          </article>
         </section>
       </section>
 

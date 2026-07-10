@@ -3,6 +3,7 @@
   const LEGACY_STORAGE_KEY = "profitness-data-v0";
   const SESSION_KEY = "profitness-student-session-v1";
   const API_PLACEHOLDER = "COLE_A_URL_DO_WEB_APP_AQUI";
+  const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
 
   function todayISO() {
     return new Date().toISOString().slice(0, 10);
@@ -124,6 +125,44 @@
       method: payment.method || "pix",
       paidAt: payment.paidAt || "",
       notes: payment.notes || ""
+    };
+  }
+
+  function createDemoWeeklyClass(overrides) {
+    const weeklyClass = {
+      id: overrides.id || uid("GRD"),
+      title: overrides.title || "Atividade coletiva",
+      category: overrides.category || "outra",
+      dayOfWeek: Number(overrides.dayOfWeek ?? 1),
+      startTime: overrides.startTime || "08:00",
+      endTime: overrides.endTime || "09:00",
+      teacherId: overrides.teacherId || "",
+      teacherName: overrides.teacherName || "Professor a definir",
+      location: overrides.location || "Local a definir",
+      capacity: Number(overrides.capacity || 0),
+      status: overrides.status || "ativo",
+      userNotes: overrides.notes || "Horario demonstrativo. Substitua pelos dados reais da academia."
+    };
+
+    return {
+      id: weeklyClass.id,
+      studentId: "",
+      date: "",
+      time: weeklyClass.startTime,
+      type: "group",
+      status: weeklyClass.status,
+      title: weeklyClass.title,
+      category: weeklyClass.category,
+      dayOfWeek: weeklyClass.dayOfWeek,
+      startTime: weeklyClass.startTime,
+      endTime: weeklyClass.endTime,
+      teacherId: weeklyClass.teacherId,
+      teacherName: weeklyClass.teacherName,
+      location: weeklyClass.location,
+      capacity: weeklyClass.capacity,
+      recurring: true,
+      scheduleKind: "weekly-class",
+      notes: `${WEEKLY_NOTE_PREFIX}${JSON.stringify(weeklyClass)}`
     };
   }
 
@@ -267,7 +306,84 @@
           type: "presencial",
           status: "remarcada",
           notes: "Sessao de retorno."
-        }
+        },
+        createDemoWeeklyClass({
+          id: "GRD-001",
+          title: "Natacao adulto",
+          category: "natacao",
+          dayOfWeek: 1,
+          startTime: "06:00",
+          endTime: "07:00",
+          teacherName: "Prof. Rafael",
+          location: "Piscina",
+          capacity: 16
+        }),
+        createDemoWeeklyClass({
+          id: "GRD-002",
+          title: "Hidroginastica",
+          category: "hidroginastica",
+          dayOfWeek: 2,
+          startTime: "08:00",
+          endTime: "09:00",
+          teacherName: "Profa. Luiza",
+          location: "Piscina",
+          capacity: 20
+        }),
+        createDemoWeeklyClass({
+          id: "GRD-003",
+          title: "Karate infantil",
+          category: "karate",
+          dayOfWeek: 2,
+          startTime: "17:30",
+          endTime: "18:30",
+          teacherName: "Profa. Camila",
+          location: "Sala de lutas",
+          capacity: 18
+        }),
+        createDemoWeeklyClass({
+          id: "GRD-004",
+          title: "Jiu-jitsu",
+          category: "jiu-jitsu",
+          dayOfWeek: 3,
+          startTime: "19:00",
+          endTime: "20:30",
+          teacherName: "Prof. Bruno",
+          location: "Sala de lutas",
+          capacity: 22
+        }),
+        createDemoWeeklyClass({
+          id: "GRD-005",
+          title: "Natacao infantil",
+          category: "natacao",
+          dayOfWeek: 4,
+          startTime: "18:30",
+          endTime: "19:20",
+          teacherName: "Prof. Rafael",
+          location: "Piscina",
+          capacity: 12
+        }),
+        createDemoWeeklyClass({
+          id: "GRD-006",
+          title: "Treino funcional",
+          category: "funcional",
+          dayOfWeek: 5,
+          startTime: "07:00",
+          endTime: "08:00",
+          teacherName: "Profa. Ana",
+          location: "Sala principal",
+          capacity: 20
+        }),
+        createDemoWeeklyClass({
+          id: "GRD-007",
+          title: "Karate adulto",
+          category: "karate",
+          dayOfWeek: 6,
+          startTime: "09:00",
+          endTime: "10:30",
+          teacherName: "Profa. Camila",
+          location: "Sala de lutas",
+          capacity: 20
+        })
       ],
       payments: [
         createPaymentRecord({
