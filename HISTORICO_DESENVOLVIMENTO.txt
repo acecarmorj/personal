@@ -1707,3 +1707,19 @@ CACHE E DOCUMENTACAO
 - Cache do PWA e versoes dos arquivos elevados de auth7 para auth8.
 - Documentacao atualizada para schemaVersion 7, TentativasLogin e novas regras de sessao.
 - Testes automatizados ampliados para cobrir os itens acima.
+
+
+======================================================================
+ATUALIZACAO - 11/07/2026 - API PUBLICA MIGRADA PARA SCHEMA 7
+======================================================================
+- Confirmado que o frontend e o codigo-fonte da API estavam publicados no GitHub, mas a planilha ainda informava `schemaVersion: 6` no health publico.
+- Codigo atual enviado ao projeto Apps Script vinculado `1PN1oVX1AvRHPJpZfm3pWiJ38BBz2X2eYeW5IIfcrytyORYt48rX55oc_` pelo Clasp.
+- A mesma implantacao publica `AKfycbxv5kc71SaSMhe10SQR0kqQQO11aFNInVAJFmH1zTif5SqefNDnZ1F60xBN_VrU0lFGIw` foi preservada, sem alterar a URL usada pelos aplicativos.
+- Executada `setupProFitnessSpreadsheet()` para migrar a planilha vinculada, criar a aba privada `TentativasLogin` e registrar o schema 7.
+- Endpoint de manutencao de uso unico foi removido imediatamente depois da migracao e nao integra o codigo final.
+- Manifesto passou a declarar `executionApi` com acesso `MYSELF`, restrito a conta proprietaria para futuras manutencoes.
+- API final criada e reimplantada como versao imutavel 18, descricao `Pro Fitness v18 - schema 7 final protegido`.
+- Health publico final confirmou `ok: true`, ambiente `demo`, `schemaVersion: 7` e planilha configurada.
+- Tentativa de reutilizar a acao temporaria recebeu `AUTH_REQUIRED`, confirmando sua remocao.
+- `apps-script/api.gs` e `api.txt` permanecem byte a byte identicos.
+- Smoke tests do repositorio e do pacote limpo concluidos com sucesso apos a reimplantacao.
