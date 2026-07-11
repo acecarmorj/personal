@@ -878,7 +878,7 @@
 
   async function fetchRemoteSnapshot() {
     const exportUrl = `${getApiBaseUrl()}?action=exportAll`;
-    const data = await fetchJson(exportUrl, {}, 20000);
+    const data = await fetchJson(exportUrl, {}, 60000);
 
     if (!data.ok) {
       throw new Error(data.message || "Falha ao exportar snapshot remoto.");

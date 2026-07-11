@@ -1285,3 +1285,4 @@ ATUALIZACAO - 2026-07-11 - BASE FICTICIA PARA DEMONSTRACAO
 - A base ficticia foi importada na planilha 1GgKofWojTW6EgrJCnA3Z4ZOZvgmzeyc1refIz2Inj8Y.
 - Conferencia remota confirmou competencias 2026-05, 2026-06 e 2026-07, 10 por cento de inadimplencia, datas validas e Zumba.
 - A pasta backups foi adicionada ao .gitignore para nunca publicar dados operacionais no GitHub.
+- O tempo limite de leitura do snapshot remoto foi ampliado de 20 para 60 segundos para suportar a base demonstrativa com mais de 2.000 registros.
