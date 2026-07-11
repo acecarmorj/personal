@@ -197,3 +197,32 @@ PROXIMOS PONTOS RECOMENDADOS
 - Adicionados sete horarios ficticios de demonstracao; nomes e horarios devem ser substituidos pelos dados reais.
 - O texto de apresentacao da Visao geral foi atualizado para explicar os indicadores de forma mais natural.
 - Fluxo completo de criar, editar, desativar e excluir foi testado em navegador com largura de 320 px.
+
+[10/07/2026] Central financeira completa
+- O Financeiro foi reorganizado em cinco areas independentes: Resumo, Mensalidades, Caixa diario,
+  Despesas e Relatorios.
+- O Resumo passou a exibir entradas, saidas, resultado, valores a receber, inadimplencia, adimplencia,
+  previsto x recebido, movimento do dia, pendencias prioritarias e previsao dos proximos 30 dias.
+- Mensalidades agora aceitam valor base, desconto, multa/acrescimo, valor liquido, competencia,
+  vencimento, data de recebimento, forma de pagamento, status e observacoes.
+- Adicionada geracao em lote das mensalidades da competencia para alunos ativos, sem duplicar cobrancas.
+- Recebimentos de mensalidades criam automaticamente uma entrada vinculada no caixa.
+- Criado Caixa diario com entradas, saidas, categorias, formas de pagamento, conta, busca, filtros,
+  edicao, estorno, reativacao e resumo diario.
+- Criado fechamento de caixa com saldo inicial, dinheiro esperado, dinheiro contado, diferenca,
+  responsavel, observacoes e historico dos ultimos fechamentos.
+- Criado controle de despesas com fornecedor, categoria, valor, vencimento, status, forma de pagamento,
+  recorrencia, documento/nota e observacoes.
+- O pagamento de uma despesa cria automaticamente uma saida vinculada no caixa; reversoes estornam o
+  movimento sem apagar o historico.
+- Relatorios financeiros receberam periodo livre, filtros por tipo e forma de pagamento, totais,
+  ticket medio, composicao por categoria, recebimentos por forma e detalhamento de movimentos.
+- Adicionadas exportacao em CSV compativel com planilhas e impressao otimizada para PDF em A4 paisagem.
+- A API e a estrutura sugerida da planilha foram ampliadas com as abas Movimentacoes, Despesas e
+  Fechamentos, alem de desconto, multa e valor liquido em Pagamentos.
+- Removida a constante opcional de ID da planilha: a API usa somente a planilha vinculada e registrada
+  por setupProFitnessSpreadsheet().
+- Mantida compatibilidade com a API anterior: dados financeiros locais novos nao sao descartados quando
+  um Web App antigo ainda nao retorna as novas colecoes.
+- Teste isolado no Edge validou as cinco abas, criacao de movimento, despesa e mensalidade, calculo do
+  valor liquido, relatorio, exportacao CSV e ausencia de transbordamento em todas as abas a 320 px.

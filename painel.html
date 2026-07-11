@@ -677,24 +677,37 @@
         <header class="dashboard-card finance-hero">
           <div>
             <p class="eyebrow">Area reservada</p>
-            <h2>Controle financeiro</h2>
-            <p>Recebimentos, pendencias e previsao mensal concentrados em um unico ambiente.</p>
+            <h2>Central financeira</h2>
+            <p>Mensalidades, caixa, despesas, fechamentos e relatorios em uma rotina simples para a administracao.</p>
           </div>
           <div class="finance-hero-actions">
-            <span class="privacy-label">Visivel somente nesta aba</span>
+            <label class="finance-period-control">
+              Competencia
+              <input type="month" id="financeMonthFilter" />
+            </label>
+            <button class="ghost-button" type="button" id="newMovementButton">Lancar no caixa</button>
+            <button class="ghost-button" type="button" id="newExpenseButton">Nova despesa</button>
             <button class="primary-button" type="button" id="newPaymentButton">Nova mensalidade</button>
           </div>
         </header>
 
-        <section class="finance-overview-grid" id="financeMetricGrid"></section>
+        <nav class="finance-subnav" aria-label="Modulos financeiros">
+          <button class="finance-tab active" type="button" data-finance-tab="summary" aria-pressed="true">Resumo</button>
+          <button class="finance-tab" type="button" data-finance-tab="payments" aria-pressed="false">Mensalidades</button>
+          <button class="finance-tab" type="button" data-finance-tab="cash" aria-pressed="false">Caixa diario</button>
+          <button class="finance-tab" type="button" data-finance-tab="expenses" aria-pressed="false">Despesas</button>
+          <button class="finance-tab" type="button" data-finance-tab="reports" aria-pressed="false">Relatorios</button>
+        </nav>
 
-        <section class="finance-layout">
-          <div class="finance-main-column">
+        <section class="finance-panel active" data-finance-panel="summary">
+          <section class="finance-overview-grid" id="financeMetricGrid"></section>
+
+          <section class="finance-summary-layout">
             <article class="dashboard-card finance-chart-card">
               <div class="section-head">
                 <div>
-                  <p class="eyebrow">Fluxo de caixa</p>
-                  <h2>Ultimos seis meses</h2>
+                  <p class="eyebrow">Receita recorrente</p>
+                  <h2>Previsto x recebido</h2>
                 </div>
                 <div class="finance-legend" aria-label="Legenda do grafico">
                   <span><i class="legend-dot paid"></i> Recebido</span>
@@ -704,20 +717,64 @@
               <div class="finance-chart" id="financeChart"></div>
             </article>
 
+            <article class="dashboard-card finance-today-card">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Hoje</p>
+                  <h2>Movimento do caixa</h2>
+                </div>
+              </div>
+              <div id="financeTodaySummary" class="finance-today-summary"></div>
+            </article>
+          </section>
+
+          <section class="finance-summary-lower">
+            <article class="dashboard-card finance-priority-card">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Atencao diaria</p>
+                  <h2>Pendencias prioritarias</h2>
+                </div>
+              </div>
+              <div id="financePriorityList" class="finance-priority-list"></div>
+            </article>
+
+            <article class="dashboard-card finance-forecast-card">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Proximos 30 dias</p>
+                  <h2>Previsao financeira</h2>
+                </div>
+              </div>
+              <div id="financeForecast" class="finance-forecast"></div>
+            </article>
+          </section>
+        </section>
+
+        <section class="finance-panel" data-finance-panel="payments" hidden>
+          <header class="dashboard-card finance-module-head">
+            <div>
+              <p class="eyebrow">Receita recorrente</p>
+              <h2>Mensalidades dos alunos</h2>
+              <p>Gere cobrancas do mes, acompanhe vencimentos e registre recebimentos.</p>
+            </div>
+            <div class="finance-module-actions">
+              <button class="ghost-button" type="button" id="generateMonthlyPaymentsButton">Gerar mensalidades do mes</button>
+              <button class="primary-button" type="button" id="paymentTabNewButton">Nova mensalidade</button>
+            </div>
+          </header>
+
+          <section class="finance-layout">
             <article class="dashboard-card finance-list-card">
               <div class="section-head finance-list-head">
                 <div>
-                  <p class="eyebrow">Mensalidades</p>
-                  <h2>Controle de cobrancas</h2>
+                  <p class="eyebrow">Cobrancas</p>
+                  <h2>Controle de mensalidades</h2>
                 </div>
                 <span class="result-count" id="financeResultCount">0 registros</span>
               </div>
 
-              <div class="finance-filters">
-                <label>
-                  Competencia
-                  <input type="month" id="financeMonthFilter" />
-                </label>
+              <div class="finance-filters payment-filters">
                 <label>
                   Status
                   <select id="financeStatusFilter">
@@ -735,60 +792,159 @@
 
               <div class="finance-table" id="paymentHistory"></div>
             </article>
-          </div>
 
-          <aside class="dashboard-card finance-editor">
-            <div class="section-head compact-head">
-              <div>
-                <p class="eyebrow">Lancamento</p>
-                <h2>Detalhes da mensalidade</h2>
+            <aside class="dashboard-card finance-editor" id="paymentEditorCard">
+              <div class="section-head compact-head">
+                <div>
+                  <p class="eyebrow">Lancamento</p>
+                  <h2>Detalhes da mensalidade</h2>
+                </div>
               </div>
+              <p class="finance-editor-copy">Selecione uma cobranca para editar ou crie um novo lancamento.</p>
+              <form id="paymentForm" class="form-grid finance-form">
+                <input type="hidden" name="id" />
+                <label class="full">Aluno<select name="studentId" id="financeStudentSelect" required></select></label>
+                <label>Competencia<input type="month" name="reference" required /></label>
+                <label>Vencimento<input type="date" name="dueDate" required /></label>
+                <label>Valor base<input type="number" step="0.01" min="0" name="amount" required /></label>
+                <label>Desconto<input type="number" step="0.01" min="0" name="discount" value="0" /></label>
+                <label>Multa/acrescimo<input type="number" step="0.01" min="0" name="fine" value="0" /></label>
+                <label>Status<select name="status"><option value="pago">Pago</option><option value="pendente">Pendente</option><option value="vencido">Vencido</option></select></label>
+                <label>Forma de pagamento<select name="method"><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="boleto">Boleto</option><option value="dinheiro">Dinheiro</option><option value="transferencia">Transferencia</option></select></label>
+                <label>Data do recebimento<input type="date" name="paidAt" /></label>
+                <div class="payment-total-preview full"><span>Valor final</span><strong id="paymentNetPreview">R$ 0,00</strong></div>
+                <label class="full">Observacoes<textarea name="notes" rows="3"></textarea></label>
+                <div class="form-actions full"><button type="submit" class="primary-button">Salvar mensalidade</button></div>
+              </form>
+            </aside>
+          </section>
+        </section>
+
+        <section class="finance-panel" data-finance-panel="cash" hidden>
+          <header class="dashboard-card finance-module-head">
+            <div>
+              <p class="eyebrow">Operacao do dia</p>
+              <h2>Caixa diario</h2>
+              <p>Registre entradas e saidas, confira formas de pagamento e feche o caixa.</p>
             </div>
-            <p class="finance-editor-copy">Selecione uma cobranca para editar ou crie um novo lancamento.</p>
-            <form id="paymentForm" class="form-grid finance-form">
-              <input type="hidden" name="id" />
-              <label class="full">
-                Aluno
-                <select name="studentId" id="financeStudentSelect" required></select>
-              </label>
-              <label>
-                Competencia
-                <input type="month" name="reference" required />
-              </label>
-              <label>
-                Valor
-                <input type="number" step="0.01" min="0" name="amount" required />
-              </label>
-              <label>
-                Vencimento
-                <input type="date" name="dueDate" required />
-              </label>
-              <label>
-                Status
-                <select name="status">
-                  <option value="pago">Pago</option>
-                  <option value="pendente">Pendente</option>
-                  <option value="vencido">Vencido</option>
-                </select>
-              </label>
-              <label class="full">
-                Forma de pagamento
-                <select name="method">
-                  <option value="pix">Pix</option>
-                  <option value="cartao">Cartao</option>
-                  <option value="boleto">Boleto</option>
-                  <option value="dinheiro">Dinheiro</option>
-                </select>
-              </label>
-              <label class="full">
-                Observacoes
-                <textarea name="notes" rows="3"></textarea>
-              </label>
-              <div class="form-actions full">
-                <button type="submit" class="primary-button">Salvar mensalidade</button>
+            <div class="finance-module-actions">
+              <label class="compact-date-field">Data<input type="date" id="cashDateFilter" /></label>
+              <button class="primary-button" type="button" id="cashTabNewMovementButton">Novo lancamento</button>
+            </div>
+          </header>
+
+          <section class="cash-metric-grid" id="cashMetricGrid"></section>
+
+          <section class="finance-layout cash-layout">
+            <article class="dashboard-card finance-list-card">
+              <div class="section-head"><div><p class="eyebrow">Movimentacoes</p><h2>Entradas e saidas</h2></div><span class="result-count" id="movementResultCount">0 registros</span></div>
+              <div class="cash-filters">
+                <select id="movementTypeFilter"><option value="todos">Entradas e saidas</option><option value="entrada">Somente entradas</option><option value="saida">Somente saidas</option></select>
+                <select id="movementMethodFilter"><option value="todos">Todas as formas</option><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select>
+                <input type="search" id="movementSearchFilter" placeholder="Buscar descricao" />
               </div>
-            </form>
-          </aside>
+              <div class="movement-list" id="movementList"></div>
+            </article>
+
+            <aside class="dashboard-card finance-editor" id="movementEditorCard">
+              <div class="section-head compact-head"><div><p class="eyebrow">Lancamento de caixa</p><h2 id="movementEditorTitle">Novo movimento</h2></div></div>
+              <form id="movementForm" class="form-grid finance-form">
+                <input type="hidden" name="id" />
+                <label>Data<input type="date" name="date" required /></label>
+                <label>Horario<input type="time" name="time" required /></label>
+                <label>Tipo<select name="type"><option value="entrada">Entrada</option><option value="saida">Saida</option></select></label>
+                <label>Categoria<select name="category"><option value="mensalidade">Mensalidade</option><option value="avaliacao">Avaliacao</option><option value="venda">Venda</option><option value="limpeza">Limpeza</option><option value="manutencao">Manutencao</option><option value="utilidades">Utilidades</option><option value="salarios">Salarios</option><option value="impostos">Impostos</option><option value="outros">Outros</option></select></label>
+                <label class="full">Descricao<input type="text" name="description" required /></label>
+                <label>Valor<input type="number" step="0.01" min="0" name="amount" required /></label>
+                <label>Forma<select name="method"><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select></label>
+                <label class="full">Conta<select name="account"><option value="caixa-principal">Caixa principal</option><option value="conta-bancaria">Conta bancaria</option></select></label>
+                <label class="full">Observacoes<textarea name="notes" rows="3"></textarea></label>
+                <div class="form-actions full finance-dual-actions"><button class="ghost-button" type="button" id="clearMovementButton">Limpar</button><button class="primary-button" type="submit">Salvar movimento</button></div>
+              </form>
+            </aside>
+          </section>
+
+          <section class="cash-closing-layout">
+            <article class="dashboard-card cash-closing-card">
+              <div class="section-head"><div><p class="eyebrow">Conferencia</p><h2>Fechamento de caixa</h2></div><span class="result-count" id="cashClosingStatus">Em aberto</span></div>
+              <form id="cashClosingForm" class="form-grid finance-form">
+                <input type="hidden" name="id" />
+                <label>Saldo inicial<input type="number" step="0.01" name="openingBalance" value="0" /></label>
+                <label>Dinheiro contado<input type="number" step="0.01" name="countedCash" required /></label>
+                <label class="full">Responsavel<input type="text" name="closedBy" value="Administracao" required /></label>
+                <label class="full">Observacoes<textarea name="notes" rows="2"></textarea></label>
+                <div class="cash-closing-preview full" id="cashClosingPreview"></div>
+                <div class="form-actions full"><button class="primary-button" type="submit">Salvar fechamento</button></div>
+              </form>
+            </article>
+            <article class="dashboard-card cash-history-card">
+              <div class="section-head"><div><p class="eyebrow">Historico</p><h2>Ultimos fechamentos</h2></div></div>
+              <div id="cashClosingHistory" class="cash-closing-history"></div>
+            </article>
+          </section>
+        </section>
+
+        <section class="finance-panel" data-finance-panel="expenses" hidden>
+          <header class="dashboard-card finance-module-head">
+            <div><p class="eyebrow">Contas a pagar</p><h2>Despesas da academia</h2><p>Controle fornecedores, recorrencias, vencimentos e pagamentos.</p></div>
+            <button class="primary-button" type="button" id="expenseTabNewButton">Nova despesa</button>
+          </header>
+          <section class="finance-layout">
+            <article class="dashboard-card finance-list-card">
+              <div class="section-head"><div><p class="eyebrow">Despesas</p><h2>Contas cadastradas</h2></div><span class="result-count" id="expenseResultCount">0 registros</span></div>
+              <div class="expense-filters">
+                <input type="month" id="expenseMonthFilter" />
+                <select id="expenseStatusFilter"><option value="todos">Todos os status</option><option value="pago">Pago</option><option value="pendente">Pendente</option><option value="vencido">Vencido</option></select>
+                <input type="search" id="expenseSearchFilter" placeholder="Buscar despesa ou fornecedor" />
+              </div>
+              <div class="expense-list" id="expenseList"></div>
+            </article>
+            <aside class="dashboard-card finance-editor" id="expenseEditorCard">
+              <div class="section-head compact-head"><div><p class="eyebrow">Conta a pagar</p><h2 id="expenseEditorTitle">Nova despesa</h2></div></div>
+              <form id="expenseForm" class="form-grid finance-form">
+                <input type="hidden" name="id" />
+                <label class="full">Descricao<input type="text" name="description" required /></label>
+                <label class="full">Fornecedor<input type="text" name="supplier" /></label>
+                <label>Categoria<select name="category"><option value="utilidades">Utilidades</option><option value="aluguel">Aluguel</option><option value="limpeza">Limpeza</option><option value="manutencao">Manutencao</option><option value="equipamentos">Equipamentos</option><option value="salarios">Salarios</option><option value="impostos">Impostos</option><option value="marketing">Marketing</option><option value="outros">Outros</option></select></label>
+                <label>Valor<input type="number" step="0.01" min="0" name="amount" required /></label>
+                <label>Vencimento<input type="date" name="dueDate" required /></label>
+                <label>Status<select name="status"><option value="pendente">Pendente</option><option value="pago">Pago</option><option value="vencido">Vencido</option></select></label>
+                <label>Forma<select name="method"><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select></label>
+                <label>Recorrencia<select name="recurring"><option value="nao">Nao recorrente</option><option value="mensal">Mensal</option><option value="anual">Anual</option></select></label>
+                <label class="full">Documento/nota<input type="text" name="document" /></label>
+                <label class="full">Observacoes<textarea name="notes" rows="3"></textarea></label>
+                <div class="form-actions full finance-dual-actions"><button class="ghost-button" type="button" id="clearExpenseButton">Limpar</button><button class="primary-button" type="submit">Salvar despesa</button></div>
+              </form>
+            </aside>
+          </section>
+        </section>
+
+        <section class="finance-panel finance-report-panel" data-finance-panel="reports" hidden>
+          <header class="dashboard-card finance-module-head report-module-head">
+            <div><p class="eyebrow">Analise financeira</p><h2>Relatorios e resultados</h2><p>Consulte qualquer periodo e gere um arquivo para conferencia ou contabilidade.</p></div>
+            <div class="finance-module-actions"><button class="ghost-button" type="button" id="exportFinanceCsvButton">Exportar CSV</button><button class="primary-button" type="button" id="printFinanceReportButton">Imprimir / PDF</button></div>
+          </header>
+
+          <article class="dashboard-card report-filter-card">
+            <div class="report-filters">
+              <label>Data inicial<input type="date" id="reportStartDate" /></label>
+              <label>Data final<input type="date" id="reportEndDate" /></label>
+              <label>Tipo<select id="reportTypeFilter"><option value="todos">Entradas e saidas</option><option value="entrada">Entradas</option><option value="saida">Saidas</option></select></label>
+              <label>Forma<select id="reportMethodFilter"><option value="todos">Todas</option><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select></label>
+              <button class="primary-button" type="button" id="applyReportFiltersButton">Atualizar relatorio</button>
+            </div>
+          </article>
+
+          <section class="report-metric-grid" id="reportMetricGrid"></section>
+          <section class="report-chart-grid">
+            <article class="dashboard-card report-chart-card"><div class="section-head"><div><p class="eyebrow">Por categoria</p><h2>Composicao do resultado</h2></div></div><div id="reportCategoryChart" class="report-bar-list"></div></article>
+            <article class="dashboard-card report-chart-card"><div class="section-head"><div><p class="eyebrow">Recebimentos</p><h2>Formas de pagamento</h2></div></div><div id="reportMethodChart" class="report-bar-list"></div></article>
+          </section>
+          <article class="dashboard-card report-table-card" id="printableFinanceReport">
+            <div class="print-report-header"><div><strong>Pro Fitness Academia</strong><span>Relatorio financeiro</span></div><span id="reportPeriodLabel"></span></div>
+            <div class="section-head"><div><p class="eyebrow">Detalhamento</p><h2>Movimentacoes do periodo</h2></div><span class="result-count" id="reportResultCount">0 registros</span></div>
+            <div id="reportMovementTable" class="report-movement-table"></div>
+          </article>
         </section>
       </section>
     </div>

@@ -115,16 +115,84 @@
 
   function createPaymentRecord(overrides) {
     const payment = overrides || {};
+    const amount = Number(payment.amount || 0);
+    const discount = Number(payment.discount || 0);
+    const fine = Number(payment.fine || 0);
     return {
       id: payment.id || uid("PG"),
       studentId: payment.studentId || "",
       reference: payment.reference || currentMonth(),
-      amount: Number(payment.amount || 0),
+      amount: amount,
+      discount: discount,
+      fine: fine,
+      netAmount: Number(payment.netAmount ?? Math.max(0, amount - discount + fine)),
       dueDate: payment.dueDate || todayISO(),
       status: payment.status || "pendente",
       method: payment.method || "pix",
       paidAt: payment.paidAt || "",
+      description: payment.description || "Mensalidade",
+      createdAt: payment.createdAt || new Date().toISOString(),
       notes: payment.notes || ""
+    };
+  }
+
+  function createMovementRecord(overrides) {
+    const movement = overrides || {};
+    return {
+      id: movement.id || uid("MOV"),
+      date: movement.date || todayISO(),
+      time: movement.time || new Date().toTimeString().slice(0, 5),
+      type: movement.type || "entrada",
+      category: movement.category || "outros",
+      description: movement.description || "Lancamento financeiro",
+      amount: Number(movement.amount || 0),
+      method: movement.method || "pix",
+      account: movement.account || "caixa-principal",
+      studentId: movement.studentId || "",
+      paymentId: movement.paymentId || "",
+      expenseId: movement.expenseId || "",
+      status: movement.status || "confirmado",
+      createdAt: movement.createdAt || new Date().toISOString(),
+      notes: movement.notes || ""
+    };
+  }
+
+  function createExpenseRecord(overrides) {
+    const expense = overrides || {};
+    return {
+      id: expense.id || uid("DES"),
+      description: expense.description || "Despesa",
+      supplier: expense.supplier || "",
+      category: expense.category || "outros",
+      amount: Number(expense.amount || 0),
+      dueDate: expense.dueDate || todayISO(),
+      status: expense.status || "pendente",
+      paidAt: expense.paidAt || "",
+      method: expense.method || "pix",
+      account: expense.account || "caixa-principal",
+      recurring: expense.recurring || "nao",
+      document: expense.document || "",
+      createdAt: expense.createdAt || new Date().toISOString(),
+      notes: expense.notes || ""
+    };
+  }
+
+  function createCashClosingRecord(overrides) {
+    const closing = overrides || {};
+    return {
+      id: closing.id || uid("FEC"),
+      date: closing.date || todayISO(),
+      openingBalance: Number(closing.openingBalance || 0),
+      cashIncome: Number(closing.cashIncome || 0),
+      cashExpense: Number(closing.cashExpense || 0),
+      expectedCash: Number(closing.expectedCash || 0),
+      countedCash: Number(closing.countedCash || 0),
+      difference: Number(closing.difference || 0),
+      totalIncome: Number(closing.totalIncome || 0),
+      totalExpense: Number(closing.totalExpense || 0),
+      closedBy: closing.closedBy || "Administracao",
+      closedAt: closing.closedAt || new Date().toISOString(),
+      notes: closing.notes || ""
     };
   }
 
@@ -169,6 +237,7 @@
   function buildDemoData() {
     const today = todayISO();
     const month = currentMonth();
+    const yesterday = demoDateDaysAgo(1);
     return {
       students: [
         createStudentRecord({
@@ -391,7 +460,7 @@
           studentId: "ALU-001",
           reference: month,
           amount: 320,
-          dueDate: "2026-04-28",
+          dueDate: `${month}-20`,
           status: "pendente",
           method: "pix"
         }),
@@ -400,7 +469,7 @@
           studentId: "ALU-002",
           reference: month,
           amount: 450,
-          dueDate: "2026-04-25",
+          dueDate: `${month}-08`,
           status: "pago",
           method: "cartao",
           paidAt: today
@@ -410,9 +479,104 @@
           studentId: "ALU-003",
           reference: month,
           amount: 280,
-          dueDate: "2026-04-12",
+          dueDate: `${month}-05`,
+          status: "vencido",
+          method: "boleto",
+          fine: 15,
+          netAmount: 295
+        })
+      ],
+      movements: [
+        createMovementRecord({
+          id: "MOV-001",
+          date: today,
+          time: "09:15",
+          type: "entrada",
+          category: "mensalidade",
+          description: "Mensalidade do mes",
+          amount: 450,
+          method: "cartao",
+          studentId: "ALU-002",
+          paymentId: "PG-002"
+        }),
+        createMovementRecord({
+          id: "MOV-002",
+          date: yesterday,
+          time: "16:30",
+          type: "entrada",
+          category: "avaliacao",
+          description: "Avaliacao fisica avulsa",
+          amount: 120,
+          method: "pix"
+        }),
+        createMovementRecord({
+          id: "MOV-003",
+          date: yesterday,
+          time: "17:10",
+          type: "saida",
+          category: "limpeza",
+          description: "Material de limpeza",
+          amount: 180,
+          method: "pix",
+          expenseId: "DES-002"
+        }),
+        createMovementRecord({
+          id: "MOV-004",
+          date: yesterday,
+          time: "19:20",
+          type: "entrada",
+          category: "outros",
+          description: "Venda de touca de natacao",
+          amount: 35,
+          method: "dinheiro"
+        })
+      ],
+      expenses: [
+        createExpenseRecord({
+          id: "DES-001",
+          description: "Conta de energia",
+          supplier: "Concessionaria",
+          category: "utilidades",
+          amount: 980,
+          dueDate: `${month}-15`,
+          status: "pendente",
+          recurring: "mensal"
+        }),
+        createExpenseRecord({
+          id: "DES-002",
+          description: "Material de limpeza",
+          supplier: "Fornecedor local",
+          category: "limpeza",
+          amount: 180,
+          dueDate: `${month}-06`,
+          status: "pago",
+          paidAt: yesterday,
+          method: "pix"
+        }),
+        createExpenseRecord({
+          id: "DES-003",
+          description: "Manutencao de equipamento",
+          supplier: "Assistencia tecnica",
+          category: "manutencao",
+          amount: 640,
+          dueDate: `${month}-05`,
           status: "vencido",
           method: "boleto"
+        })
+      ],
+      cashClosings: [
+        createCashClosingRecord({
+          id: "FEC-001",
+          date: yesterday,
+          openingBalance: 100,
+          cashIncome: 35,
+          cashExpense: 0,
+          expectedCash: 135,
+          countedCash: 135,
+          difference: 0,
+          totalIncome: 155,
+          totalExpense: 180,
+          closedBy: "Equipe Pro Fitness"
         })
       ],
       checkins: [
@@ -524,6 +688,9 @@
       workouts: safeArray(data.workouts).length ? safeArray(data.workouts) : base.workouts,
       schedule: safeArray(data.schedule).length ? safeArray(data.schedule) : base.schedule,
       payments: safeArray(data.payments).length ? safeArray(data.payments).map(createPaymentRecord) : base.payments,
+      movements: safeArray(data.movements).length ? safeArray(data.movements).map(createMovementRecord) : base.movements,
+      expenses: safeArray(data.expenses).length ? safeArray(data.expenses).map(createExpenseRecord) : base.expenses,
+      cashClosings: safeArray(data.cashClosings).length ? safeArray(data.cashClosings).map(createCashClosingRecord) : base.cashClosings,
       checkins: safeArray(data.checkins).length ? safeArray(data.checkins) : base.checkins,
       exercises: safeArray(data.exercises).length ? safeArray(data.exercises) : base.exercises,
       users: safeArray(data.users).length ? safeArray(data.users) : base.users,
@@ -577,8 +744,7 @@
       throw new Error(data.message || "Falha ao exportar snapshot remoto.");
     }
 
-    const snapshot = data.data && data.data.snapshot ? data.data.snapshot : data.data;
-    return normalizeSnapshot(snapshot || {});
+    return data.data && data.data.snapshot ? data.data.snapshot : data.data || {};
   }
 
   async function setupRemoteSpreadsheet() {
@@ -616,9 +782,8 @@
   }
 
   function snapshotHasMeaningfulData(snapshot) {
-    const normalized = normalizeSnapshot(snapshot);
-    const keys = ["students", "assessments", "workouts", "schedule", "payments", "checkins", "exercises", "users"];
-    return keys.some((key) => Array.isArray(normalized[key]) && normalized[key].length > 0);
+    const keys = ["students", "assessments", "workouts", "schedule", "payments", "checkins", "exercises", "users", "movements", "expenses", "cashClosings"];
+    return keys.some((key) => Array.isArray(snapshot?.[key]) && snapshot[key].length > 0);
   }
 
   async function hydrateFromRemoteIfConfigured() {
@@ -629,12 +794,18 @@
     }
 
     try {
-      const remoteSnapshot = await fetchRemoteSnapshot();
+      const remoteRawSnapshot = await fetchRemoteSnapshot();
 
-      if (!snapshotHasMeaningfulData(remoteSnapshot) && snapshotHasMeaningfulData(localSnapshot)) {
+      if (!snapshotHasMeaningfulData(remoteRawSnapshot) && snapshotHasMeaningfulData(localSnapshot)) {
         return localSnapshot;
       }
 
+      const remoteSnapshot = migrateData(remoteRawSnapshot);
+      ["movements", "expenses", "cashClosings"].forEach((key) => {
+        if (!Array.isArray(remoteRawSnapshot[key]) && Array.isArray(localSnapshot[key])) {
+          remoteSnapshot[key] = clone(localSnapshot[key]);
+        }
+      });
       saveData(remoteSnapshot);
       return remoteSnapshot;
     } catch (error) {
@@ -938,6 +1109,9 @@
     clearStudentSession: clearStudentSession,
     clone: clone,
     createCode: createCode,
+    createCashClosingRecord: createCashClosingRecord,
+    createExpenseRecord: createExpenseRecord,
+    createMovementRecord: createMovementRecord,
     createPaymentRecord: createPaymentRecord,
     createStudentRecord: createStudentRecord,
     currency: currency,

@@ -6,6 +6,7 @@ let activeFilter = "todos";
 let activePanelTab = "resumo";
 let activeMainSection = "overview";
 let activeWeeklyDay = new Date().getDay();
+let activeFinanceTab = "summary";
 
 const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
 const WEEK_DAYS = [
@@ -29,8 +30,34 @@ const WEEKLY_CATEGORY_LABELS = {
   outra: "Outra atividade"
 };
 
+const FINANCE_METHOD_LABELS = {
+  pix: "Pix",
+  cartao: "Cartao",
+  dinheiro: "Dinheiro",
+  boleto: "Boleto",
+  transferencia: "Transferencia"
+};
+
+const FINANCE_CATEGORY_LABELS = {
+  mensalidade: "Mensalidades",
+  avaliacao: "Avaliacoes",
+  venda: "Vendas",
+  utilidades: "Utilidades",
+  aluguel: "Aluguel",
+  limpeza: "Limpeza",
+  manutencao: "Manutencao",
+  equipamentos: "Equipamentos",
+  salarios: "Salarios",
+  impostos: "Impostos",
+  marketing: "Marketing",
+  outros: "Outros"
+};
+
 const studentForm = document.getElementById("studentForm");
 const paymentForm = document.getElementById("paymentForm");
+const movementForm = document.getElementById("movementForm");
+const expenseForm = document.getElementById("expenseForm");
+const cashClosingForm = document.getElementById("cashClosingForm");
 const workoutForm = document.getElementById("workoutForm");
 const assessmentForm = document.getElementById("assessmentForm");
 const scheduleForm = document.getElementById("scheduleForm");
@@ -40,6 +67,17 @@ const workspaceContent = document.getElementById("workspaceContent");
 const financeMonthFilter = document.getElementById("financeMonthFilter");
 const financeStatusFilter = document.getElementById("financeStatusFilter");
 const financeSearchFilter = document.getElementById("financeSearchFilter");
+const cashDateFilter = document.getElementById("cashDateFilter");
+const movementTypeFilter = document.getElementById("movementTypeFilter");
+const movementMethodFilter = document.getElementById("movementMethodFilter");
+const movementSearchFilter = document.getElementById("movementSearchFilter");
+const expenseMonthFilter = document.getElementById("expenseMonthFilter");
+const expenseStatusFilter = document.getElementById("expenseStatusFilter");
+const expenseSearchFilter = document.getElementById("expenseSearchFilter");
+const reportStartDate = document.getElementById("reportStartDate");
+const reportEndDate = document.getElementById("reportEndDate");
+const reportTypeFilter = document.getElementById("reportTypeFilter");
+const reportMethodFilter = document.getElementById("reportMethodFilter");
 const weeklyScheduleForm = document.getElementById("weeklyScheduleForm");
 const weeklyDayFilter = document.getElementById("weeklyDayFilter");
 const weeklySearchFilter = document.getElementById("weeklySearchFilter");
@@ -164,7 +202,11 @@ function findRecord(collection, id) {
 }
 
 function upsertRecord(collection, record) {
-  const nextState = Store.clone(panelState);
+  return upsertRecordInState(panelState, collection, record);
+}
+
+function upsertRecordInState(state, collection, record) {
+  const nextState = Store.clone(state);
   const records = Array.isArray(nextState[collection]) ? nextState[collection] : [];
   const index = records.findIndex((item) => item.id === record.id);
 
@@ -882,11 +924,24 @@ function populatePaymentForm(student, payment) {
   paymentForm.elements.studentId.value = record ? record.studentId : student ? student.id : "";
   paymentForm.elements.reference.value = record ? record.reference : Store.currentMonth();
   paymentForm.elements.amount.value = record ? record.amount : student ? student.monthlyFee : "";
+  paymentForm.elements.discount.value = record ? record.discount || 0 : 0;
+  paymentForm.elements.fine.value = record ? record.fine || 0 : 0;
   paymentForm.elements.dueDate.value = record ? record.dueDate : Store.todayISO();
   paymentForm.elements.status.value = record ? record.status : "pendente";
   paymentForm.elements.method.value = record ? record.method : "pix";
+  paymentForm.elements.paidAt.value = record ? record.paidAt || "" : "";
   paymentForm.elements.notes.value = record ? record.notes || "" : "";
   paymentForm.elements.id.value = record?.id || "";
+  updatePaymentNetPreview();
+}
+
+function updatePaymentNetPreview() {
+  const amount = safeNumber(paymentForm.elements.amount.value);
+  const discount = safeNumber(paymentForm.elements.discount.value);
+  const fine = safeNumber(paymentForm.elements.fine.value);
+  const netAmount = Math.max(0, amount - discount + fine);
+  document.getElementById("paymentNetPreview").textContent = Store.currency(netAmount);
+  return netAmount;
 }
 
 function renderFinanceStudentOptions() {
@@ -1223,6 +1278,130 @@ function getEffectivePaymentStatus(payment) {
   return "pendente";
 }
 
+function getEffectiveExpenseStatus(expense) {
+  if (expense.status === "pago") {
+    return "pago";
+  }
+  if (expense.status === "vencido" || (expense.dueDate && expense.dueDate < Store.todayISO())) {
+    return "vencido";
+  }
+  return "pendente";
+}
+
+function getPaymentNetAmount(payment) {
+  const amount = safeNumber(payment.amount);
+  const discount = safeNumber(payment.discount);
+  const fine = safeNumber(payment.fine);
+  return Math.max(0, safeNumber(payment.netAmount) || amount - discount + fine);
+}
+
+function sumFinance(records, valueGetter) {
+  return records.reduce((sum, record) => sum + safeNumber(valueGetter ? valueGetter(record) : record.amount), 0);
+}
+
+function getReportableMovements() {
+  const movements = panelState.movements.map((movement) => ({ ...movement, synthetic: false }));
+  const linkedPayments = new Set(movements.filter((item) => item.paymentId).map((item) => item.paymentId));
+  const linkedExpenses = new Set(movements.filter((item) => item.expenseId).map((item) => item.expenseId));
+
+  panelState.payments
+    .filter((payment) => getEffectivePaymentStatus(payment) === "pago" && !linkedPayments.has(payment.id))
+    .forEach((payment) => {
+      const student = Store.findStudent(panelState, payment.studentId);
+      movements.push({
+        id: `SYN-${payment.id}`,
+        date: payment.paidAt || payment.dueDate || Store.todayISO(),
+        time: "12:00",
+        type: "entrada",
+        category: "mensalidade",
+        description: `Mensalidade ${payment.reference} - ${student?.name || "Aluno"}`,
+        amount: getPaymentNetAmount(payment),
+        method: payment.method || "pix",
+        account: "caixa-principal",
+        studentId: payment.studentId,
+        paymentId: payment.id,
+        status: "confirmado",
+        synthetic: true
+      });
+    });
+
+  panelState.expenses
+    .filter((expense) => getEffectiveExpenseStatus(expense) === "pago" && !linkedExpenses.has(expense.id))
+    .forEach((expense) => {
+      movements.push({
+        id: `SYN-${expense.id}`,
+        date: expense.paidAt || expense.dueDate || Store.todayISO(),
+        time: "12:00",
+        type: "saida",
+        category: expense.category || "outros",
+        description: expense.description,
+        amount: safeNumber(expense.amount),
+        method: expense.method || "pix",
+        account: expense.account || "caixa-principal",
+        expenseId: expense.id,
+        status: "confirmado",
+        synthetic: true
+      });
+    });
+
+  return movements.sort((left, right) => `${right.date || ""}T${right.time || ""}`.localeCompare(`${left.date || ""}T${left.time || ""}`));
+}
+
+function syncPaymentMovement(state, payment) {
+  const existing = (state.movements || []).find((movement) => movement.paymentId === payment.id);
+  if (getEffectivePaymentStatus(payment) !== "pago") {
+    if (!existing) return state;
+    return upsertRecordInState(state, "movements", { ...existing, status: "estornado" });
+  }
+
+  const student = Store.findStudent(state, payment.studentId);
+  const movement = Store.createMovementRecord({
+    ...existing,
+    id: existing?.id || "",
+    date: payment.paidAt || Store.todayISO(),
+    time: existing?.time || new Date().toTimeString().slice(0, 5),
+    type: "entrada",
+    category: "mensalidade",
+    description: `Mensalidade ${payment.reference} - ${student?.name || "Aluno"}`,
+    amount: getPaymentNetAmount(payment),
+    method: payment.method || "pix",
+    account: existing?.account || "caixa-principal",
+    studentId: payment.studentId,
+    paymentId: payment.id,
+    expenseId: "",
+    status: "confirmado",
+    notes: payment.notes || ""
+  });
+  return upsertRecordInState(state, "movements", movement);
+}
+
+function syncExpenseMovement(state, expense) {
+  const existing = (state.movements || []).find((movement) => movement.expenseId === expense.id);
+  if (getEffectiveExpenseStatus(expense) !== "pago") {
+    if (!existing) return state;
+    return upsertRecordInState(state, "movements", { ...existing, status: "estornado" });
+  }
+
+  const movement = Store.createMovementRecord({
+    ...existing,
+    id: existing?.id || "",
+    date: expense.paidAt || Store.todayISO(),
+    time: existing?.time || new Date().toTimeString().slice(0, 5),
+    type: "saida",
+    category: expense.category || "outros",
+    description: expense.description,
+    amount: safeNumber(expense.amount),
+    method: expense.method || "pix",
+    account: expense.account || "caixa-principal",
+    studentId: "",
+    paymentId: "",
+    expenseId: expense.id,
+    status: "confirmado",
+    notes: expense.notes || ""
+  });
+  return upsertRecordInState(state, "movements", movement);
+}
+
 function getRecentMonths(endMonth, count) {
   const [year, month] = String(endMonth || Store.currentMonth()).split("-").map(Number);
   return Array.from({ length: count }, (_, index) => {
@@ -1242,18 +1421,41 @@ function getFinanceMonthLabel(reference) {
     .replace(".", "");
 }
 
-function renderFinanceMetrics(monthlyPayments) {
+function setActiveFinanceTab(tabName) {
+  activeFinanceTab = tabName;
+  document.querySelectorAll("[data-finance-tab]").forEach((button) => {
+    const isActive = button.dataset.financeTab === tabName;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+  document.querySelectorAll("[data-finance-panel]").forEach((panel) => {
+    const isActive = panel.dataset.financePanel === tabName;
+    panel.classList.toggle("active", isActive);
+    panel.hidden = !isActive;
+  });
+
+  if (tabName === "summary") renderFinanceSummary();
+  if (tabName === "payments") renderFinancePaymentsModule();
+  if (tabName === "cash") renderCashModule();
+  if (tabName === "expenses") renderExpenseModule();
+  if (tabName === "reports") renderFinanceReports();
+}
+
+function renderFinanceMetrics(monthlyPayments, monthlyMovements) {
   const paidPayments = monthlyPayments.filter((payment) => getEffectivePaymentStatus(payment) === "pago");
   const pendingPayments = monthlyPayments.filter((payment) => getEffectivePaymentStatus(payment) === "pendente");
   const overduePayments = monthlyPayments.filter((payment) => getEffectivePaymentStatus(payment) === "vencido");
-  const total = (payments) => payments.reduce((sum, payment) => sum + safeNumber(payment.amount), 0);
-  const expected = total(monthlyPayments);
+  const confirmedMovements = monthlyMovements.filter((movement) => movement.status !== "estornado");
+  const income = sumFinance(confirmedMovements.filter((item) => item.type === "entrada"));
+  const expense = sumFinance(confirmedMovements.filter((item) => item.type === "saida"));
+  const result = income - expense;
   const compliance = monthlyPayments.length ? Math.round((paidPayments.length / monthlyPayments.length) * 100) : 0;
   const metrics = [
-    { label: "Receita confirmada", value: Store.currency(total(paidPayments)), note: `${paidPayments.length} pagamento(s)`, tone: "success" },
-    { label: "A receber", value: Store.currency(total(pendingPayments)), note: `${pendingPayments.length} cobranca(s)`, tone: "warning" },
-    { label: "Em atraso", value: Store.currency(total(overduePayments)), note: `${overduePayments.length} cobranca(s)`, tone: "danger" },
-    { label: "Previsto no mes", value: Store.currency(expected), note: `${monthlyPayments.length} lancamento(s)`, tone: "neutral" },
+    { label: "Entradas do mes", value: Store.currency(income), note: `${confirmedMovements.filter((item) => item.type === "entrada").length} lancamento(s)`, tone: "success" },
+    { label: "Saidas do mes", value: Store.currency(expense), note: `${confirmedMovements.filter((item) => item.type === "saida").length} lancamento(s)`, tone: "neutral" },
+    { label: "Resultado", value: Store.currency(result), note: result >= 0 ? "Saldo positivo" : "Saldo negativo", tone: result >= 0 ? "success" : "danger" },
+    { label: "A receber", value: Store.currency(sumFinance(pendingPayments, getPaymentNetAmount)), note: `${pendingPayments.length} cobranca(s)`, tone: "warning" },
+    { label: "Em atraso", value: Store.currency(sumFinance(overduePayments, getPaymentNetAmount)), note: `${overduePayments.length} cobranca(s)`, tone: "danger" },
     { label: "Adimplencia", value: `${compliance}%`, note: "Por quantidade de cobrancas", tone: compliance >= 80 ? "success" : compliance >= 50 ? "warning" : "danger" }
   ];
 
@@ -1276,10 +1478,10 @@ function renderFinanceChart() {
     const payments = panelState.payments.filter((payment) => payment.reference === reference);
     return {
       reference: reference,
-      expected: payments.reduce((sum, payment) => sum + safeNumber(payment.amount), 0),
+      expected: sumFinance(payments, getPaymentNetAmount),
       paid: payments
         .filter((payment) => getEffectivePaymentStatus(payment) === "pago")
-        .reduce((sum, payment) => sum + safeNumber(payment.amount), 0)
+        .reduce((sum, payment) => sum + getPaymentNetAmount(payment), 0)
     };
   });
   const maximum = Math.max(...summaries.map((item) => item.expected), 1);
@@ -1350,7 +1552,7 @@ function renderFinancePaymentList() {
               </div>
               <div data-label="Competencia"><span>${escapeHtml(payment.reference)}</span></div>
               <div data-label="Vencimento"><span>${escapeHtml(Store.formatDate(payment.dueDate))}</span></div>
-              <div data-label="Valor"><strong class="finance-amount">${escapeHtml(Store.currency(payment.amount))}</strong></div>
+              <div data-label="Valor"><strong class="finance-amount">${escapeHtml(Store.currency(getPaymentNetAmount(payment)))}</strong></div>
               <div data-label="Status">${badge(effectiveStatus, effectiveStatus)}</div>
               <div class="finance-row-actions" data-label="Acoes">
                 <button class="ghost-button small-button" type="button" data-edit-payment="${escapeHtml(payment.id)}">Editar</button>
@@ -1364,21 +1566,291 @@ function renderFinancePaymentList() {
     : `<div class="empty-state">Nenhuma cobranca encontrada para os filtros selecionados.</div>`;
 }
 
-function renderFinance() {
-  if (!financeMonthFilter.value) {
-    financeMonthFilter.value = Store.currentMonth();
-  }
-
+function renderFinancePaymentsModule() {
   renderFinanceStudentOptions();
-  const monthlyPayments = panelState.payments.filter((payment) => payment.reference === financeMonthFilter.value);
-  renderFinanceMetrics(monthlyPayments);
-  renderFinanceChart();
   renderFinancePaymentList();
-
   if (!paymentForm.elements.reference.value && panelState.students.length) {
     const student = Store.findStudent(panelState, paymentForm.elements.studentId.value) || panelState.students[0];
     populatePaymentForm(student);
   }
+}
+
+function renderFinanceTodaySummary() {
+  const today = Store.todayISO();
+  const movements = getReportableMovements().filter((item) => item.date === today && item.status !== "estornado");
+  const income = sumFinance(movements.filter((item) => item.type === "entrada"));
+  const expense = sumFinance(movements.filter((item) => item.type === "saida"));
+  const methods = Object.keys(FINANCE_METHOD_LABELS)
+    .map((method) => ({ method, value: sumFinance(movements.filter((item) => item.type === "entrada" && item.method === method)) }))
+    .filter((item) => item.value > 0)
+    .sort((left, right) => right.value - left.value);
+
+  document.getElementById("financeTodaySummary").innerHTML = `
+    <div class="finance-today-balance"><span>Resultado do dia</span><strong>${Store.currency(income - expense)}</strong></div>
+    <div class="finance-today-totals"><div><span>Entradas</span><strong>${Store.currency(income)}</strong></div><div><span>Saidas</span><strong>${Store.currency(expense)}</strong></div></div>
+    <div class="finance-method-summary">
+      ${methods.length ? methods.map((item) => `<div><span>${escapeHtml(FINANCE_METHOD_LABELS[item.method])}</span><strong>${escapeHtml(Store.currency(item.value))}</strong></div>`).join("") : '<p class="muted">Nenhum recebimento registrado hoje.</p>'}
+    </div>
+  `;
+}
+
+function daysOverdue(dateValue) {
+  if (!dateValue) return 0;
+  return Math.max(0, Math.floor((new Date(`${Store.todayISO()}T12:00:00`) - new Date(`${dateValue}T12:00:00`)) / 86400000));
+}
+
+function renderFinancePriorities() {
+  const paymentPriorities = panelState.payments
+    .filter((payment) => getEffectivePaymentStatus(payment) === "vencido")
+    .map((payment) => {
+      const student = Store.findStudent(panelState, payment.studentId);
+      return { type: "Mensalidade", title: student?.name || "Aluno", dueDate: payment.dueDate, amount: getPaymentNetAmount(payment), tone: "danger" };
+    });
+  const expensePriorities = panelState.expenses
+    .filter((expense) => getEffectiveExpenseStatus(expense) === "vencido")
+    .map((expense) => ({ type: "Despesa", title: expense.description, dueDate: expense.dueDate, amount: expense.amount, tone: "warning" }));
+  const priorities = [...paymentPriorities, ...expensePriorities]
+    .sort((left, right) => String(left.dueDate).localeCompare(String(right.dueDate)))
+    .slice(0, 6);
+
+  document.getElementById("financePriorityList").innerHTML = priorities.length
+    ? priorities.map((item) => `
+        <article class="finance-priority-item">
+          <div><span>${escapeHtml(item.type)} · ${daysOverdue(item.dueDate)} dia(s) em atraso</span><strong>${escapeHtml(item.title)}</strong><small>Venceu em ${escapeHtml(Store.formatDate(item.dueDate))}</small></div>
+          <strong>${escapeHtml(Store.currency(item.amount))}</strong>
+        </article>
+      `).join("")
+    : '<div class="empty-state">Nenhuma pendencia vencida. Caixa em dia.</div>';
+}
+
+function renderFinanceForecast() {
+  const today = Store.todayISO();
+  const end = shiftISODate(today, 30);
+  const receivables = panelState.payments.filter((item) => getEffectivePaymentStatus(item) === "pendente" && item.dueDate >= today && item.dueDate <= end);
+  const payables = panelState.expenses.filter((item) => getEffectiveExpenseStatus(item) === "pendente" && item.dueDate >= today && item.dueDate <= end);
+  const income = sumFinance(receivables, getPaymentNetAmount);
+  const expense = sumFinance(payables);
+  document.getElementById("financeForecast").innerHTML = `
+    <div class="forecast-result"><span>Saldo projetado</span><strong class="${income - expense < 0 ? "negative" : ""}">${Store.currency(income - expense)}</strong></div>
+    <div class="forecast-line"><span>A receber</span><strong>${Store.currency(income)}</strong><small>${receivables.length} cobranca(s)</small></div>
+    <div class="forecast-line"><span>A pagar</span><strong>${Store.currency(expense)}</strong><small>${payables.length} despesa(s)</small></div>
+  `;
+}
+
+function renderFinanceSummary() {
+  const reference = financeMonthFilter.value || Store.currentMonth();
+  const monthlyPayments = panelState.payments.filter((payment) => payment.reference === reference);
+  const monthlyMovements = getReportableMovements().filter((movement) => String(movement.date || "").slice(0, 7) === reference);
+  renderFinanceMetrics(monthlyPayments, monthlyMovements);
+  renderFinanceChart();
+  renderFinanceTodaySummary();
+  renderFinancePriorities();
+  renderFinanceForecast();
+}
+
+function resetMovementForm() {
+  movementForm.reset();
+  movementForm.elements.id.value = "";
+  movementForm.elements.date.value = cashDateFilter.value || Store.todayISO();
+  movementForm.elements.time.value = new Date().toTimeString().slice(0, 5);
+  movementForm.elements.type.value = "entrada";
+  movementForm.elements.method.value = "pix";
+  movementForm.elements.account.value = "caixa-principal";
+  document.getElementById("movementEditorTitle").textContent = "Novo movimento";
+}
+
+function populateMovementForm(movement) {
+  resetMovementForm();
+  Object.entries(movement).forEach(([key, value]) => {
+    if (movementForm.elements[key]) movementForm.elements[key].value = value ?? "";
+  });
+  document.getElementById("movementEditorTitle").textContent = "Editar movimento";
+}
+
+function getFilteredMovements() {
+  const date = cashDateFilter.value;
+  const type = movementTypeFilter.value;
+  const method = movementMethodFilter.value;
+  const query = movementSearchFilter.value.trim().toLocaleLowerCase("pt-BR");
+  return getReportableMovements()
+    .filter((item) => !date || item.date === date)
+    .filter((item) => type === "todos" || item.type === type)
+    .filter((item) => method === "todos" || item.method === method)
+    .filter((item) => !query || `${item.description} ${item.category}`.toLocaleLowerCase("pt-BR").includes(query));
+}
+
+function renderMovementList() {
+  const movements = getFilteredMovements();
+  document.getElementById("movementResultCount").textContent = `${movements.length} registro${movements.length === 1 ? "" : "s"}`;
+  document.getElementById("movementList").innerHTML = movements.length
+    ? movements.map((item) => `
+        <article class="movement-item ${item.type} ${item.status === "estornado" ? "void" : ""}">
+          <div class="movement-sign">${item.type === "entrada" ? "+" : "-"}</div>
+          <div class="movement-info"><span>${escapeHtml(item.time || "--:--")} · ${escapeHtml(FINANCE_CATEGORY_LABELS[item.category] || item.category)}</span><strong>${escapeHtml(item.description)}</strong><small>${escapeHtml(FINANCE_METHOD_LABELS[item.method] || item.method)} · ${escapeHtml(item.account || "caixa-principal")}</small></div>
+          <strong class="movement-amount">${item.type === "entrada" ? "+" : "-"} ${escapeHtml(Store.currency(item.amount))}</strong>
+          <div class="movement-actions">
+            ${!item.synthetic ? `<button class="ghost-button small-button" type="button" data-edit-movement="${escapeHtml(item.id)}">Editar</button><button class="ghost-button small-button" type="button" data-void-movement="${escapeHtml(item.id)}">${item.status === "estornado" ? "Reativar" : "Estornar"}</button>` : '<span class="linked-label">Vinculado</span>'}
+          </div>
+        </article>
+      `).join("")
+    : '<div class="empty-state">Nenhuma movimentacao encontrada.</div>';
+}
+
+function getCashDaySummary(date) {
+  const movements = getReportableMovements().filter((item) => item.date === date && item.status !== "estornado");
+  const income = movements.filter((item) => item.type === "entrada");
+  const expense = movements.filter((item) => item.type === "saida");
+  return {
+    movements,
+    income: sumFinance(income),
+    expense: sumFinance(expense),
+    cashIncome: sumFinance(income.filter((item) => item.method === "dinheiro")),
+    cashExpense: sumFinance(expense.filter((item) => item.method === "dinheiro"))
+  };
+}
+
+function renderCashMetrics() {
+  const summary = getCashDaySummary(cashDateFilter.value);
+  const metrics = [
+    ["Entradas", summary.income, "success"],
+    ["Saidas", summary.expense, "neutral"],
+    ["Resultado", summary.income - summary.expense, summary.income - summary.expense >= 0 ? "success" : "danger"],
+    ["Dinheiro em especie", summary.cashIncome - summary.cashExpense, "warning"]
+  ];
+  document.getElementById("cashMetricGrid").innerHTML = metrics.map(([label, value, tone]) => `<article class="finance-metric-card ${tone}"><span>${label}</span><strong>${Store.currency(value)}</strong><small>${cashDateFilter.value === Store.todayISO() ? "Hoje" : Store.formatDate(cashDateFilter.value)}</small></article>`).join("");
+}
+
+function updateCashClosingPreview() {
+  const summary = getCashDaySummary(cashDateFilter.value);
+  const opening = safeNumber(cashClosingForm.elements.openingBalance.value);
+  const counted = safeNumber(cashClosingForm.elements.countedCash.value);
+  const expected = opening + summary.cashIncome - summary.cashExpense;
+  const difference = counted - expected;
+  document.getElementById("cashClosingPreview").innerHTML = `
+    <div><span>Esperado em dinheiro</span><strong>${Store.currency(expected)}</strong></div>
+    <div><span>Diferenca</span><strong class="${difference < 0 ? "negative" : difference > 0 ? "positive" : ""}">${Store.currency(difference)}</strong></div>
+  `;
+  return { ...summary, opening, counted, expected, difference };
+}
+
+function renderCashClosing() {
+  const existing = panelState.cashClosings.find((item) => item.date === cashDateFilter.value);
+  cashClosingForm.elements.id.value = existing?.id || "";
+  cashClosingForm.elements.openingBalance.value = existing?.openingBalance || 0;
+  cashClosingForm.elements.countedCash.value = existing?.countedCash ?? "";
+  cashClosingForm.elements.closedBy.value = existing?.closedBy || "Administracao";
+  cashClosingForm.elements.notes.value = existing?.notes || "";
+  document.getElementById("cashClosingStatus").textContent = existing ? `Fechado ${Store.formatDateTime(existing.closedAt)}` : "Em aberto";
+  updateCashClosingPreview();
+  document.getElementById("cashClosingHistory").innerHTML = panelState.cashClosings.length
+    ? [...panelState.cashClosings].sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 8).map((item) => `<article><div><strong>${Store.formatDate(item.date)}</strong><span>${escapeHtml(item.closedBy)}</span></div><div><strong class="${safeNumber(item.difference) ? "warning-text" : ""}">${Store.currency(item.difference)}</strong><span>Diferenca</span></div></article>`).join("")
+    : '<div class="empty-state">Nenhum fechamento realizado.</div>';
+}
+
+function renderCashModule() {
+  if (!cashDateFilter.value) cashDateFilter.value = Store.todayISO();
+  renderCashMetrics();
+  renderMovementList();
+  renderCashClosing();
+}
+
+function resetExpenseForm() {
+  expenseForm.reset();
+  expenseForm.elements.id.value = "";
+  expenseForm.elements.dueDate.value = Store.todayISO();
+  expenseForm.elements.status.value = "pendente";
+  expenseForm.elements.method.value = "pix";
+  expenseForm.elements.recurring.value = "nao";
+  document.getElementById("expenseEditorTitle").textContent = "Nova despesa";
+}
+
+function populateExpenseForm(expense) {
+  resetExpenseForm();
+  Object.entries(expense).forEach(([key, value]) => {
+    if (expenseForm.elements[key]) expenseForm.elements[key].value = value ?? "";
+  });
+  document.getElementById("expenseEditorTitle").textContent = "Editar despesa";
+}
+
+function getFilteredExpenses() {
+  const month = expenseMonthFilter.value;
+  const status = expenseStatusFilter.value;
+  const query = expenseSearchFilter.value.trim().toLocaleLowerCase("pt-BR");
+  return [...panelState.expenses]
+    .filter((item) => !month || String(item.dueDate || "").slice(0, 7) === month)
+    .filter((item) => status === "todos" || getEffectiveExpenseStatus(item) === status)
+    .filter((item) => !query || `${item.description} ${item.supplier}`.toLocaleLowerCase("pt-BR").includes(query))
+    .sort((left, right) => String(left.dueDate).localeCompare(String(right.dueDate)));
+}
+
+function renderExpenseList() {
+  const expenses = getFilteredExpenses();
+  document.getElementById("expenseResultCount").textContent = `${expenses.length} registro${expenses.length === 1 ? "" : "s"}`;
+  document.getElementById("expenseList").innerHTML = expenses.length
+    ? expenses.map((expense) => {
+        const status = getEffectiveExpenseStatus(expense);
+        return `<article class="expense-item"><div class="expense-due ${status}"><strong>${String(expense.dueDate || "").slice(8, 10) || "--"}</strong><span>${getFinanceMonthLabel(String(expense.dueDate || "").slice(0, 7))}</span></div><div class="expense-info"><div class="record-head"><div><span>${escapeHtml(FINANCE_CATEGORY_LABELS[expense.category] || expense.category)}</span><h4>${escapeHtml(expense.description)}</h4></div>${badge(status, status)}</div><p>${escapeHtml(expense.supplier || "Fornecedor nao informado")} · ${escapeHtml(expense.recurring || "nao")} recorrente</p><strong>${escapeHtml(Store.currency(expense.amount))}</strong><div class="record-actions"><button class="ghost-button small-button" type="button" data-edit-expense="${escapeHtml(expense.id)}">Editar</button>${status !== "pago" ? `<button class="ghost-button small-button pay-button" type="button" data-pay-expense="${escapeHtml(expense.id)}">Pagar</button>` : ""}</div></div></article>`;
+      }).join("")
+    : '<div class="empty-state">Nenhuma despesa encontrada.</div>';
+}
+
+function renderExpenseModule() {
+  if (!expenseMonthFilter.value) expenseMonthFilter.value = financeMonthFilter.value || Store.currentMonth();
+  renderExpenseList();
+}
+
+function getReportMovements() {
+  const start = reportStartDate.value;
+  const end = reportEndDate.value;
+  const type = reportTypeFilter.value;
+  const method = reportMethodFilter.value;
+  return getReportableMovements()
+    .filter((item) => item.status !== "estornado")
+    .filter((item) => !start || item.date >= start)
+    .filter((item) => !end || item.date <= end)
+    .filter((item) => type === "todos" || item.type === type)
+    .filter((item) => method === "todos" || item.method === method)
+    .sort((left, right) => `${right.date}T${right.time}`.localeCompare(`${left.date}T${left.time}`));
+}
+
+function renderReportBars(targetId, groups) {
+  const maximum = Math.max(...groups.map((item) => item.value), 1);
+  document.getElementById(targetId).innerHTML = groups.length
+    ? groups.map((item) => `<div class="report-bar-row"><span>${escapeHtml(item.label)}</span><div><i style="--report-width: ${(item.value / maximum) * 100}%"></i></div><strong>${escapeHtml(Store.currency(item.value))}</strong></div>`).join("")
+    : '<div class="empty-state">Sem dados para o periodo.</div>';
+}
+
+function renderFinanceReports() {
+  if (!reportStartDate.value) reportStartDate.value = `${Store.currentMonth()}-01`;
+  if (!reportEndDate.value) reportEndDate.value = Store.todayISO();
+  const movements = getReportMovements();
+  const income = sumFinance(movements.filter((item) => item.type === "entrada"));
+  const expense = sumFinance(movements.filter((item) => item.type === "saida"));
+  const result = income - expense;
+  const averageTicket = movements.filter((item) => item.type === "entrada").length ? income / movements.filter((item) => item.type === "entrada").length : 0;
+  const metrics = [["Entradas", income, "success"], ["Saidas", expense, "neutral"], ["Resultado", result, result >= 0 ? "success" : "danger"], ["Ticket medio", averageTicket, "warning"]];
+  document.getElementById("reportMetricGrid").innerHTML = metrics.map(([label, value, tone]) => `<article class="finance-metric-card ${tone}"><span>${label}</span><strong>${Store.currency(value)}</strong><small>${movements.length} movimento(s)</small></article>`).join("");
+
+  const categoryGroups = Object.entries(movements.reduce((groups, item) => {
+    const key = `${item.type}:${item.category}`;
+    groups[key] = (groups[key] || 0) + safeNumber(item.amount);
+    return groups;
+  }, {})).map(([key, value]) => { const [type, category] = key.split(":"); return { label: `${type === "entrada" ? "+" : "-"} ${FINANCE_CATEGORY_LABELS[category] || category}`, value }; }).sort((a, b) => b.value - a.value);
+  const methodGroups = Object.entries(movements.filter((item) => item.type === "entrada").reduce((groups, item) => { groups[item.method] = (groups[item.method] || 0) + safeNumber(item.amount); return groups; }, {})).map(([method, value]) => ({ label: FINANCE_METHOD_LABELS[method] || method, value })).sort((a, b) => b.value - a.value);
+  renderReportBars("reportCategoryChart", categoryGroups);
+  renderReportBars("reportMethodChart", methodGroups);
+
+  document.getElementById("reportResultCount").textContent = `${movements.length} registro${movements.length === 1 ? "" : "s"}`;
+  document.getElementById("reportPeriodLabel").textContent = `${Store.formatDate(reportStartDate.value)} a ${Store.formatDate(reportEndDate.value)}`;
+  document.getElementById("reportMovementTable").innerHTML = movements.length
+    ? `<div class="report-table-header"><span>Data</span><span>Descricao</span><span>Categoria</span><span>Forma</span><span>Tipo</span><span>Valor</span></div>${movements.map((item) => `<article class="report-table-row"><span data-label="Data">${Store.formatDate(item.date)} ${escapeHtml(item.time || "")}</span><strong data-label="Descricao">${escapeHtml(item.description)}</strong><span data-label="Categoria">${escapeHtml(FINANCE_CATEGORY_LABELS[item.category] || item.category)}</span><span data-label="Forma">${escapeHtml(FINANCE_METHOD_LABELS[item.method] || item.method)}</span><span data-label="Tipo" class="report-type ${item.type}">${item.type}</span><strong data-label="Valor">${item.type === "entrada" ? "+" : "-"} ${Store.currency(item.amount)}</strong></article>`).join("")}`
+    : '<div class="empty-state">Nenhuma movimentacao no periodo selecionado.</div>';
+}
+
+function renderFinance() {
+  if (!financeMonthFilter.value) financeMonthFilter.value = Store.currentMonth();
+  renderFinanceStudentOptions();
+  setActiveFinanceTab(activeFinanceTab);
 }
 
 function renderAccess(student) {
@@ -1542,13 +2014,83 @@ function handlePaymentSave(event) {
     ...payload,
     id: payload.id || (existingByReference ? existingByReference.id : ""),
     amount: safeNumber(payload.amount),
-    paidAt: payload.status === "pago" ? existing?.paidAt || Store.todayISO() : ""
+    discount: safeNumber(payload.discount),
+    fine: safeNumber(payload.fine),
+    netAmount: Math.max(0, safeNumber(payload.amount) - safeNumber(payload.discount) + safeNumber(payload.fine)),
+    paidAt: payload.status === "pago" ? payload.paidAt || existing?.paidAt || Store.todayISO() : ""
   });
 
   paymentForm.elements.id.value = nextPayment.id;
   let nextState = Store.upsertPayment(panelState, nextPayment);
   nextState = Store.updateStudent(nextState, payload.studentId, { monthlyFee: nextPayment.amount });
+  nextState = syncPaymentMovement(nextState, nextPayment);
   saveWithLog(nextState, "payment-updated", payload.studentId, `Mensalidade ${nextPayment.reference} atualizada para ${nextPayment.status}.`);
+}
+
+function handleMovementSave(event) {
+  event.preventDefault();
+  const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  const existing = findRecord("movements", payload.id);
+  const movement = Store.createMovementRecord({
+    ...existing,
+    ...payload,
+    amount: safeNumber(payload.amount),
+    status: existing?.status || "confirmado"
+  });
+  cashDateFilter.value = movement.date;
+  saveWithLog(
+    upsertRecord("movements", movement),
+    payload.id ? "movement-updated" : "movement-created",
+    "",
+    `${movement.type === "entrada" ? "Entrada" : "Saida"} de caixa registrada: ${movement.description}.`
+  );
+}
+
+function handleExpenseSave(event) {
+  event.preventDefault();
+  const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  const existing = findRecord("expenses", payload.id);
+  const expense = Store.createExpenseRecord({
+    ...existing,
+    ...payload,
+    amount: safeNumber(payload.amount),
+    paidAt: payload.status === "pago" ? existing?.paidAt || Store.todayISO() : ""
+  });
+  let nextState = upsertRecordInState(panelState, "expenses", expense);
+  nextState = syncExpenseMovement(nextState, expense);
+  saveWithLog(
+    nextState,
+    payload.id ? "expense-updated" : "expense-created",
+    "",
+    `Despesa ${expense.description} atualizada para ${expense.status}.`
+  );
+}
+
+function handleCashClosingSave(event) {
+  event.preventDefault();
+  const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  const summary = updateCashClosingPreview();
+  const existing = findRecord("cashClosings", payload.id);
+  const closing = Store.createCashClosingRecord({
+    ...existing,
+    ...payload,
+    date: cashDateFilter.value,
+    openingBalance: summary.opening,
+    cashIncome: summary.cashIncome,
+    cashExpense: summary.cashExpense,
+    expectedCash: summary.expected,
+    countedCash: summary.counted,
+    difference: summary.difference,
+    totalIncome: summary.income,
+    totalExpense: summary.expense,
+    closedAt: new Date().toISOString()
+  });
+  saveWithLog(
+    upsertRecord("cashClosings", closing),
+    existing ? "cash-closing-updated" : "cash-closing-created",
+    "",
+    `Caixa de ${Store.formatDate(closing.date)} fechado com diferenca de ${Store.currency(closing.difference)}.`
+  );
 }
 
 function handleWorkoutSave(event) {
@@ -1700,6 +2242,7 @@ function createNewSchedule() {
 }
 
 function createNewPayment() {
+  setActiveFinanceTab("payments");
   const preferredStudentId = paymentForm.elements.studentId.value || selectedStudentId;
   const student = Store.findStudent(panelState, preferredStudentId) || panelState.students[0] || null;
   if (student) {
@@ -1712,7 +2255,118 @@ function createNewPayment() {
       status: "pendente",
       method: "pix"
     });
+    document.getElementById("paymentEditorCard").scrollIntoView({ behavior: "smooth", block: "start" });
   }
+}
+
+function createNewMovement() {
+  setActiveFinanceTab("cash");
+  resetMovementForm();
+  document.getElementById("movementEditorCard").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function createNewExpense() {
+  setActiveFinanceTab("expenses");
+  resetExpenseForm();
+  document.getElementById("expenseEditorCard").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function generateMonthlyPayments() {
+  const reference = financeMonthFilter.value || Store.currentMonth();
+  const activeStudents = panelState.students.filter((student) => student.status === "ativo" || student.enrollmentStatus === "ativo");
+  const existingKeys = new Set(panelState.payments.map((payment) => `${payment.studentId}:${payment.reference}`));
+  const payments = activeStudents
+    .filter((student) => !existingKeys.has(`${student.id}:${reference}`))
+    .map((student) => Store.createPaymentRecord({
+      studentId: student.id,
+      reference: reference,
+      amount: safeNumber(student.monthlyFee),
+      dueDate: `${reference}-10`,
+      status: "pendente",
+      method: "pix",
+      description: "Mensalidade"
+    }));
+
+  if (!payments.length) {
+    window.alert("Todos os alunos ativos ja possuem mensalidade nesta competencia.");
+    return;
+  }
+
+  const nextState = Store.clone(panelState);
+  nextState.payments = [...payments, ...nextState.payments];
+  saveWithLog(nextState, "monthly-payments-generated", "", `${payments.length} mensalidade(s) gerada(s) para ${reference}.`);
+  window.alert(`${payments.length} mensalidade(s) gerada(s) para ${reference}.`);
+}
+
+function handleMovementAction(event) {
+  const button = event.target.closest("button");
+  if (!button) return;
+  const id = button.dataset.editMovement || button.dataset.voidMovement;
+  const movement = findRecord("movements", id);
+  if (!movement) return;
+
+  if (button.dataset.editMovement) {
+    populateMovementForm(movement);
+    document.getElementById("movementEditorCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  const status = movement.status === "estornado" ? "confirmado" : "estornado";
+  saveWithLog(
+    updateRecord("movements", movement.id, (record) => ({ ...record, status })),
+    status === "estornado" ? "movement-voided" : "movement-restored",
+    movement.studentId || "",
+    `Movimento ${movement.description} marcado como ${status}.`
+  );
+}
+
+function handleExpenseAction(event) {
+  const button = event.target.closest("button");
+  if (!button) return;
+  const id = button.dataset.editExpense || button.dataset.payExpense;
+  const expense = findRecord("expenses", id);
+  if (!expense) return;
+
+  if (button.dataset.editExpense) {
+    populateExpenseForm(expense);
+    document.getElementById("expenseEditorCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  const paidExpense = Store.createExpenseRecord({ ...expense, status: "pago", paidAt: Store.todayISO() });
+  let nextState = upsertRecordInState(panelState, "expenses", paidExpense);
+  nextState = syncExpenseMovement(nextState, paidExpense);
+  saveWithLog(nextState, "expense-paid", "", `Despesa ${expense.description} marcada como paga.`);
+}
+
+function escapeCsvCell(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
+
+function exportFinanceCsv() {
+  const movements = getReportMovements();
+  const rows = [
+    ["Data", "Horario", "Tipo", "Categoria", "Descricao", "Forma", "Conta", "Valor", "Status"],
+    ...movements.map((item) => [
+      item.date,
+      item.time || "",
+      item.type,
+      FINANCE_CATEGORY_LABELS[item.category] || item.category,
+      item.description,
+      FINANCE_METHOD_LABELS[item.method] || item.method,
+      item.account || "",
+      safeNumber(item.amount).toFixed(2).replace(".", ","),
+      item.status || "confirmado"
+    ])
+  ];
+  const content = `\uFEFF${rows.map((row) => row.map(escapeCsvCell).join(";")).join("\r\n")}`;
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([content], { type: "text/csv;charset=utf-8" }));
+  link.download = `pro-fitness-financeiro-${reportStartDate.value}-${reportEndDate.value}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(link.href);
 }
 
 function handleWorkspaceAction(event) {
@@ -1807,12 +2461,10 @@ function handleFinanceAction(event) {
     return;
   }
 
-  saveWithLog(
-    updateRecord("payments", payment.id, (record) => ({ ...record, status: "pago", paidAt: Store.todayISO() })),
-    "payment-paid",
-    payment.studentId,
-    `Mensalidade ${payment.reference} marcada como paga.`
-  );
+  const paidPayment = Store.createPaymentRecord({ ...payment, status: "pago", paidAt: Store.todayISO() });
+  let nextState = upsertRecordInState(panelState, "payments", paidPayment);
+  nextState = syncPaymentMovement(nextState, paidPayment);
+  saveWithLog(nextState, "payment-paid", payment.studentId, `Mensalidade ${payment.reference} marcada como paga.`);
 }
 
 function handleTabKeyboard(event) {
@@ -1848,6 +2500,9 @@ function handleTabKeyboard(event) {
 function attachPanelEvents() {
   studentForm.addEventListener("submit", handleStudentSave);
   paymentForm.addEventListener("submit", handlePaymentSave);
+  movementForm.addEventListener("submit", handleMovementSave);
+  expenseForm.addEventListener("submit", handleExpenseSave);
+  cashClosingForm.addEventListener("submit", handleCashClosingSave);
   workoutForm.addEventListener("submit", handleWorkoutSave);
   assessmentForm.addEventListener("submit", handleAssessmentSave);
   scheduleForm.addEventListener("submit", handleScheduleSave);
@@ -1895,6 +2550,8 @@ function attachPanelEvents() {
   document.getElementById("newAssessmentButton").addEventListener("click", createNewAssessment);
   document.getElementById("newScheduleButton").addEventListener("click", createNewSchedule);
   document.getElementById("newPaymentButton").addEventListener("click", createNewPayment);
+  document.getElementById("newMovementButton").addEventListener("click", createNewMovement);
+  document.getElementById("newExpenseButton").addEventListener("click", createNewExpense);
   document.getElementById("manageWeeklyScheduleButton").addEventListener("click", () => {
     setActiveMainSection("weekly");
     document.querySelector(".main-section-nav").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1922,9 +2579,23 @@ function attachPanelEvents() {
   document.getElementById("weeklyScheduleAdminList").addEventListener("click", handleWeeklyAdminAction);
 
   financeMonthFilter.addEventListener("change", renderFinance);
+  document.querySelectorAll("[data-finance-tab]").forEach((button) => {
+    button.addEventListener("click", () => setActiveFinanceTab(button.dataset.financeTab));
+  });
+  document.getElementById("paymentTabNewButton").addEventListener("click", createNewPayment);
+  document.getElementById("generateMonthlyPaymentsButton").addEventListener("click", generateMonthlyPayments);
   financeStatusFilter.addEventListener("change", renderFinancePaymentList);
   financeSearchFilter.addEventListener("input", renderFinancePaymentList);
   document.getElementById("paymentHistory").addEventListener("click", handleFinanceAction);
+  ["amount", "discount", "fine"].forEach((name) => {
+    paymentForm.elements[name].addEventListener("input", updatePaymentNetPreview);
+  });
+  paymentForm.elements.status.addEventListener("change", () => {
+    if (paymentForm.elements.status.value === "pago" && !paymentForm.elements.paidAt.value) {
+      paymentForm.elements.paidAt.value = Store.todayISO();
+    }
+    if (paymentForm.elements.status.value !== "pago") paymentForm.elements.paidAt.value = "";
+  });
   paymentForm.elements.studentId.addEventListener("change", () => {
     if (paymentForm.elements.id.value) {
       return;
@@ -1932,7 +2603,33 @@ function attachPanelEvents() {
     const student = Store.findStudent(panelState, paymentForm.elements.studentId.value);
     const latestPayment = student ? Store.getStudentPayments(panelState, student.id)[0] : null;
     paymentForm.elements.amount.value = student ? student.monthlyFee || latestPayment?.amount || 0 : "";
+    updatePaymentNetPreview();
   });
+
+  document.getElementById("cashTabNewMovementButton").addEventListener("click", createNewMovement);
+  document.getElementById("clearMovementButton").addEventListener("click", resetMovementForm);
+  document.getElementById("movementList").addEventListener("click", handleMovementAction);
+  cashDateFilter.addEventListener("change", renderCashModule);
+  movementTypeFilter.addEventListener("change", renderMovementList);
+  movementMethodFilter.addEventListener("change", renderMovementList);
+  movementSearchFilter.addEventListener("input", renderMovementList);
+  cashClosingForm.elements.openingBalance.addEventListener("input", updateCashClosingPreview);
+  cashClosingForm.elements.countedCash.addEventListener("input", updateCashClosingPreview);
+
+  document.getElementById("expenseTabNewButton").addEventListener("click", createNewExpense);
+  document.getElementById("clearExpenseButton").addEventListener("click", resetExpenseForm);
+  document.getElementById("expenseList").addEventListener("click", handleExpenseAction);
+  expenseMonthFilter.addEventListener("change", renderExpenseList);
+  expenseStatusFilter.addEventListener("change", renderExpenseList);
+  expenseSearchFilter.addEventListener("input", renderExpenseList);
+
+  document.getElementById("applyReportFiltersButton").addEventListener("click", renderFinanceReports);
+  document.getElementById("exportFinanceCsvButton").addEventListener("click", exportFinanceCsv);
+  document.getElementById("printFinanceReportButton").addEventListener("click", () => {
+    document.body.classList.add("printing-finance-report");
+    window.print();
+  });
+  window.addEventListener("afterprint", () => document.body.classList.remove("printing-finance-report"));
 
   document.getElementById("studentRoster").addEventListener("click", (event) => {
     const trigger = event.target.closest("[data-select-student]");
@@ -1986,6 +2683,10 @@ function attachPanelEvents() {
 
 attachPanelEvents();
 resetWeeklyScheduleForm();
+cashDateFilter.value = Store.todayISO();
+expenseMonthFilter.value = Store.currentMonth();
+resetMovementForm();
+resetExpenseForm();
 renderPanel();
 Store.hydrateFromRemoteIfConfigured().then((remoteState) => {
   panelState = remoteState;

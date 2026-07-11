@@ -19,7 +19,6 @@
  * POST { "action": "delete", "resource": "students", "data": { "id": "..." } }
  */
 
-const SPREADSHEET_ID = "COLE_O_ID_DA_PLANILHA_AQUI";
 const SPREADSHEET_ID_PROPERTY = "PROFITNESS_SPREADSHEET_ID";
 
 const SHEETS = {
@@ -85,7 +84,19 @@ const SHEETS = {
   },
   payments: {
     sheetName: "Pagamentos",
-    headers: ["id", "studentId", "reference", "amount", "dueDate", "status", "method", "paidAt", "notes"]
+    headers: ["id", "studentId", "reference", "amount", "discount", "fine", "netAmount", "dueDate", "status", "method", "paidAt", "description", "createdAt", "notes"]
+  },
+  movements: {
+    sheetName: "Movimentacoes",
+    headers: ["id", "date", "time", "type", "category", "description", "amount", "method", "account", "studentId", "paymentId", "expenseId", "status", "createdAt", "notes"]
+  },
+  expenses: {
+    sheetName: "Despesas",
+    headers: ["id", "description", "supplier", "category", "amount", "dueDate", "status", "paidAt", "method", "account", "recurring", "document", "createdAt", "notes"]
+  },
+  cashClosings: {
+    sheetName: "Fechamentos",
+    headers: ["id", "date", "openingBalance", "cashIncome", "cashExpense", "expectedCash", "countedCash", "difference", "totalIncome", "totalExpense", "closedBy", "closedAt", "notes"]
   },
   checkins: {
     sheetName: "Checkins",
@@ -363,13 +374,7 @@ function rememberSpreadsheet(spreadsheet) {
 
 function getResolvedSpreadsheetId() {
   const savedSpreadsheetId = PropertiesService.getScriptProperties().getProperty(SPREADSHEET_ID_PROPERTY);
-  if (savedSpreadsheetId) {
-    return savedSpreadsheetId;
-  }
-  if (SPREADSHEET_ID && SPREADSHEET_ID !== "COLE_O_ID_DA_PLANILHA_AQUI") {
-    return SPREADSHEET_ID;
-  }
-  return "";
+  return savedSpreadsheetId || "";
 }
 
 function validateResource(resource) {

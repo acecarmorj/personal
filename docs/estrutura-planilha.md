@@ -43,7 +43,16 @@ completam a estrutura da mesma planilha. A API nao cria outra planilha automatic
 - `teacherId` fica preparado para o futuro modulo Professores; `teacherName` permite uso imediato no painel.
 
 ### `Pagamentos`
-`id`, `studentId`, `reference`, `amount`, `dueDate`, `status`, `method`, `paidAt`, `notes`
+`id`, `studentId`, `reference`, `amount`, `discount`, `fine`, `netAmount`, `dueDate`, `status`, `method`, `paidAt`, `description`, `createdAt`, `notes`
+
+### `Movimentacoes`
+`id`, `date`, `time`, `type`, `category`, `description`, `amount`, `method`, `account`, `studentId`, `paymentId`, `expenseId`, `status`, `createdAt`, `notes`
+
+### `Despesas`
+`id`, `description`, `supplier`, `category`, `amount`, `dueDate`, `status`, `paidAt`, `method`, `account`, `recurring`, `document`, `createdAt`, `notes`
+
+### `Fechamentos`
+`id`, `date`, `openingBalance`, `cashIncome`, `cashExpense`, `expectedCash`, `countedCash`, `difference`, `totalIncome`, `totalExpense`, `closedBy`, `closedAt`, `notes`
 
 ### `Checkins`
 `id`, `studentId`, `workoutId`, `date`, `time`, `type`, `checkedInAt`, `checkedOutAt`, `source`, `presenceStatus`, `usedLoad`, `difficulty`, `pain`, `notes`
