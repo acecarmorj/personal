@@ -1644,3 +1644,9 @@ ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 16
 - Aluno `000001` recebeu apenas `ALU-DEMO-001`, sem outros alunos, usuarios ou exportacao integral.
 - QR temporario foi aceito uma vez e recusado como reutilizado na segunda tentativa; a base operacional foi restaurada ao modelo oficial depois do teste.
 - Cache final atualizado para `20260711-auth6` e service worker para `profitness-shell-2026-07-auth6`.
+- Entrega principal publicada no GitHub pelo commit `19c66a4` da branch `main`.
+- Workflow `Publish PersonalPro` numero `29163415676` concluido com sucesso.
+- GitHub Pages confirmou HTTP 200 em aluno, painel, professor, manifesto, service worker e biblioteca QR local.
+- Paginas publicas confirmaram os formularios `studentLoginForm`, `adminLoginForm` e `profLoginForm`.
+- Pacote limpo validado e compactado em `D:\PersonalPro-entrega-20260711-152407.zip`.
+- API oficial permanece na mesma URL como implantacao imutavel 12 e planilha vinculada no esquema 6.
