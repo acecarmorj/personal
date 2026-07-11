@@ -1366,4 +1366,7 @@ ATUALIZACAO - 2026-07-11 - CORRECOES DE RESTAURACAO, CONFLITOS E ENTREGA
 - Teste remoto controlado criou e editou um exercicio temporario, bloqueou a exclusao com versao antiga e permitiu a exclusao com a versao atual; nenhum registro operacional de teste permaneceu.
 - Na revisao final, removida a regravacao local feita depois de `pushRemoteSnapshot`: uma edicao realizada durante o envio do backup nao pode mais ser substituida pela copia anterior.
 - Adicionado teste de regressao garantindo que o envio remoto de snapshot nao chama `saveData` ao concluir.
-- A API esta atualizada e validada; o frontend ainda aguarda a publicacao final no GitHub.
+- Frontend e documentacao publicados no GitHub pelo commit `5cde0db` da branch `main` do repositorio `acecarmorj/personal`.
+- Workflow `Publish PersonalPro` numero `29157388633` concluido com sucesso e implantado no GitHub Pages.
+- Verificacao publica confirmou HTTP 200 em `index.html`, `painel.html` e `prof.html`, todos apontando para a versao de cache `20260711-schema2-sync2`.
+- Verificacao final conjunta confirmou frontend publicado, API publica ativa em `schemaVersion: 2` e planilha correta vinculada.
