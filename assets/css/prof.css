@@ -39,6 +39,73 @@ select { font: inherit; }
 
 button { cursor: pointer; }
 
+.prof-auth-view {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(300px, 1.15fr) minmax(320px, 0.85fr);
+  background: #e8e7e1;
+}
+
+.prof-auth-visual { position: relative; min-height: 100vh; overflow: hidden; background: var(--black); }
+.prof-auth-visual img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(.2) contrast(1.06); }
+.prof-auth-visual::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(17,17,17,.82), rgba(17,17,17,.08) 60%); }
+.prof-auth-visual > div { position: absolute; z-index: 1; left: 36px; bottom: 34px; display: grid; color: white; }
+.prof-auth-visual strong { color: var(--yellow); font-size: clamp(34px, 5vw, 64px); letter-spacing: .06em; }
+.prof-auth-visual span { font-weight: 800; letter-spacing: .2em; }
+.prof-auth-card { width: min(100% - 40px, 440px); margin: auto; padding: 34px; border-radius: 26px; background: white; box-shadow: var(--shadow); }
+.prof-auth-card h1 { margin: 6px 0 10px; font-size: clamp(26px, 4vw, 38px); line-height: 1.05; }
+.prof-auth-card > p:not(.prof-view-kicker) { color: var(--muted); line-height: 1.55; }
+.prof-auth-form { display: grid; gap: 15px; margin: 24px 0 14px; }
+.prof-auth-form label { display: grid; gap: 7px; font-weight: 750; }
+.prof-auth-form input { min-height: 54px; padding: 0 14px; border: 1px solid var(--line); border-radius: 14px; background: #faf9f5; }
+.prof-auth-feedback { min-height: 22px; color: var(--danger) !important; font-size: 14px; font-weight: 700; }
+.prof-lock-view { position: fixed; z-index: 9999; inset: 0; place-items: center; grid-template-columns: 1fr; background: rgba(17,17,17,.92); }
+.prof-session-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding: 10px 12px; border-radius: 14px; background: var(--black); color: white; }
+.prof-session-bar > div { display: grid; margin-right: auto; }
+.prof-session-bar span { color: #bbb; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+.prof-session-bar button { min-height: 38px; padding: 0 12px; border: 1px solid #555; border-radius: 10px; color: white; background: #2b2b2b; font-weight: 700; }
+.training-result-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+.training-result-summary article { padding: 14px; border-radius: 14px; background: var(--paper); }
+.training-result-summary span, .training-result-summary strong { display: block; }
+.training-result-summary span { color: var(--muted); font-size: 12px; }
+.training-result-summary strong { margin-top: 5px; font-size: 20px; }
+.training-result-list { display: grid; gap: 12px; }
+.training-result-card { padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: white; }
+.training-result-card header, .training-result-meta, .training-exercise-result { display: flex; align-items: center; gap: 10px; }
+.training-result-card header { justify-content: space-between; }
+.training-result-card h4 { margin: 3px 0 0; font-size: 17px; }
+.training-result-card header > div > span { color: var(--muted); font-size: 12px; }
+.training-result-meta { flex-wrap: wrap; margin: 12px 0; }
+.training-result-meta span { padding: 6px 9px; border-radius: 9px; background: var(--paper); font-size: 12px; font-weight: 700; }
+.training-result-meta .pain { color: var(--danger); background: var(--danger-bg); }
+.training-exercise-result { justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.training-exercise-result span { color: var(--muted); }
+
+.environment-badge {
+  position: fixed;
+  z-index: 10000;
+  top: 10px;
+  right: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(17, 17, 17, 0.2);
+  border-radius: 999px;
+  color: var(--black);
+  background: rgba(244, 201, 40, 0.96);
+  box-shadow: 0 8px 24px rgba(21, 21, 18, 0.18);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  .prof-auth-view { grid-template-columns: 1fr; }
+  .prof-auth-visual { min-height: 230px; height: 34vh; }
+  .prof-auth-card { margin: -28px auto 24px; position: relative; z-index: 2; }
+  .prof-lock-view .prof-auth-card { margin: auto; }
+  .training-result-summary { grid-template-columns: repeat(2, 1fr); }
+}
+
 .prof-shell {
   width: min(100%, 1180px);
   min-height: 100vh;
@@ -453,7 +520,7 @@ button.student-list-card {
   backdrop-filter: blur(12px);
 }
 
-/* Ponto do professor: uso rapido no tablet e leitura clara a distancia. */
+/* Presenca do professor: uso rapido no tablet e leitura clara a distancia. */
 .prof-view-kicker {
   margin: 0 0 4px;
   color: var(--yellow-deep);

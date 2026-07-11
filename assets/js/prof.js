@@ -17,14 +17,15 @@
     { value: 6, label: "Sabado", short: "Sab" }
   ];
   const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
-  const PROFESSOR_SYNC_QUEUE_KEY = "profitness-professor-sync-queue-v1";
-  const PROFESSOR_LAST_SYNC_KEY = "profitness-professor-last-sync-v1";
+  const PROFESSOR_SYNC_QUEUE_PREFIX = Store.storageKey("professor-sync-queue-v2");
+  const PROFESSOR_LAST_SYNC_PREFIX = Store.storageKey("professor-last-sync-v2");
   const PROFESSOR_SYNC_INTERVAL_MS = 60000;
   const PROFESSOR_SYNC_RESOURCES = ["students", "assessments", "workouts", "schedule", "payments", "movements", "checkins", "staffTimeEntries"];
-  const ACTIVE_PROFESSOR_KEY = "profitness-active-professor-v1";
-  const PROFESSOR_DEVICE_KEY = "profitness-professor-device-v1";
+  const ACTIVE_PROFESSOR_KEY = Store.storageKey("active-professor-v1");
+  const PROFESSOR_DEVICE_KEY = Store.storageKey("professor-device-v1");
 
   let state = Store.loadData();
+  let authSession = Store.loadAuthSession();
   let activeView = "inicio";
   let selectedStudentId = "";
   let activeStudentModule = "ficha";
@@ -35,6 +36,12 @@
   let professorSyncPromise = null;
   let professorAutoSyncTimer = null;
   let staffClockTimer = null;
+  let professorIdleTimer = null;
+  let professorLastActivity = Date.now();
+
+  function professorAccountKey(prefix) {
+    return `${prefix}-${authSession?.account?.id || "anonymous"}`;
+  }
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -78,7 +85,7 @@
 
   function loadProfessorSyncQueue() {
     try {
-      const parsed = JSON.parse(localStorage.getItem(PROFESSOR_SYNC_QUEUE_KEY) || "[]");
+      const parsed = JSON.parse(localStorage.getItem(professorAccountKey(PROFESSOR_SYNC_QUEUE_PREFIX)) || "[]");
       return Array.isArray(parsed) ? parsed.filter((item) => item && item.resource && item.recordId) : [];
     } catch (error) {
       return [];
@@ -86,7 +93,7 @@
   }
 
   function saveProfessorSyncQueue(queue) {
-    localStorage.setItem(PROFESSOR_SYNC_QUEUE_KEY, JSON.stringify(Array.isArray(queue) ? queue : []));
+    localStorage.setItem(professorAccountKey(PROFESSOR_SYNC_QUEUE_PREFIX), JSON.stringify(Array.isArray(queue) ? queue : []));
     renderProfessorSyncStatus();
   }
 
@@ -110,6 +117,7 @@
         if (!beforeMap.has(recordId) || !recordsAreEqual(beforeMap.get(recordId), record)) {
           operations.push({
             id: Store.uid("SYNC"),
+            accountId: authSession?.account?.id || "",
             action: "upsert",
             resource,
             recordId,
@@ -123,6 +131,7 @@
         if (!afterMap.has(recordId)) {
           operations.push({
             id: Store.uid("SYNC"),
+            accountId: authSession?.account?.id || "",
             action: "delete",
             resource,
             recordId,
@@ -155,7 +164,7 @@
   }
 
   function formatProfessorLastSync() {
-    const value = localStorage.getItem(PROFESSOR_LAST_SYNC_KEY);
+    const value = localStorage.getItem(professorAccountKey(PROFESSOR_LAST_SYNC_PREFIX));
     if (!value) {
       return "Ainda não sincronizado";
     }
@@ -172,7 +181,7 @@
   }
 
   function setProfessorLastSync() {
-    localStorage.setItem(PROFESSOR_LAST_SYNC_KEY, new Date().toISOString());
+    localStorage.setItem(professorAccountKey(PROFESSOR_LAST_SYNC_PREFIX), new Date().toISOString());
   }
 
   function renderProfessorSyncStatus(mode, customText) {
@@ -737,10 +746,18 @@
     updateProfessorPaymentPreview();
   }
 
-  function openProfessorPayment() {
+  async function openProfessorPayment() {
     const student = Store.findStudent(state, selectedStudentId);
     if (!student) {
       showToast("Selecione um aluno.", "warning");
+      return;
+    }
+    try {
+      const context = await Store.fetchProfessorPaymentContext(student.id, todayLocalISO().slice(0, 7));
+      state.payments = context.payment ? [context.payment] : [];
+      student.monthlyFee = context.suggestedAmount;
+    } catch (error) {
+      showToast(error.message || "Nao foi possivel consultar esta mensalidade.", "warning");
       return;
     }
     populateProfessorPaymentForm(student, todayLocalISO().slice(0, 7));
@@ -831,12 +848,8 @@
       return;
     }
 
-    const existing = form.elements.id.value
-      ? (state.payments || []).find((payment) => payment.id === form.elements.id.value)
-      : getPaymentForReference(student.id, reference);
     const payment = Store.createPaymentRecord({
-      ...existing,
-      id: existing?.id || "",
+      id: form.elements.id.value || "",
       studentId: student.id,
       reference,
       amount,
@@ -854,16 +867,15 @@
       updatedAt: new Date().toISOString()
     });
 
-    let next = Store.upsertPayment(state, payment);
-    next = Store.updateStudent(next, student.id, { monthlyFee: amount });
-    next = syncProfessorPaymentMovement(next, payment);
-    closeProfessorPayment();
-    await persistProfessorState(
-      next,
-      existing ? "professor-payment-updated" : "professor-payment-received",
-      student.id,
-      `Mensalidade ${reference} recebida no tablet por ${recordedBy}.`
-    );
+    try {
+      const result = await Store.receivePaymentRemote(payment);
+      state.payments = result.payment ? [result.payment] : [];
+      closeProfessorPayment();
+      showToast(`Recebimento de ${Store.currency(result.payment?.paidAmount || paidAmount)} confirmado.`, "success");
+      await refreshData({ manual: false });
+    } catch (error) {
+      showToast(error.message || "Nao foi possivel confirmar o recebimento.", "warning");
+    }
   }
 
 
@@ -1534,8 +1546,30 @@
     );
   }
 
+  function renderProfessorTrainingResults(student) {
+    const sessions = (state.workoutSessions || []).filter((item) => item.studentId === student.id).sort((a, b) => String(b.startedAt || "").localeCompare(String(a.startedAt || "")));
+    const completed = sessions.filter((item) => item.status === "concluida");
+    const totalMinutes = completed.reduce((sum, item) => sum + safeNumber(item.durationMinutes), 0);
+    const painReports = sessions.filter((item) => item.pain && normalizeText(item.pain) !== "nenhuma").length;
+    document.getElementById("profResultTabCount").textContent = String(sessions.length);
+    document.getElementById("profResultCount").textContent = `${sessions.length} ${sessions.length === 1 ? "sessao" : "sessoes"}`;
+    document.getElementById("profResultSummary").innerHTML = [
+      ["Concluidos", completed.length], ["Tempo total", formatStaffDuration(totalMinutes)], ["Relatos de dor", painReports], ["Interrompidos", sessions.filter((item) => item.status !== "concluida").length]
+    ].map(([label, value]) => `<article><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></article>`).join("");
+    document.getElementById("profResultList").innerHTML = sessions.length ? sessions.slice(0, 12).map((session) => {
+      const sets = (state.exerciseSets || []).filter((item) => item.sessionId === session.id);
+      const grouped = new Map();
+      sets.forEach((set) => {
+        const key = set.exerciseId || set.exerciseName;
+        if (!grouped.has(key)) grouped.set(key, { name: set.exerciseName, sets: 0, completed: 0, maxLoad: 0 });
+        const group = grouped.get(key); group.sets += 1; if (set.status === "concluida") group.completed += 1; group.maxLoad = Math.max(group.maxLoad, safeNumber(set.actualLoad));
+      });
+      return `<article class="training-result-card"><header><div><span>${escapeHtml(Store.formatDateTime(session.startedAt))}</span><h4>${escapeHtml(session.workoutTitle || session.division || "Treino")}</h4></div><span class="status-pill ${session.status === "concluida" ? "ok" : "warning"}">${session.status === "concluida" ? "Concluido" : "Interrompido"}</span></header><div class="training-result-meta"><span>${escapeHtml(formatStaffDuration(session.durationMinutes || 0))}</span><span>${safeNumber(session.completedSets)} de ${safeNumber(session.totalSets)} series</span><span>Dificuldade: ${escapeHtml(session.difficulty || "nao informada")}</span><span class="${session.pain && normalizeText(session.pain) !== "nenhuma" ? "pain" : ""}">Dor: ${escapeHtml(session.pain || "nenhuma")}</span></div>${[...grouped.values()].map((group) => `<div class="training-exercise-result"><strong>${escapeHtml(group.name)}</strong><span>${group.completed}/${group.sets} series · ${group.maxLoad ? `${formatNumber(group.maxLoad, 1)} kg` : "sem carga"}</span></div>`).join("")}${session.notes ? `<p>${escapeHtml(session.notes)}</p>` : ""}</article>`;
+    }).join("") : '<div class="empty-state">Nenhum treino realizado pelo aluno.</div>';
+  }
+
   function setStudentModule(moduleName, options = {}) {
-    const allowed = ["ficha", "treinos", "avaliacoes", "agenda", "presencas"];
+    const allowed = ["ficha", "treinos", "resultados", "avaliacoes", "agenda", "presencas"];
     const target = allowed.includes(moduleName) ? moduleName : "ficha";
     activeStudentModule = target;
 
@@ -1634,6 +1668,7 @@ function startNewProfessorStudent() {
     fillStudentForm(student);
     setStudentEditing(false);
     renderProfessorWorkouts(student);
+    renderProfessorTrainingResults(student);
     renderProfessorAssessments(student);
     renderProfessorStudentSchedule(student);
 
@@ -1798,7 +1833,7 @@ function startNewProfessorStudent() {
       .sort((left, right) => String(left.name || "").localeCompare(String(right.name || ""), "pt-BR"));
     return professors.length
       ? professors
-      : [{ id: "USR-PROF-TEMP", name: "Professor Pro Fitness", email: "", role: "professor", status: "ativo" }];
+      : [{ id: authSession?.account?.personId || "USR-PROF-TEMP", name: authSession?.account?.login || "Professor Pro Fitness", email: "", role: "professor", status: "ativo" }];
   }
 
   function getActiveProfessor() {
@@ -1862,7 +1897,7 @@ function startNewProfessorStudent() {
 
     document.getElementById("profTimeDate").textContent = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "America/Sao_Paulo" }).format(now);
     document.getElementById("staffClockCurrentTime").textContent = formatStaffClock(now);
-    document.getElementById("staffClockStatus").textContent = openEntry ? "Em expediente" : "Fora da academia";
+    document.getElementById("staffClockStatus").textContent = openEntry ? "Presente na academia" : "Fora da academia";
     document.getElementById("staffClockDetail").textContent = openEntry
       ? `Entrada registrada as ${formatStaffClock(openEntry.clockIn)}. Tempo atual: ${formatStaffDuration(getStaffEntryMinutes(openEntry, now))}.`
       : "Registre a entrada ao chegar e a saida antes de deixar a academia.";
@@ -1950,6 +1985,16 @@ function startNewProfessorStudent() {
     renderStaffClock();
   }
 
+  function buildProfessorState(data) {
+    const empty = Store.createEmptySnapshot();
+    return Store.migrateData({
+      ...empty,
+      students: data?.students || [], assessments: data?.assessments || [], workouts: data?.workouts || [], schedule: data?.schedule || [],
+      checkins: data?.checkins || [], workoutSessions: data?.workoutSessions || [], exerciseSets: data?.exerciseSets || [], exercises: data?.exercises || [],
+      users: data?.users || [], staffTimeEntries: data?.staffTimeEntries || [], config: data?.config || [], payments: [], movements: [], expenses: [], cashClosings: [], log: []
+    });
+  }
+
   async function refreshData(options) {
     const settings = options && !(options instanceof Event) ? options : {};
     const manual = settings.manual !== false;
@@ -1978,14 +2023,14 @@ function startNewProfessorStudent() {
           state = Store.loadData();
           renderProfessorSyncStatus("pending");
         } else {
-          const remoteRaw = await Store.fetchRemoteSnapshot();
+          const remoteRaw = await Store.fetchProfessorBootstrap();
           const localSnapshot = Store.loadData();
           const localChangedDuringRefresh = JSON.stringify(localSnapshot) !== refreshBaseline;
           if (getProfessorPendingCount() || localChangedDuringRefresh) {
             state = localSnapshot;
             renderProfessorSyncStatus("pending");
           } else if (Store.snapshotHasMeaningfulData(remoteRaw) || !Store.snapshotHasMeaningfulData(localSnapshot)) {
-            state = Store.migrateData(remoteRaw);
+            state = buildProfessorState(remoteRaw);
             Store.saveData(state);
           } else {
             state = localSnapshot;
@@ -2007,6 +2052,67 @@ function startNewProfessorStudent() {
         renderStudentWorkspace(selectedStudentId);
       }
     }
+  }
+
+  function showProfessorAccess(mode) {
+    const logged = mode === "app";
+    document.getElementById("profAuthView").hidden = mode !== "login";
+    document.getElementById("profLockView").hidden = mode !== "lock";
+    document.getElementById("profAppShell").hidden = !logged;
+    if (logged) {
+      const profile = getProfessorUsers()[0];
+      document.getElementById("profCurrentUser").textContent = profile?.name || authSession?.account?.login || "Professor";
+      professorLastActivity = Date.now();
+    }
+  }
+
+  async function loginProfessor(login, password, feedbackId) {
+    const feedback = document.getElementById(feedbackId);
+    feedback.textContent = "Verificando acesso...";
+    try {
+      const session = await Store.loginRemote(login, password);
+      if (session.account?.role !== "professor") {
+        await Store.logoutRemote();
+        throw new Error("Esta conta nao pertence a um professor.");
+      }
+      authSession = session;
+      if (session.account?.mustChangePassword) {
+        document.getElementById("profLoginCard").hidden = true;
+        document.getElementById("profPasswordChangeCard").hidden = false;
+        feedback.textContent = "";
+        return;
+      }
+      state = buildProfessorState(await Store.fetchProfessorBootstrap());
+      Store.saveData(state);
+      feedback.textContent = "";
+      showProfessorAccess("app");
+      renderAll();
+      renderProfessorSyncStatus("online");
+    } catch (error) {
+      feedback.textContent = error.message || "Nao foi possivel entrar.";
+    }
+  }
+
+  async function leaveProfessorSession() {
+    await Store.logoutRemote();
+    authSession = null;
+    state = Store.migrateData(Store.createEmptySnapshot());
+    Store.saveData(state);
+    showProfessorAccess("login");
+    document.getElementById("profLoginCard").hidden = false;
+    document.getElementById("profPasswordChangeCard").hidden = true;
+    document.getElementById("profLoginForm").reset();
+  }
+
+  function lockProfessorTablet() {
+    if (!authSession) return;
+    document.getElementById("profLockName").textContent = document.getElementById("profCurrentUser").textContent;
+    document.getElementById("profUnlockForm").dataset.login = authSession.account.login;
+    showProfessorAccess("lock");
+  }
+
+  function registerProfessorActivity() {
+    if (authSession && document.getElementById("profLockView").hidden) professorLastActivity = Date.now();
   }
 
   document.addEventListener("click", (event) => {
@@ -2127,6 +2233,37 @@ function startNewProfessorStudent() {
     renderStaffClock();
   });
   document.getElementById("toggleStaffClockButton").addEventListener("click", toggleStaffClock);
+  document.getElementById("profLoginForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    await loginProfessor(form.get("login"), form.get("password"), "profLoginFeedback");
+  });
+  document.getElementById("profDemoLoginButton").addEventListener("click", () => loginProfessor("prof.rafael", "Demo1234", "profLoginFeedback"));
+  document.getElementById("profPasswordChangeForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const newPassword = String(form.get("newPassword") || "");
+    const feedback = document.getElementById("profPasswordChangeFeedback");
+    if (newPassword !== String(form.get("confirmPassword") || "")) { feedback.textContent = "A confirmacao nao confere."; return; }
+    try {
+      authSession = await Store.changePasswordRemote(form.get("currentPassword"), newPassword);
+      state = buildProfessorState(await Store.fetchProfessorBootstrap());
+      Store.saveData(state);
+      document.getElementById("profLoginCard").hidden = false;
+      document.getElementById("profPasswordChangeCard").hidden = true;
+      showProfessorAccess("app"); renderAll();
+    } catch (error) { feedback.textContent = error.message || "Nao foi possivel alterar a senha."; }
+  });
+  document.getElementById("cancelProfPasswordChange").addEventListener("click", leaveProfessorSession);
+  document.getElementById("profLogoutButton").addEventListener("click", leaveProfessorSession);
+  document.getElementById("profLockButton").addEventListener("click", lockProfessorTablet);
+  document.getElementById("profSwitchUserButton").addEventListener("click", leaveProfessorSession);
+  document.getElementById("profUnlockForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await loginProfessor(event.currentTarget.dataset.login, new FormData(event.currentTarget).get("password"), "profUnlockFeedback");
+    event.currentTarget.reset();
+  });
+  ["pointerdown", "keydown", "touchstart"].forEach((eventName) => document.addEventListener(eventName, registerProfessorActivity, { passive: true }));
   document.getElementById("newProfessorStudent").addEventListener("click", startNewProfessorStudent);
   document.getElementById("closeStudentPreview").addEventListener("click", () => {
     creatingProfessorStudent = false;
@@ -2246,12 +2383,15 @@ function startNewProfessorStudent() {
   });
 
   professorAutoSyncTimer = window.setInterval(() => {
-    if (!hasProfessorUnsavedEditor()) {
+    if (authSession && !hasProfessorUnsavedEditor()) {
       refreshData({ manual: false });
     }
   }, PROFESSOR_SYNC_INTERVAL_MS);
 
   staffClockTimer = window.setInterval(renderStaffClock, 30000);
+  professorIdleTimer = window.setInterval(() => {
+    if (authSession && Date.now() - professorLastActivity >= 5 * 60 * 1000) lockProfessorTablet();
+  }, 30000);
 
   window.addEventListener("beforeunload", () => {
     if (professorAutoSyncTimer) {
@@ -2260,9 +2400,17 @@ function startNewProfessorStudent() {
     if (staffClockTimer) {
       window.clearInterval(staffClockTimer);
     }
+    if (professorIdleTimer) window.clearInterval(professorIdleTimer);
   });
 
+  Store.applyRuntimeEnvironment();
   setView(activeView);
-  renderProfessorSyncStatus(getProfessorPendingCount() ? "pending" : isProfessorOnline() ? "online" : "offline");
-  refreshData({ manual: false });
+  if (authSession?.account?.role === "professor") {
+    showProfessorAccess("app");
+    renderProfessorSyncStatus(getProfessorPendingCount() ? "pending" : isProfessorOnline() ? "online" : "offline");
+    refreshData({ manual: false });
+  } else {
+    authSession = null;
+    showProfessorAccess("login");
+  }
 })();

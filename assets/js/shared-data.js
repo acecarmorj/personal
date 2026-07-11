@@ -1,10 +1,17 @@
 (function () {
-  const STORAGE_KEY = "profitness-data-v1";
+  const RUNTIME_CONFIG = window.PROFITNESS_CONFIG || {};
+  const ENVIRONMENT = String(RUNTIME_CONFIG.environment || "production").trim().toLowerCase() === "demo" ? "demo" : "production";
+  const PAGE_NAME = String(window.location?.pathname || "").split("/").pop().toLowerCase();
+  const SURFACE = PAGE_NAME === "prof.html" ? "professor" : PAGE_NAME === "painel.html" ? "admin" : "student";
+  const STORAGE_NAMESPACE = `profitness-${ENVIRONMENT}-${SURFACE}`;
+  const STORAGE_KEY = `${STORAGE_NAMESPACE}-data-v1`;
+  const PRE_ENVIRONMENT_STORAGE_KEY = "profitness-data-v1";
   const LEGACY_STORAGE_KEY = "profitness-data-v0";
-  const SESSION_KEY = "profitness-student-session-v1";
+  const SESSION_KEY = `${STORAGE_NAMESPACE}-student-session-v1`;
+  const AUTH_SESSION_KEY = `${STORAGE_NAMESPACE}-auth-session-v1`;
   const API_PLACEHOLDER = "COLE_A_URL_DO_WEB_APP_AQUI";
   const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
-  const SYNC_DEVICE_KEY = "profitness-sync-device-v1";
+  const SYNC_DEVICE_KEY = `${STORAGE_NAMESPACE}-sync-device-v1`;
   const SNAPSHOT_RESOURCES = ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "workoutSessions", "exerciseSets", "exercises", "users", "staffTimeEntries", "config", "log"];
   const LEGACY_OPTIONAL_RESOURCES = ["workoutSessions", "exerciseSets"];
 
@@ -149,7 +156,28 @@
   }
 
   function getRuntimeConfig() {
-    return window.PROFITNESS_CONFIG || {};
+    return RUNTIME_CONFIG;
+  }
+
+  function getEnvironment() {
+    return ENVIRONMENT;
+  }
+
+  function isDemoEnvironment() {
+    return ENVIRONMENT === "demo";
+  }
+
+  function storageKey(name) {
+    return `${STORAGE_NAMESPACE}-${String(name || "data").replace(/^profitness-/, "")}`;
+  }
+
+  function applyRuntimeEnvironment() {
+    const label = String(RUNTIME_CONFIG.environmentLabel || (isDemoEnvironment() ? "Ambiente de demonstracao" : "")).trim();
+    document.querySelectorAll("[data-environment-badge]").forEach((badge) => {
+      badge.hidden = !isDemoEnvironment();
+      badge.textContent = label;
+    });
+    document.documentElement.dataset.environment = ENVIRONMENT;
   }
 
   function getApiBaseUrl() {
@@ -176,6 +204,9 @@
     const student = overrides || {};
     return {
       id: student.id || uid("ALU"),
+      enrollmentNumber: String(student.enrollmentNumber || student.registrationNumber || student.id || ""),
+      cpf: String(student.cpf || ""),
+      accountId: String(student.accountId || ""),
       name: student.name || "",
       phone: student.phone || "",
       email: student.email || "",
@@ -883,7 +914,9 @@
           paymentAlertDays: [7, 3, 0],
           paymentGraceDays: 0,
           blockAccessOnOverdue: true,
-          schemaVersion: 3
+          environment: "demo",
+          datasetId: "pro-fitness-demo-2026-07",
+          schemaVersion: 6
         }
       ],
       log: []
@@ -919,8 +952,9 @@
 
   function loadData() {
     const raw = localStorage.getItem(STORAGE_KEY);
-    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : legacy ? JSON.parse(legacy) : buildDemoData();
+    const preEnvironment = isDemoEnvironment() ? localStorage.getItem(PRE_ENVIRONMENT_STORAGE_KEY) : null;
+    const legacy = isDemoEnvironment() ? localStorage.getItem(LEGACY_STORAGE_KEY) : null;
+    const parsed = raw ? JSON.parse(raw) : preEnvironment ? JSON.parse(preEnvironment) : legacy ? JSON.parse(legacy) : isDemoEnvironment() ? buildDemoData() : createEmptySnapshot();
     const normalized = migrateData(parsed);
     saveData(normalized);
     return normalized;
@@ -959,7 +993,8 @@
     };
 
     if (payload) {
-      options.body = JSON.stringify(payload);
+      const authSession = loadAuthSession();
+      options.body = JSON.stringify({ ...payload, ...(authSession?.token ? { token: authSession.token } : {}) });
     }
 
     const data = await fetchJson(apiBaseUrl, options, 20000);
@@ -974,30 +1009,89 @@
     return data;
   }
 
-  async function fetchRemoteSnapshot() {
-    const exportUrl = `${getApiBaseUrl()}?action=exportAll`;
-    const data = await fetchJson(exportUrl, {}, 60000);
+  function getDeviceDescriptor() {
+    return {
+      deviceId: getSyncDeviceId(),
+      deviceName: `${navigator?.platform || "Web"} - ${getSyncSource()}`,
+      userAgent: navigator?.userAgent || ""
+    };
+  }
 
-    if (!data.ok) {
-      const error = new Error(data.message || "Falha ao exportar snapshot remoto.");
-      error.code = data.errorCode || "REMOTE_ERROR";
-      throw error;
+  async function loginRemote(login, password) {
+    const data = await requestRemote("POST", { action: "login", login: String(login || ""), password: String(password || ""), ...getDeviceDescriptor() });
+    return saveAuthSession(data.data);
+  }
+
+  async function changePasswordRemote(currentPassword, newPassword) {
+    const data = await requestRemote("POST", { action: "changePassword", currentPassword, newPassword, ...getDeviceDescriptor() });
+    return saveAuthSession(data.data);
+  }
+
+  async function logoutRemote() {
+    try {
+      if (loadAuthSession()) await requestRemote("POST", { action: "logout" });
+    } catch (error) {
+      // A sessao local sempre deve ser removida, mesmo se ja expirou no servidor.
+    } finally {
+      clearAuthSession();
     }
+  }
 
+  async function listAccountsRemote() {
+    return (await requestRemote("POST", { action: "listAccounts" })).data || [];
+  }
+
+  async function createAccountRemote(account) {
+    return (await requestRemote("POST", { action: "createAccount", data: account })).data;
+  }
+
+  async function resetPasswordRemote(accountId) {
+    return (await requestRemote("POST", { action: "resetPassword", accountId })).data;
+  }
+
+  async function updateAccountRemote(account) {
+    return (await requestRemote("POST", { action: "updateAccount", data: account })).data;
+  }
+
+  async function restoreDemoRemote(snapshot, confirmation) {
+    return (await requestRemote("POST", { action: "restoreDemo", snapshot: normalizeSnapshot(snapshot), confirmation })).data;
+  }
+
+  async function requestGateTokenRemote() {
+    return (await requestRemote("POST", { action: "requestGateToken", deviceId: getSyncDeviceId() })).data;
+  }
+
+  async function validateGateRemote(payload) {
+    return (await requestRemote("POST", { action: "validateGate", payload, deviceId: getSyncDeviceId() })).data;
+  }
+
+  async function fetchRemoteSnapshot() {
+    const data = await requestRemote("POST", { action: "exportAll" });
     return data.data && data.data.snapshot ? data.data.snapshot : data.data || {};
   }
 
+  async function fetchStudentBootstrap() {
+    const data = await requestRemote("POST", { action: "studentBootstrap" });
+    return data.data || {};
+  }
+
+  async function fetchProfessorBootstrap() {
+    const data = await requestRemote("POST", { action: "professorBootstrap" });
+    return data.data || {};
+  }
+
+  async function fetchProfessorPaymentContext(studentId, reference) {
+    const data = await requestRemote("POST", { action: "paymentContext", studentId, reference });
+    return data.data || {};
+  }
+
+  async function receivePaymentRemote(payment) {
+    const data = await requestRemote("POST", { action: "receivePayment", data: payment });
+    return data.data || {};
+  }
+
   async function setupRemoteSpreadsheet() {
-    const setupUrl = `${getApiBaseUrl()}?action=setup`;
-    const data = await fetchJson(setupUrl, {}, 20000);
-
-    if (!data.ok) {
-      const error = new Error(data.message || "Falha ao preparar a planilha.");
-      error.code = data.errorCode || "REMOTE_ERROR";
-      throw error;
-    }
-
-    return data.data;
+    throw new Error("Prepare a planilha pelo menu Pro Fitness no editor vinculado do Google Sheets.");
   }
 
   async function fetchRemoteHealth() {
@@ -1010,15 +1104,16 @@
       throw error;
     }
 
-    return data.data;
+    return data.data || data;
   }
 
   async function upsertRemoteRecord(resource, record) {
     if (!resource || !record || !record.id) {
       throw new Error("Registro remoto invalido.");
     }
+    const authSession = loadAuthSession();
     const data = await requestRemote("POST", {
-      action: "upsert",
+      action: authSession?.account?.role === "student" ? "studentUpsert" : authSession?.account?.role === "professor" && resource === "staffTimeEntries" ? "staffPresenceUpsert" : "upsert",
       resource: resource,
       data: prepareRemoteRecord(record)
     });
@@ -1035,8 +1130,9 @@
     if (!resource || !recordId) {
       throw new Error("Registro remoto invalido.");
     }
+    const authSession = loadAuthSession();
     const data = await requestRemote("POST", {
-      action: "delete",
+      action: authSession?.account?.role === "student" ? "studentDelete" : "delete",
       resource: resource,
       data: { id: recordId, expectedUpdatedAt: expectedUpdatedAt || "" }
     });
@@ -1198,11 +1294,37 @@
     return migrateData(snapshot || {});
   }
 
+  function createEmptySnapshot() {
+    return Object.fromEntries(SNAPSHOT_RESOURCES.map((resource) => [resource, []]));
+  }
+
   function saveData(data) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(migrateData(data)));
   }
 
+  function loadAuthSession() {
+    try {
+      const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || "null");
+      return session && session.token && session.account ? session : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function saveAuthSession(session) {
+    if (!session?.token || !session?.account) throw new Error("Sessao de autenticacao invalida.");
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+    return session;
+  }
+
+  function clearAuthSession() {
+    localStorage.removeItem(AUTH_SESSION_KEY);
+  }
+
   function resetData() {
+    if (!isDemoEnvironment() || getRuntimeConfig().allowDemoReset !== true) {
+      throw new Error("A restauracao demonstrativa nao esta disponivel neste ambiente.");
+    }
     const demo = buildDemoData();
     saveData(demo);
     clearStudentSession();
@@ -1314,6 +1436,10 @@
       };
     }
 
+    if (student.operationalAccess) {
+      return { ...student.operationalAccess, payment: null };
+    }
+
     const payment = getCurrentPayment(data, studentId);
     const today = todayISO();
     const config = safeArray(data.config)[0] || {};
@@ -1413,23 +1539,6 @@
     };
   }
 
-  function buildEnrollmentPayload(student) {
-    if (!student || student.enrollmentStatus === "ativo" || !student.enrollmentToken) {
-      return "";
-    }
-    return `PROFITNESS|ENROLL|${student.id}|${student.enrollmentToken}`;
-  }
-
-  function buildGatePayload(data, studentId) {
-    const student = findStudent(data, studentId);
-    const access = getAccessState(data, studentId);
-    if (!student) {
-      return "";
-    }
-    const syncSeed = student.lastGateSyncAt || new Date().toISOString();
-    return `PROFITNESS|GATE|${student.id}|${student.gateCode}|${syncSeed}|${access.status}`;
-  }
-
   function appendLog(data, entry) {
     const next = migrateData(data);
     next.log.unshift({
@@ -1511,16 +1620,19 @@
 
   window.ProFitnessStore = {
     API_PLACEHOLDER: API_PLACEHOLDER,
+    applyRuntimeEnvironment: applyRuntimeEnvironment,
     STORAGE_KEY: STORAGE_KEY,
     SESSION_KEY: SESSION_KEY,
     buildDemoData: buildDemoData,
-    buildEnrollmentPayload: buildEnrollmentPayload,
-    buildGatePayload: buildGatePayload,
     buildRemoteRecordOperations: buildRemoteRecordOperations,
     appendLog: appendLog,
     clearStudentSession: clearStudentSession,
+    clearAuthSession: clearAuthSession,
     clone: clone,
+    changePasswordRemote: changePasswordRemote,
     createCode: createCode,
+    createAccountRemote: createAccountRemote,
+    createEmptySnapshot: createEmptySnapshot,
     createCashClosingRecord: createCashClosingRecord,
     createCheckinRecord: createCheckinRecord,
     createExerciseSetRecord: createExerciseSetRecord,
@@ -1533,6 +1645,9 @@
     currentMonth: currentMonth,
     deleteRemoteRecord: deleteRemoteRecord,
     fetchRemoteHealth: fetchRemoteHealth,
+    fetchProfessorBootstrap: fetchProfessorBootstrap,
+    fetchProfessorPaymentContext: fetchProfessorPaymentContext,
+    fetchStudentBootstrap: fetchStudentBootstrap,
     fetchRemoteSnapshot: fetchRemoteSnapshot,
     findStudent: findStudent,
     formatDate: formatDate,
@@ -1549,22 +1664,35 @@
     getStudentWorkouts: getStudentWorkouts,
     getWorkoutSessionSets: getWorkoutSessionSets,
     getApiBaseUrl: getApiBaseUrl,
+    getEnvironment: getEnvironment,
+    getDeviceDescriptor: getDeviceDescriptor,
     getRuntimeConfig: getRuntimeConfig,
     hydrateFromRemoteIfConfigured: hydrateFromRemoteIfConfigured,
     isRemoteConfigured: isRemoteConfigured,
+    isDemoEnvironment: isDemoEnvironment,
     loadData: loadData,
+    loadAuthSession: loadAuthSession,
+    listAccountsRemote: listAccountsRemote,
     loadStudentSession: loadStudentSession,
+    loginRemote: loginRemote,
     migrateData: migrateData,
     normalizeSnapshot: normalizeSnapshot,
+    logoutRemote: logoutRemote,
     pushRemoteSnapshot: pushRemoteSnapshot,
     pushRemotePartialSnapshot: pushRemotePartialSnapshot,
     regenerateEnrollmentToken: regenerateEnrollmentToken,
     regenerateGateCode: regenerateGateCode,
+    receivePaymentRemote: receivePaymentRemote,
     resetData: resetData,
+    resetPasswordRemote: resetPasswordRemote,
+    requestGateTokenRemote: requestGateTokenRemote,
+    restoreDemoRemote: restoreDemoRemote,
     saveData: saveData,
+    saveAuthSession: saveAuthSession,
     saveStudentSession: saveStudentSession,
     setupRemoteSpreadsheet: setupRemoteSpreadsheet,
     snapshotHasMeaningfulData: snapshotHasMeaningfulData,
+    storageKey: storageKey,
     getSnapshotSummary: getSnapshotSummary,
     validateCompleteSnapshot: validateCompleteSnapshot,
     shouldAutoSyncToRemote: shouldAutoSyncToRemote,
@@ -1577,6 +1705,8 @@
     upsertRemoteRecord: upsertRemoteRecord,
     upsertPayment: upsertPayment,
     upsertStudent: upsertStudent,
-    updateStudent: updateStudent
+    updateAccountRemote: updateAccountRemote,
+    updateStudent: updateStudent,
+    validateGateRemote: validateGateRemote
   };
 })();

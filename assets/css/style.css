@@ -73,6 +73,23 @@ textarea:focus-visible {
   display: none !important;
 }
 
+.environment-badge {
+  position: fixed;
+  z-index: 10000;
+  top: max(8px, env(safe-area-inset-top));
+  right: 10px;
+  padding: 7px 10px;
+  border: 1px solid rgba(32, 33, 31, 0.22);
+  border-radius: 999px;
+  color: var(--ink);
+  background: rgba(242, 197, 0, 0.94);
+  box-shadow: 0 8px 24px rgba(31, 32, 29, 0.16);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
 .student-app-shell {
   width: 100%;
   min-height: 100vh;
@@ -1433,13 +1450,15 @@ textarea:focus-visible {
   top: 0;
   display: grid;
   min-height: calc(72px + env(safe-area-inset-top));
-  grid-template-columns: 52px 1fr auto;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: calc(10px + env(safe-area-inset-top)) 15px 10px;
   background: var(--ink);
   color: #fff;
 }
+
+.session-header > div { min-width: 0; }
 
 .session-back {
   min-height: 38px;
@@ -1474,10 +1493,13 @@ textarea:focus-visible {
 }
 
 .session-header time {
+  min-width: 58px;
   color: var(--yellow);
   font-family: var(--font-display);
   font-size: 1.3rem;
   font-weight: 800;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .session-progress {
@@ -1575,7 +1597,7 @@ textarea:focus-visible {
 
 .set-field label {
   color: var(--graphite);
-  font-size: 0.5rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -1761,9 +1783,16 @@ textarea:focus-visible {
   }
 
   .bottom-nav-item small {
-    font-size: 0.49rem;
+    font-size: 0.68rem;
   }
 }
+
+.physical-evolution-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.physical-evolution-grid article { padding: 13px; border-radius: 14px; background: var(--paper); }
+.physical-evolution-grid span, .physical-evolution-grid strong, .physical-evolution-grid small { display: block; }
+.physical-evolution-grid span { color: var(--graphite); font-size: .72rem; }
+.physical-evolution-grid strong { margin-top: 5px; font-family: var(--font-display); font-size: 1.35rem; }
+.physical-evolution-grid small { margin-top: 4px; color: var(--graphite); font-size: .68rem; line-height: 1.35; }
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -18,6 +18,8 @@ const javascriptFiles = [
   "assets/js/app.js",
   "assets/js/painel.js",
   "assets/js/prof.js",
+  "assets/js/pwa.js",
+  "sw.js",
   "tools/generate-demo-data.mjs"
 ];
 
@@ -31,10 +33,22 @@ const apiCheck = spawnSync(process.execPath, ["--check", "-"], { cwd: root, inpu
 assert.equal(apiCheck.status, 0, `apps-script/api.gs: ${apiCheck.stderr}`);
 assert.equal(hash("api.txt"), hash("apps-script/api.gs"), "api.txt deve ser identico a apps-script/api.gs");
 
-const apiContext = { Date, JSON, Object, Array, String, Number, Math, Set, Map };
-vm.runInNewContext(`${apiSource}\nthis.__apiTest = { SHEETS, CURRENT_SCHEMA_VERSION, buildConfigSnapshotMetadata, validateCompleteSnapshot, normalizePartialSnapshot, hasDeleteConflict, resolveResourceName };`, apiContext);
+const toSignedBytes = (buffer) => [...buffer].map((value) => value > 127 ? value - 256 : value);
+const apiContext = {
+  Date, JSON, Object, Array, String, Number, Math, Set, Map,
+  Utilities: {
+    DigestAlgorithm: { SHA_256: "sha256" },
+    newBlob: (value) => ({ getBytes: () => toSignedBytes(Buffer.from(String(value), "utf8")) }),
+    base64Encode: (bytes) => Buffer.from(bytes.map((value) => value & 255)).toString("base64"),
+    base64Decode: (value) => toSignedBytes(Buffer.from(String(value), "base64")),
+    computeDigest: (_algorithm, bytes) => toSignedBytes(crypto.createHash("sha256").update(Buffer.from(bytes.map((value) => value & 255))).digest()),
+    computeHmacSha256Signature: (value, key) => toSignedBytes(crypto.createHmac("sha256", Buffer.from(key.map((item) => item & 255))).update(Buffer.from(value.map((item) => item & 255))).digest()),
+    getUuid: () => "12345678-1234-1234-1234-123456789abc"
+  }
+};
+vm.runInNewContext(`${apiSource}\nthis.__apiTest = { SHEETS, CURRENT_SCHEMA_VERSION, getSnapshotResourceNames, buildConfigSnapshotMetadata, validateCompleteSnapshot, normalizePartialSnapshot, hasDeleteConflict, resolveResourceName, derivePasswordCredential, constantTimeEqual, getSessionPolicy, sanitizeSession, getAccountPermissions, hasPermission, authorizeGenericOperation, normalizeLogin };`, apiContext);
 const api = apiContext.__apiTest;
-assert.equal(api.CURRENT_SCHEMA_VERSION, 3, "schemaVersion da API deve ser 3");
+assert.equal(api.CURRENT_SCHEMA_VERSION, 6, "schemaVersion da API deve ser 6");
 
 for (const [resource, definition] of Object.entries(api.SHEETS)) {
   const headers = [...definition.headers];
@@ -45,9 +59,46 @@ assert.ok(api.SHEETS.checkins.headers.includes("presenceSource"), "Checkins deve
 assert.ok(api.SHEETS.config.headers.includes("schemaVersion"), "Config deve registrar schemaVersion");
 assert.ok(api.SHEETS.workoutSessions, "API deve possuir SessoesTreino");
 assert.ok(api.SHEETS.exerciseSets, "API deve possuir SeriesRealizadas");
+assert.ok(api.SHEETS.accounts, "API deve possuir Contas");
+assert.ok(api.SHEETS.sessions, "API deve possuir Sessoes");
+assert.ok(api.SHEETS.gateTokens, "API deve possuir tokens temporarios de acesso");
+assert.ok(api.SHEETS.accessAttempts, "API deve auditar tentativas de acesso");
+assert.ok(api.SHEETS.students.headers.includes("enrollmentNumber"), "Aluno deve possuir numero de matricula");
+assert.ok(api.SHEETS.students.headers.includes("accountId"), "Aluno deve vincular uma conta");
+assert.ok(!api.getSnapshotResourceNames().includes("accounts"), "Snapshot nao deve exportar contas");
+assert.ok(!api.getSnapshotResourceNames().includes("sessions"), "Snapshot nao deve exportar sessoes");
 assert.ok(!api.SHEETS.log.headers.includes("payload"), "Log remoto nao deve armazenar payload completo");
 assert.equal(api.resolveResourceName("staffTimeEntries"), "staffTimeEntries", "API deve resolver recursos compostos");
 assert.equal(api.resolveResourceName("WORKOUTSESSIONS"), "workoutSessions", "API deve resolver novos recursos sem diferenciar caixa");
+const passwordOptions = { salt: Buffer.from("salt-individual").toString("base64"), iterations: 10 };
+const passwordA = JSON.parse(JSON.stringify(api.derivePasswordCredential("SenhaDemo123", "pepper-test", passwordOptions)));
+const passwordB = JSON.parse(JSON.stringify(api.derivePasswordCredential("SenhaDemo123", "pepper-test", passwordOptions)));
+const passwordC = JSON.parse(JSON.stringify(api.derivePasswordCredential("OutraSenha123", "pepper-test", passwordOptions)));
+const expectedPasswordHash = crypto.pbkdf2Sync(Buffer.from("SenhaDemo123\u001fpepper-test", "utf8"), Buffer.from("salt-individual", "utf8"), 10, 32, "sha256").toString("base64");
+assert.equal(passwordA.passwordHash, expectedPasswordHash, "Implementacao V8 deve corresponder ao PBKDF2-HMAC-SHA256 padrao");
+assert.equal(passwordA.passwordHash, passwordB.passwordHash, "PBKDF2 deve ser deterministico com os mesmos parametros");
+assert.notEqual(passwordA.passwordHash, passwordC.passwordHash, "PBKDF2 deve diferenciar senhas");
+assert.equal(api.constantTimeEqual(passwordA.passwordHash, passwordB.passwordHash), true);
+assert.equal(api.constantTimeEqual(passwordA.passwordHash, passwordC.passwordHash), false);
+assert.equal(passwordA.passwordAlgorithm, "PBKDF2-HMAC-SHA256");
+assert.equal(passwordA.passwordVersion, 1);
+assert.equal(api.getSessionPolicy("professor").idleMinutes, 15, "Tablet do professor deve bloquear por inatividade curta");
+assert.equal(api.getSessionPolicy("admin").absoluteMinutes, 480, "Sessao administrativa deve ser limitada");
+const publicSession = JSON.parse(JSON.stringify(api.sanitizeSession({ id: "S1", tokenHash: "segredo", ipReference: "ip", userAgentReference: "ua", deviceName: "Tablet" })));
+assert.equal(publicSession.tokenHash, undefined, "Sessao devolvida nao deve revelar hash do token");
+assert.equal(publicSession.ipReference, undefined, "Sessao devolvida nao deve revelar referencia de IP");
+const professorAccount = { role: "professor", permissions: [] };
+const adminAccount = { role: "admin", permissions: [] };
+assert.equal(api.hasPermission(professorAccount, "payments.receive"), true, "Professor deve poder receber mensalidade individual");
+assert.equal(api.hasPermission(professorAccount, "finance.manage"), false, "Professor nao deve acessar financeiro geral");
+assert.equal(api.hasPermission(professorAccount, "professional.write"), true, "Professor deve editar dados profissionais");
+assert.equal(api.hasPermission(adminAccount, "professional.read"), true, "Administrador deve consultar dados profissionais");
+assert.equal(api.hasPermission(adminAccount, "professional.write"), false, "Administrador nao deve editar dados profissionais por padrao");
+assert.equal(api.hasPermission(adminAccount, "finance.manage"), true, "Administrador deve gerir financeiro");
+assert.equal(api.hasPermission(professorAccount, "staff.presence"), true, "Professor deve registrar presenca operacional");
+assert.equal(api.hasPermission(adminAccount, "staff.presence.read"), true, "Administrador deve consultar permanencia da equipe");
+assert.throws(() => api.authorizeGenericOperation(professorAccount, "payments", "read"), /permissao/i, "Professor nao pode listar pagamentos pelo CRUD geral");
+assert.equal(api.normalizeLogin(" 000123 "), "000123", "Login deve preservar zeros a esquerda da matricula");
 
 const originalConfig = {
   id: "CFG-TEST",
@@ -66,9 +117,9 @@ const metadataConfig = JSON.parse(JSON.stringify(api.buildConfigSnapshotMetadata
 assert.deepEqual(metadataConfig.plans, originalConfig.plans, "Atualizacao de metadados deve preservar planos");
 assert.deepEqual(metadataConfig.modalities, originalConfig.modalities, "Atualizacao de metadados deve preservar modalidades");
 assert.deepEqual(metadataConfig.costCenters, originalConfig.costCenters, "Atualizacao de metadados deve preservar centros de custo");
-assert.equal(metadataConfig.schemaVersion, 3);
+assert.equal(metadataConfig.schemaVersion, 6);
 
-const completeApiSnapshot = Object.fromEntries(Object.keys(api.SHEETS).map((resource) => [resource, []]));
+const completeApiSnapshot = Object.fromEntries(api.getSnapshotResourceNames().map((resource) => [resource, []]));
 assert.equal(api.validateCompleteSnapshot(completeApiSnapshot), undefined);
 let incompleteCode = "";
 try {
@@ -80,6 +131,19 @@ assert.equal(incompleteCode, "INCOMPLETE_SNAPSHOT", "API deve bloquear snapshot 
 const partial = JSON.parse(JSON.stringify(api.normalizePartialSnapshot({ students: [] })));
 assert.deepEqual(Object.keys(partial), ["students"], "Importacao parcial deve manter somente colecoes enviadas");
 assert.match(apiSource, /action === "importpartial"/, "API deve implementar importPartial");
+assert.match(apiSource, /METHOD_NOT_ALLOWED/, "API deve bloquear leituras publicas fora do health");
+assert.match(apiSource, /SETUP_NOT_PUBLIC/, "Setup nao deve ser exposto pelo Web App");
+assert.match(apiSource, /RESTAURAR DEMONSTRACAO/, "Restauracao demo deve exigir frase reforcada");
+assert.match(apiSource, /DriveApp\.getFileById/, "Restauracao demo deve criar copia da planilha antes de importar");
+assert.match(apiSource, /getConfiguredEnvironment\(\) !== "demo"/, "Restauracao demo deve ser recusada em producao");
+assert.match(apiSource, /action === "requestgatetoken"/, "QR deve ser emitido somente para aluno autenticado");
+assert.match(apiSource, /action === "validategate"/, "Leitor deve validar QR no servidor");
+assert.match(apiSource, /Codigo ja utilizado/, "QR deve detectar reutilizacao");
+assert.match(apiSource, /action === "studentbootstrap"/, "API deve fornecer pacote individual autenticado");
+assert.match(apiSource, /\["workoutSessions", "exerciseSets"\]/, "Aluno deve alterar somente sessoes e series proprias");
+assert.match(apiSource, /action === "professorbootstrap"/, "Professor deve receber pacote operacional proprio");
+assert.match(apiSource, /action === "receivepayment"/, "Recebimento do professor deve usar endpoint dedicado");
+assert.match(apiSource, /action === "staffpresenceupsert"/, "Presenca do professor deve validar a conta autenticada");
 assert.match(apiSource, /ensureApiReady/, "API deve usar verificacao leve nas requisicoes comuns");
 assert.match(apiSource, /buildAuditLogEntry/, "API deve gerar log tecnico reduzido");
 assert.equal(api.hasDeleteConflict({ updatedAt: "2026-07-11T10:00:00.000Z" }, "2026-07-11T10:00:00.000Z"), false);
@@ -181,6 +245,8 @@ for (const cssFile of ["assets/css/style.css", "assets/css/painel.css", "assets/
 }
 
 const panelHtml = read("painel.html");
+assert.match(panelHtml, /id="gateSimulatorDialog"/, "Painel deve demonstrar catraca sem hardware real");
+assert.doesNotMatch(panelHtml, /id="setupSheetsButton"/, "Painel nao deve expor setup da planilha");
 const panelJs = read("assets/js/painel.js");
 const studentJs = read("assets/js/app.js");
 const studentHtml = read("index.html");
@@ -190,13 +256,20 @@ assert.match(panelHtml, /Resumo administrativo/, "Painel administrativo deve pos
 assert.doesNotMatch(panelHtml, /id="newStudentButton"/, "Painel administrativo nao deve cadastrar aluno");
 assert.match(professorHtml, /id="newProfessorStudent"/, "Painel do professor deve cadastrar aluno");
 assert.match(professorHtml, /id="toggleStaffClockButton"/, "Painel do professor deve registrar entrada e saida");
-assert.match(panelHtml, /id="staffTimePrintableReport"/, "Painel administrativo deve exibir o relatorio de ponto");
+assert.match(professorHtml, /id="profLoginForm"/, "Tablet deve exigir login individual do professor");
+assert.match(professorHtml, /id="profLockView"/, "Tablet deve possuir bloqueio por inatividade");
+assert.match(professorJs, /fetchProfessorBootstrap/, "Professor nao deve baixar snapshot administrativo");
+assert.doesNotMatch(professorJs, /Store\.fetchRemoteSnapshot/, "Tablet nao deve chamar exportacao integral");
+assert.match(panelHtml, /id="staffTimePrintableReport"/, "Painel administrativo deve exibir o relatorio de presenca e permanencia");
 assert.doesNotMatch(professorHtml, /Caixa diario|Despesas da academia|Relatorios e resultados/, "Painel do professor nao deve expor modulos financeiros administrativos");
 assert.match(panelHtml, /id="adminSyncStatus"/, "Painel deve mostrar status de sincronizacao");
+assert.match(panelHtml, /id="adminLoginForm"/, "Painel administrativo deve exigir login");
+assert.match(panelHtml, /id="accountForm"/, "Painel deve gerenciar contas sem editar a planilha manualmente");
+assert.match(panelJs, /listAccountsRemote/, "Painel deve listar contas pela API protegida");
 assert.match(panelHtml, /id="adminPendingSyncButton"/, "Painel deve permitir reenviar pendencias");
 assert.match(panelHtml, /id="paymentRulesForm"/, "Painel deve configurar alertas e bloqueio do aluno");
-assert.match(panelJs, /ADMIN_SYNC_QUEUE_KEY/, "Painel deve possuir fila persistente");
-assert.match(panelJs, /ADMIN_PENDING_SNAPSHOT_KEY/, "Painel deve preservar restauracao integral pendente");
+assert.match(panelJs, /ADMIN_SYNC_QUEUE_PREFIX/, "Painel deve possuir fila persistente por conta");
+assert.match(panelJs, /ADMIN_PENDING_SNAPSHOT_PREFIX/, "Painel deve preservar restauracao integral pendente por conta");
 assert.match(panelJs, /flushAdminSyncQueue/, "Painel deve reenviar a fila");
 assert.doesNotMatch(panelJs, /catch\(\(\) => null\)/, "Painel nao deve ignorar falhas de sincronizacao silenciosamente");
 assert.match(panelJs, /Store\.validateCompleteSnapshot\(snapshot\)/, "Restauracao deve validar snapshot completo");
@@ -209,21 +282,33 @@ const pushSnapshotBlock = read("assets/js/shared-data.js").slice(
   read("assets/js/shared-data.js").indexOf("async function pushRemotePartialSnapshot")
 );
 assert.doesNotMatch(pushSnapshotBlock, /saveData\(/, "Envio remoto de snapshot nao deve sobrescrever alteracoes locais feitas durante a requisicao");
-assert.match(studentJs, /STUDENT_SYNC_QUEUE_KEY/, "App do aluno deve possuir fila offline persistente");
+assert.match(studentJs, /STUDENT_SYNC_QUEUE_PREFIX/, "App do aluno deve possuir fila offline persistente por conta");
 assert.match(studentJs, /flushStudentSyncQueue/, "App do aluno deve reenviar pendencias");
-assert.match(studentJs, /workoutSessions.*exerciseSets.*checkins/s, "Fila do aluno deve sincronizar sessoes, series e treinos");
+assert.match(studentJs, /STUDENT_SYNC_RESOURCES = \["workoutSessions", "exerciseSets"\]/, "Fila do aluno deve sincronizar somente sessoes e series");
 assert.doesNotMatch(studentJs, /catch\(\(\) => null\)/, "App do aluno nao deve ignorar falhas de sincronizacao");
 assert.doesNotMatch(studentJs, /syncSnapshotChanges/, "App do aluno deve usar fila incremental propria");
 for (const screen of ["home", "workouts", "agenda", "evolution", "payments"]) {
   assert.match(studentHtml, new RegExp(`data-screen="${screen}"`), `App do aluno deve possuir navegacao ${screen}`);
 }
 assert.match(studentHtml, /id="workoutSessionDialog"/, "App deve possuir execucao de treino em tela dedicada");
+assert.match(studentHtml, /id="studentLoginForm"/, "App do aluno deve pedir matricula e senha");
+assert.match(studentHtml, /id="studentPasswordChangeForm"/, "App deve exigir troca da senha temporaria");
 assert.doesNotMatch(studentHtml, /id="restoreDemoButton"/, "App publicado nao deve expor restauracao de demonstracao");
-assert.match(studentJs, /demo-preview/, "Base ficticia deve permitir visualizar o app antes do login definitivo");
+assert.match(studentJs, /loginStudent\("000001", "Demo1234"\)/, "Demonstracao deve usar uma conta ficticia autenticada");
 assert.match(professorJs, /exerciseId/, "Professor deve preservar vinculo com catalogo de exercicios");
+assert.match(professorHtml, /data-student-module="resultados"/, "Professor deve analisar treinos realizados");
+assert.match(professorJs, /renderProfessorTrainingResults/, "Professor deve ver sessoes, series, carga, dor e dificuldade");
+assert.match(studentHtml, /id="physicalEvolutionGrid"/, "Aluno deve acompanhar evolucao das avaliacoes fisicas");
+assert.match(studentHtml, /manifest\.webmanifest/, "App do aluno deve ser instalavel");
+assert.doesNotMatch(studentHtml + panelHtml, /cdnjs\.cloudflare\.com\/ajax\/libs\/qrcodejs/, "QR Code nao deve depender de CDN");
+assert.ok(exists("assets/vendor/qrcode.min.js"), "Biblioteca de QR deve estar no projeto");
+assert.ok(exists("manifest.webmanifest"), "PWA deve possuir manifesto");
+assert.ok(exists("sw.js"), "PWA deve possuir service worker");
+assert.doesNotMatch(read("sw.js"), /apiBaseUrl|script\.google\.com/, "Service worker nao deve armazenar respostas autenticadas da API");
+assert.doesNotMatch(read("assets/css/style.css"), /font-size:\s*0\.49rem/, "Interface mobile nao deve usar fonte de 0.49rem");
 
 if (packageMode) {
-  const allowedRootFiles = new Set(["index.html", "painel.html", "prof.html", "api.txt", "HISTORICO_DESENVOLVIMENTO.txt"]);
+  const allowedRootFiles = new Set(["index.html", "painel.html", "prof.html", "api.txt", "HISTORICO_DESENVOLVIMENTO.txt", "manifest.webmanifest", "sw.js"]);
   const allowedRootDirectories = new Set([".github", "apps-script", "assets", "docs", "tests", "tools"]);
   for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     if (entry.isFile()) assert.ok(allowedRootFiles.has(entry.name), `Arquivo indevido na raiz: ${entry.name}`);
@@ -234,10 +319,18 @@ if (packageMode) {
 }
 assert.match(read("HISTORICO_DESENVOLVIMENTO.txt"), /ULTIMA ATUALIZACAO: 11\/07\/2026/);
 assert.match(read("docs/estrutura-planilha.md"), /presenceSource/);
-assert.match(read("docs/sheets-api-setup.md"), /schemaVersion: 3/);
+assert.match(read("docs/sheets-api-setup.md"), /schemaVersion: 6/);
 const demoTool = read("tools/generate-demo-data.mjs");
 assert.match(demoTool, /PersonalPro-backups/, "Gerador deve salvar backups fora do projeto por padrao");
 assert.doesNotMatch(demoTool, /payload:\s*JSON\.stringify/, "Gerador nao deve recriar payload integral no log");
 assert.match(apiSource, /migrateLogHeaders/, "API deve remover a coluna antiga payload durante a migracao");
+const officialDemo = JSON.parse(read("assets/data/demo.json"));
+assert.equal(officialDemo.snapshot.students.length, 50, "Demonstracao oficial deve possuir 50 alunos");
+assert.equal(officialDemo.snapshot.users.filter((user) => user.role === "professor").length, 6, "Demonstracao deve possuir seis professores");
+assert.equal(officialDemo.snapshot.payments.filter((payment) => payment.reference === "2026-07" && payment.status === "vencido").length, 5, "Inadimplencia atual deve ser 10 por cento");
+assert.equal(officialDemo.snapshot.students[0].enrollmentNumber, "000001", "Matricula ficticia deve preservar zeros a esquerda");
+assert.ok(officialDemo.snapshot.workoutSessions.some((session) => session.status === "interrompida" && session.pain === "moderada"), "Demo deve possuir treino interrompido com dor");
+assert.ok(officialDemo.snapshot.payments.some((payment) => payment.status === "parcial"), "Demo deve possuir pagamento parcial");
+assert.ok(officialDemo.snapshot.payments.some((payment) => payment.status === "estornado"), "Demo deve possuir pagamento estornado");
 
 console.log(`Smoke tests (${packageMode ? "pacote" : "repositorio"}): OK`);

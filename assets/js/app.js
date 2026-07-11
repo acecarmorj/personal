@@ -6,6 +6,7 @@
   if (!Store || !Finance) return;
 
   let state = Store.loadData();
+  let authSession = Store.loadAuthSession();
   let studentSession = Store.loadStudentSession();
   let activeScreen = "home";
   let activeWorkoutDivision = "todos";
@@ -16,21 +17,21 @@
   let scannerActive = false;
   let detector = null;
   let workoutTimer = null;
+  let gateCredential = null;
   let studentSyncPromise = null;
   let studentSyncTimer = null;
 
-  const STUDENT_SYNC_QUEUE_KEY = "profitness-student-sync-queue-v1";
-  const STUDENT_LAST_SYNC_KEY = "profitness-student-last-sync-v1";
-  const STUDENT_SYNC_RESOURCES = ["students", "workoutSessions", "exerciseSets", "checkins"];
+  const STUDENT_SYNC_QUEUE_PREFIX = Store.storageKey("student-sync-queue-v2");
+  const STUDENT_LAST_SYNC_PREFIX = Store.storageKey("student-last-sync-v2");
+  const STUDENT_SYNC_RESOURCES = ["workoutSessions", "exerciseSets"];
   const STUDENT_SYNC_INTERVAL_MS = 60000;
 
   const onboardingView = document.getElementById("onboardingView");
   const studentView = document.getElementById("studentView");
-  const enrollmentStartActions = document.getElementById("enrollmentStartActions");
   const enrollmentWelcome = document.getElementById("enrollmentWelcome");
-  const enrollmentCard = document.getElementById("enrollmentCard");
-  const enrollmentForm = document.getElementById("enrollmentForm");
-  const manualEnrollmentForm = document.getElementById("manualEnrollmentForm");
+  const passwordChangeCard = document.getElementById("passwordChangeCard");
+  const studentLoginForm = document.getElementById("studentLoginForm");
+  const studentPasswordChangeForm = document.getElementById("studentPasswordChangeForm");
   const scannerModal = document.getElementById("scannerModal");
   const scannerVideo = document.getElementById("scannerVideo");
   const workoutSessionDialog = document.getElementById("workoutSessionDialog");
@@ -101,7 +102,12 @@
 
   function syncState() {
     state = Store.loadData();
+    authSession = Store.loadAuthSession();
     studentSession = Store.loadStudentSession();
+    if (!authSession || authSession.account?.role !== "student") {
+      Store.clearStudentSession();
+      studentSession = null;
+    }
     if (studentSession && !Store.findStudent(state, studentSession.studentId)) {
       Store.clearStudentSession();
       studentSession = null;
@@ -139,7 +145,7 @@
 
   function loadStudentSyncQueue() {
     try {
-      const parsed = JSON.parse(localStorage.getItem(STUDENT_SYNC_QUEUE_KEY) || "[]");
+      const parsed = JSON.parse(localStorage.getItem(getStudentStorageKey(STUDENT_SYNC_QUEUE_PREFIX)) || "[]");
       return Array.isArray(parsed) ? parsed.filter((item) => item?.resource && item?.recordId) : [];
     } catch (error) {
       return [];
@@ -147,7 +153,7 @@
   }
 
   function saveStudentSyncQueue(queue) {
-    localStorage.setItem(STUDENT_SYNC_QUEUE_KEY, JSON.stringify(Array.isArray(queue) ? queue : []));
+    localStorage.setItem(getStudentStorageKey(STUDENT_SYNC_QUEUE_PREFIX), JSON.stringify(Array.isArray(queue) ? queue : []));
     renderStudentSyncStatus();
   }
 
@@ -155,6 +161,8 @@
     return Store.buildRemoteRecordOperations(beforeState, afterState, STUDENT_SYNC_RESOURCES).map((operation) => ({
       ...operation,
       id: Store.uid("SYNCALU"),
+      accountId: authSession?.account?.id || "",
+      studentId: authSession?.account?.personId || "",
       queuedAt: new Date().toISOString()
     }));
   }
@@ -172,7 +180,7 @@
   }
 
   function formatLastStudentSync() {
-    const value = localStorage.getItem(STUDENT_LAST_SYNC_KEY);
+    const value = localStorage.getItem(getStudentStorageKey(STUDENT_LAST_SYNC_PREFIX));
     if (!value) return "Ainda nao enviado";
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return "Ainda nao enviado";
@@ -228,7 +236,7 @@
         }
         sent += 1;
       }
-      localStorage.setItem(STUDENT_LAST_SYNC_KEY, new Date().toISOString());
+      localStorage.setItem(getStudentStorageKey(STUDENT_LAST_SYNC_PREFIX), new Date().toISOString());
       renderStudentSyncStatus("online");
       if (settings.notify) showToast(sent ? `${sent} alteracao${sent === 1 ? "" : "es"} enviada${sent === 1 ? "" : "s"}.` : "Dados atualizados.");
       return true;
@@ -252,17 +260,14 @@
     const baseline = JSON.stringify(Store.loadData());
     try {
       renderStudentSyncStatus("syncing", "Atualizando dados");
-      const remoteRaw = await Store.fetchRemoteSnapshot();
+      const remoteRaw = await Store.fetchStudentBootstrap();
       if (JSON.stringify(Store.loadData()) !== baseline || loadStudentSyncQueue().length) {
         renderStudentSyncStatus("pending");
         return false;
       }
-      const remoteState = Store.migrateData(remoteRaw);
-      if (Store.snapshotHasMeaningfulData(remoteRaw) || !Store.snapshotHasMeaningfulData(state)) {
-        state = remoteState;
-        Store.saveData(state);
-      }
-      localStorage.setItem(STUDENT_LAST_SYNC_KEY, new Date().toISOString());
+      state = buildStudentState(remoteRaw);
+      Store.saveData(state);
+      localStorage.setItem(getStudentStorageKey(STUDENT_LAST_SYNC_PREFIX), new Date().toISOString());
       renderStudentSyncStatus("online");
       render();
       return true;
@@ -272,6 +277,27 @@
       render();
       return false;
     }
+  }
+
+  function getStudentStorageKey(prefix) {
+    return `${prefix}-${authSession?.account?.id || "anonymous"}`;
+  }
+
+  function buildStudentState(data) {
+    const empty = Store.createEmptySnapshot();
+    return Store.migrateData({
+      ...empty,
+      students: data?.student ? [data.student] : [],
+      workouts: data?.workouts || [],
+      exercises: data?.exercises || [],
+      workoutSessions: data?.workoutSessions || [],
+      exerciseSets: data?.exerciseSets || [],
+      schedule: data?.schedule || [],
+      checkins: data?.checkins || [],
+      assessments: data?.assessments || [],
+      payments: data?.payments || [],
+      config: data?.config || []
+    });
   }
 
   function statusPill(status, label) {
@@ -368,23 +394,44 @@
     persistState(nextState, { message: "Matricula concluida com sucesso." });
   }
 
-  function openDemoStudentApp() {
-    const demoStudent = state.students.find((student) => String(student.id || "").startsWith("ALU-DEMO-") && student.status === "ativo");
-    if (!demoStudent) {
-      showToast("A demonstracao ainda esta carregando ou nao esta ativa nesta base.");
-      return;
+  async function activateAuthenticatedStudent(session) {
+    authSession = session;
+    if (session?.account?.mustChangePassword) Store.clearStudentSession();
+    else if (session?.account?.personId) {
+      const packageData = await Store.fetchStudentBootstrap();
+      state = buildStudentState(packageData);
+      Store.saveData(state);
+      Store.saveStudentSession(session.account.personId, { method: "password" });
     }
-    Store.saveStudentSession(demoStudent.id, { method: "demo-preview" });
     studentSession = Store.loadStudentSession();
     activeScreen = "home";
     render();
-    showToast("Demonstracao aberta com dados ficticios.");
+  }
+
+  async function loginStudent(login, password) {
+    const feedback = document.getElementById("studentLoginFeedback");
+    feedback.textContent = "Verificando acesso...";
+    try {
+      const session = await Store.loginRemote(login, password);
+      if (session.account?.role !== "student") {
+        await Store.logoutRemote();
+        throw new Error("Esta conta nao pertence a um aluno.");
+      }
+      await activateAuthenticatedStudent(session);
+      feedback.textContent = "";
+    } catch (error) {
+      feedback.textContent = error.message || "Nao foi possivel entrar.";
+    }
+  }
+
+  async function openDemoStudentApp() {
+    await loginStudent("000001", "Demo1234");
   }
 
   function renderEnrollment() {
-    enrollmentWelcome.hidden = enrollmentStarted;
-    enrollmentStartActions.hidden = !enrollmentStarted || Boolean(pendingEnrollmentId);
-    enrollmentCard.hidden = !pendingEnrollmentId;
+    const mustChange = Boolean(authSession?.account?.mustChangePassword);
+    enrollmentWelcome.hidden = mustChange;
+    passwordChangeCard.hidden = !mustChange;
   }
 
   function getWorkoutExerciseItems(workout) {
@@ -833,6 +880,18 @@
     document.getElementById("exerciseProgressList").innerHTML = exerciseGroups.length
       ? exerciseGroups.map((group) => `<article class="exercise-progress-row"><div><h3>${escapeHtml(group.name)}</h3><p>${group.sets.length} series no periodo${group.difference ? ` &bull; ${group.difference > 0 ? "+" : ""}${group.difference.toLocaleString("pt-BR")} kg desde o primeiro registro` : ""}</p><div class="progress-track"><i style="--progress:${(group.sets.length / maximumSets) * 100}%"></i></div></div><div class="exercise-progress-value">${group.maxLoad ? `${group.maxLoad.toLocaleString("pt-BR")} kg` : "-"}<small>maior carga</small></div></article>`).join("")
       : '<div class="empty-state">Conclua as series do treino para acompanhar sua evolucao por exercicio.</div>';
+
+    const assessments = (state.assessments || []).filter((item) => item.studentId === student.id).sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+    const latest = assessments[0];
+    const previous = assessments[1];
+    const physicalMetrics = [
+      ["Peso", latest?.weight, "kg", previous?.weight], ["IMC", latest?.imc, "", previous?.imc], ["Gordura", latest?.bodyFat, "%", previous?.bodyFat], ["Cintura", latest?.waist, "cm", previous?.waist]
+    ];
+    document.getElementById("physicalEvolutionGrid").innerHTML = latest ? physicalMetrics.map(([label, value, unit, previousValue]) => {
+      const difference = Number(value || 0) - Number(previousValue || 0);
+      return `<article><span>${escapeHtml(label)}</span><strong>${Number(value || 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}${unit ? ` ${unit}` : ""}</strong><small>${previous && difference ? `${difference > 0 ? "+" : ""}${difference.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} desde ${Store.formatDate(previous.date)}` : `avaliado em ${Store.formatDate(latest.date)}`}</small></article>`;
+    }).join("") : '<div class="empty-state">Sua primeira avaliacao fisica ainda nao foi registrada.</div>';
+    document.getElementById("physicalEvolutionHistory").innerHTML = assessments.slice(0, 5).map((assessment) => `<article class="history-row"><div><strong>${escapeHtml(Store.formatDate(assessment.date))}</strong><span>${Number(assessment.weight || 0).toLocaleString("pt-BR")} kg · IMC ${Number(assessment.imc || 0).toLocaleString("pt-BR")}</span></div><span>${assessment.bodyFat ? `${Number(assessment.bodyFat).toLocaleString("pt-BR")}% gordura` : "Avaliacao fisica"}</span></article>`).join("");
   }
 
   function formatPaymentReference(value) {
@@ -929,8 +988,24 @@
 
   function renderGateQr(student) {
     const access = Store.getAccessState(state, student.id);
-    renderQr(document.getElementById("gateQrContainer"), access.allowsGate ? Store.buildGatePayload(state, student.id) : "", 220);
-    document.getElementById("gateAccessDetails").innerHTML = `<div class="qr-detail-card">${statusPill(access.status, access.label)}<p>${escapeHtml(access.reason)}</p></div>`;
+    const validCredential = gateCredential?.payload && new Date(gateCredential.expiresAt).getTime() > Date.now();
+    renderQr(document.getElementById("gateQrContainer"), access.allowsGate && validCredential ? gateCredential.payload : "", 220);
+    const detail = validCredential ? `Codigo de uso unico, valido ate ${new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(gateCredential.expiresAt))}.` : access.reason;
+    document.getElementById("gateAccessDetails").innerHTML = `<div class="qr-detail-card">${statusPill(access.status, access.label)}<p>${escapeHtml(detail)}</p></div>`;
+  }
+
+  async function refreshGateCredential() {
+    const student = getCurrentStudent();
+    if (!student) return;
+    try {
+      gateCredential = await Store.requestGateTokenRemote();
+      if (!gateCredential.allowed) showToast(gateCredential.reason || "Acesso indisponivel.");
+      renderGateQr(student);
+    } catch (error) {
+      gateCredential = null;
+      renderGateQr(student);
+      showToast(error.message || "Nao foi possivel gerar o QR.");
+    }
   }
 
   function switchScreen(screen) {
@@ -1006,29 +1081,46 @@
   }
 
   function attachEvents() {
-    document.getElementById("openEnrollmentButton").addEventListener("click", () => { enrollmentStarted = true; renderEnrollment(); });
-    document.getElementById("backEnrollmentButton").addEventListener("click", () => { enrollmentStarted = false; renderEnrollment(); });
     document.getElementById("futureLoginButton").addEventListener("click", openDemoStudentApp);
-    document.getElementById("startScanButton").addEventListener("click", startScanner);
-    document.getElementById("stopScanButton").addEventListener("click", stopScanner);
     document.getElementById("closeScannerButton").addEventListener("click", stopScanner);
-    manualEnrollmentForm.addEventListener("submit", (event) => { event.preventDefault(); beginEnrollment(new FormData(event.currentTarget).get("enrollmentCode")); });
-    enrollmentForm.addEventListener("submit", completeEnrollment);
-    document.getElementById("cancelEnrollmentButton").addEventListener("click", () => { pendingEnrollmentId = ""; enrollmentStarted = true; enrollmentForm.reset(); renderEnrollment(); });
+    studentLoginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      await loginStudent(form.get("login"), form.get("password"));
+    });
+    studentPasswordChangeForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const currentPassword = String(form.get("currentPassword") || "");
+      const newPassword = String(form.get("newPassword") || "");
+      const feedback = document.getElementById("passwordChangeFeedback");
+      if (newPassword !== String(form.get("confirmPassword") || "")) {
+        feedback.textContent = "A confirmacao da nova senha nao confere.";
+        return;
+      }
+      try {
+        const session = await Store.changePasswordRemote(currentPassword, newPassword);
+        event.currentTarget.reset();
+        feedback.textContent = "";
+        await activateAuthenticatedStudent(session);
+        showToast("Senha alterada com sucesso.");
+      } catch (error) {
+        feedback.textContent = error.message || "Nao foi possivel alterar a senha.";
+      }
+    });
+    document.getElementById("cancelPasswordChange").addEventListener("click", async () => {
+      await Store.logoutRemote();
+      Store.clearStudentSession();
+      syncState();
+      render();
+    });
 
     document.querySelectorAll("[data-screen]").forEach((button) => button.addEventListener("click", () => switchScreen(button.dataset.screen)));
     document.querySelectorAll("[data-close-dialog]").forEach((button) => button.addEventListener("click", () => closeDialog(document.getElementById(button.dataset.closeDialog))));
     document.getElementById("openProfileButton").addEventListener("click", () => openDialog(document.getElementById("profileDialog")));
-    document.getElementById("logoutButton").addEventListener("click", () => { Store.clearStudentSession(); studentSession = null; closeDialog(document.getElementById("profileDialog")); render(); showToast("Sessao encerrada neste celular."); });
-    document.getElementById("openGateQrButton").addEventListener("click", () => openDialog(document.getElementById("gateQrDialog")));
-    document.getElementById("refreshGateQrButton").addEventListener("click", () => {
-      const student = getCurrentStudent();
-      if (!student) return;
-      let nextState = Store.touchGateSync(state, student.id);
-      nextState = Store.appendLog(nextState, { action: "gate-qr-refresh", studentId: student.id, message: "Aluno atualizou o QR de acesso.", source: "app-aluno" });
-      persistState(nextState, { message: "QR atualizado." });
-      renderGateQr(Store.findStudent(state, student.id));
-    });
+    document.getElementById("logoutButton").addEventListener("click", async () => { await Store.logoutRemote(); Store.clearStudentSession(); authSession = null; studentSession = null; closeDialog(document.getElementById("profileDialog")); render(); showToast("Sessao encerrada neste celular."); });
+    document.getElementById("openGateQrButton").addEventListener("click", async () => { openDialog(document.getElementById("gateQrDialog")); await refreshGateCredential(); });
+    document.getElementById("refreshGateQrButton").addEventListener("click", refreshGateCredential);
 
     document.getElementById("studentView").addEventListener("click", (event) => {
       const navigationButton = event.target.closest("[data-screen]");
@@ -1082,6 +1174,7 @@
   render();
   renderStudentSyncStatus();
   (async function initializeStudentApp() {
+    Store.applyRuntimeEnvironment();
     const flushed = await flushStudentSyncQueue({ notify: false });
     state = Store.loadData();
     if (flushed && !loadStudentSyncQueue().length) await refreshStudentFromRemote();

@@ -8,26 +8,30 @@
  * 3. Publique como Web App.
  * 4. Cole a URL publicada em app-config.js no campo apiBaseUrl.
  *
- * Endpoints:
- * GET  ?action=setup
- * GET  ?action=health
- * GET  ?action=exportAll
- * GET  ?resource=students
- * GET  ?resource=students&id=ALU-001
- * POST { "action": "importAll", "snapshot": { ... } }      // exige snapshot completo
- * POST { "action": "importPartial", "snapshot": { ... } }  // altera somente colecoes enviadas
- * POST { "action": "upsert", "resource": "students", "data": { ... } }
- * POST { "action": "delete", "resource": "students", "data": { "id": "...", "expectedUpdatedAt": "..." } }
+ * Endpoints publicos: somente GET ?action=health e POST action=login.
+ * Todas as demais operacoes usam POST, token no corpo e permissao validada no servidor.
+ * Setup, segredo de autenticacao e contas demonstrativas sao funcoes exclusivas do editor vinculado.
  */
 
 const SPREADSHEET_ID_PROPERTY = "PROFITNESS_SPREADSHEET_ID";
 const SCHEMA_VERSION_PROPERTY = "PROFITNESS_SCHEMA_VERSION";
-const CURRENT_SCHEMA_VERSION = 3;
+const AUTH_PEPPER_PROPERTY = "PROFITNESS_AUTH_PEPPER";
+const CURRENT_SCHEMA_VERSION = 6;
+const AUTH_RESOURCE_NAMES = ["accounts", "sessions", "gateTokens", "accessAttempts"];
+const PASSWORD_ALGORITHM = "PBKDF2-HMAC-SHA256";
+const PASSWORD_VERSION = 1;
+const PASSWORD_ITERATIONS = 120000;
+const ROLE_PERMISSIONS = {
+  student: ["student.self.read", "student.self.write", "gate.request"],
+  professor: ["students.read", "students.write", "professional.read", "professional.write", "payments.receive", "staff.presence", "gate.validate"],
+  admin: ["students.read", "professional.read", "payments.receive", "finance.manage", "users.manage", "backups.manage", "reports.read", "staff.presence.read", "settings.manage", "gate.validate"]
+};
 const TEXT_HEADERS = [
-  "id", "studentId", "workoutId", "sessionId", "exerciseItemId", "exerciseId", "teacherId", "paymentId", "expenseId", "staffId", "recordId", "deviceId",
+  "id", "studentId", "workoutId", "sessionId", "accountId", "personId", "exerciseItemId", "exerciseId", "teacherId", "paymentId", "expenseId", "staffId", "recordId", "deviceId",
   "phone", "birthDate", "date", "time", "startTime", "endTime", "reference", "dueDate", "paidAt", "closedAt",
   "checkedInAt", "checkedOutAt", "clockIn", "clockOut", "startedAt", "endedAt", "completedAt", "createdAt", "updatedAt", "lastLogin", "lastSnapshotAt",
-  "enrollmentToken", "enrollmentCompletedAt", "gateCode", "lastGateSyncAt", "reversedAt", "voidedAt", "timestamp", "presenceSource"
+  "enrollmentNumber", "login", "cpf", "enrollmentToken", "enrollmentCompletedAt", "gateCode", "lastGateSyncAt", "reversedAt", "voidedAt", "timestamp", "presenceSource",
+  "lockedUntil", "lastLoginAt", "passwordChangedAt", "temporaryPasswordExpiresAt", "lastUsedAt", "expiresAt", "idleExpiresAt", "revokedAt"
 ];
 
 const SHEETS = {
@@ -35,6 +39,9 @@ const SHEETS = {
     sheetName: "Alunos",
     headers: [
       "id",
+      "enrollmentNumber",
+      "cpf",
+      "accountId",
       "name",
       "phone",
       "email",
@@ -148,15 +155,31 @@ const SHEETS = {
   },
   users: {
     sheetName: "Usuarios",
-    headers: ["id", "name", "email", "passwordHash", "role", "status", "lastLogin", "updatedAt", "updatedBy", "source", "deviceId"]
+    headers: ["id", "accountId", "name", "cpf", "email", "passwordHash", "role", "status", "lastLogin", "updatedAt", "updatedBy", "source", "deviceId"]
+  },
+  accounts: {
+    sheetName: "Contas",
+    headers: ["id", "personType", "personId", "login", "email", "role", "permissions", "active", "passwordHash", "passwordSalt", "passwordAlgorithm", "passwordVersion", "passwordIterations", "mustChangePassword", "temporaryPasswordExpiresAt", "failedAttempts", "lockedUntil", "lastLoginAt", "passwordChangedAt", "sessionVersion", "createdAt", "updatedAt"]
+  },
+  sessions: {
+    sheetName: "Sessoes",
+    headers: ["id", "accountId", "tokenHash", "deviceId", "deviceName", "createdAt", "lastUsedAt", "expiresAt", "idleExpiresAt", "revokedAt", "revokedReason", "ipReference", "userAgentReference", "sessionVersion"]
+  },
+  gateTokens: {
+    sheetName: "TokensAcesso",
+    headers: ["id", "studentId", "accountId", "tokenHash", "expiresAt", "usedAt", "status", "createdAt", "deviceId"]
+  },
+  accessAttempts: {
+    sheetName: "TentativasAcesso",
+    headers: ["id", "timestamp", "studentId", "tokenId", "result", "reason", "validatedBy", "deviceId"]
   },
   staffTimeEntries: {
-    sheetName: "PontoProfessores",
+    sheetName: "PresencaProfessores",
     headers: ["id", "staffId", "staffName", "date", "clockIn", "clockOut", "durationMinutes", "status", "source", "deviceId", "notes", "createdAt", "updatedAt", "updatedBy"]
   },
   config: {
     sheetName: "Config",
-    headers: ["id", "appName", "timezone", "currency", "logoUrl", "supportPhone", "whatsappNumber", "apiBaseUrl", "lastSnapshotAt", "schemaVersion", "plans", "modalities", "costCenters", "paymentAlertDays", "paymentGraceDays", "blockAccessOnOverdue", "updatedAt", "updatedBy", "source", "deviceId"]
+    headers: ["id", "appName", "environment", "datasetId", "timezone", "currency", "logoUrl", "supportPhone", "whatsappNumber", "apiBaseUrl", "lastSnapshotAt", "schemaVersion", "plans", "modalities", "costCenters", "paymentAlertDays", "paymentGraceDays", "blockAccessOnOverdue", "updatedAt", "updatedBy", "source", "deviceId"]
   },
   log: {
     sheetName: "Log",
@@ -164,50 +187,293 @@ const SHEETS = {
   }
 };
 
+function getSnapshotResourceNames() {
+  return Object.keys(SHEETS).filter((resource) => !AUTH_RESOURCE_NAMES.includes(resource));
+}
+
+function initializeAuthSecrets() {
+  const properties = PropertiesService.getScriptProperties();
+  if (!properties.getProperty(AUTH_PEPPER_PROPERTY)) {
+    properties.setProperty(AUTH_PEPPER_PROPERTY, Utilities.getUuid() + Utilities.getUuid() + Utilities.getUuid());
+  }
+  return { ok: true, configured: true };
+}
+
+function getAuthPepper() {
+  const properties = PropertiesService.getScriptProperties();
+  let pepper = properties.getProperty(AUTH_PEPPER_PROPERTY);
+  if (!pepper) {
+    pepper = Utilities.getUuid() + Utilities.getUuid() + Utilities.getUuid();
+    properties.setProperty(AUTH_PEPPER_PROPERTY, pepper);
+  }
+  return pepper;
+}
+
+function validatePasswordStrength(password) {
+  const value = String(password || "");
+  if (value.length < 8 || value.length > 128 || !/[A-Za-z]/.test(value) || !/\d/.test(value)) {
+    const error = new Error("A senha deve possuir de 8 a 128 caracteres, com letras e numeros.");
+    error.code = "WEAK_PASSWORD";
+    throw error;
+  }
+  return value;
+}
+
+function createPasswordSalt() {
+  const randomSource = Utilities.newBlob(Utilities.getUuid() + Utilities.getUuid()).getBytes();
+  return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, randomSource));
+}
+
+function pbkdf2Sha256(passwordBytes, saltBytes, iterations, keyLength) {
+  const rounds = Math.max(1, Number(iterations || PASSWORD_ITERATIONS));
+  const desiredLength = Math.max(16, Number(keyLength || 32));
+  const output = [];
+  let blockIndex = 1;
+  while (output.length < desiredLength) {
+    const suffix = [(blockIndex >>> 24) & 255, (blockIndex >>> 16) & 255, (blockIndex >>> 8) & 255, blockIndex & 255];
+    let current = hmacSha256Bytes(passwordBytes, saltBytes.concat(suffix));
+    const block = current.slice();
+    for (let round = 1; round < rounds; round += 1) {
+      current = hmacSha256Bytes(passwordBytes, current);
+      for (let index = 0; index < block.length; index += 1) block[index] ^= current[index];
+    }
+    output.push.apply(output, block);
+    blockIndex += 1;
+  }
+  return output.slice(0, desiredLength);
+}
+
+function hmacSha256Bytes(keyBytes, valueBytes) {
+  let key = (keyBytes || []).map((value) => value & 255);
+  if (key.length > 64) key = sha256Bytes(key);
+  while (key.length < 64) key.push(0);
+  const inner = key.map((value) => value ^ 0x36).concat((valueBytes || []).map((value) => value & 255));
+  const outer = key.map((value) => value ^ 0x5c).concat(sha256Bytes(inner));
+  return sha256Bytes(outer);
+}
+
+function sha256Bytes(input) {
+  const constants = [
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+  ];
+  const bytes = (input || []).map((value) => value & 255);
+  const bitLength = bytes.length * 8;
+  bytes.push(0x80);
+  while (bytes.length % 64 !== 56) bytes.push(0);
+  const high = Math.floor(bitLength / 0x100000000);
+  const low = bitLength >>> 0;
+  [high, low].forEach((word) => bytes.push((word >>> 24) & 255, (word >>> 16) & 255, (word >>> 8) & 255, word & 255));
+  const hash = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const rotate = (value, amount) => (value >>> amount) | (value << (32 - amount));
+  for (let offset = 0; offset < bytes.length; offset += 64) {
+    const words = new Array(64);
+    for (let index = 0; index < 16; index += 1) {
+      const position = offset + index * 4;
+      words[index] = ((bytes[position] << 24) | (bytes[position + 1] << 16) | (bytes[position + 2] << 8) | bytes[position + 3]) >>> 0;
+    }
+    for (let index = 16; index < 64; index += 1) {
+      const s0 = rotate(words[index - 15], 7) ^ rotate(words[index - 15], 18) ^ (words[index - 15] >>> 3);
+      const s1 = rotate(words[index - 2], 17) ^ rotate(words[index - 2], 19) ^ (words[index - 2] >>> 10);
+      words[index] = (words[index - 16] + s0 + words[index - 7] + s1) >>> 0;
+    }
+    let [a,b,c,d,e,f,g,h] = hash;
+    for (let index = 0; index < 64; index += 1) {
+      const s1 = rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25);
+      const choice = (e & f) ^ (~e & g);
+      const temp1 = (h + s1 + choice + constants[index] + words[index]) >>> 0;
+      const s0 = rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22);
+      const majority = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (s0 + majority) >>> 0;
+      h=g; g=f; f=e; e=(d+temp1)>>>0; d=c; c=b; b=a; a=(temp1+temp2)>>>0;
+    }
+    [a,b,c,d,e,f,g,h].forEach((value, index) => hash[index] = (hash[index] + value) >>> 0);
+  }
+  const output = [];
+  hash.forEach((word) => output.push((word >>> 24) & 255, (word >>> 16) & 255, (word >>> 8) & 255, word & 255));
+  return output;
+}
+
+function derivePasswordCredential(password, pepper, options) {
+  const settings = options || {};
+  const iterations = Math.max(1, Number(settings.iterations || PASSWORD_ITERATIONS));
+  const salt = settings.salt || createPasswordSalt();
+  const passwordBytes = Utilities.newBlob(String(password) + "\u001f" + String(pepper || "")).getBytes();
+  const saltBytes = Utilities.base64Decode(salt).map((value) => value & 255);
+  return {
+    passwordHash: Utilities.base64Encode(pbkdf2Sha256(passwordBytes, saltBytes, iterations, 32)),
+    passwordSalt: salt,
+    passwordAlgorithm: PASSWORD_ALGORITHM,
+    passwordVersion: PASSWORD_VERSION,
+    passwordIterations: iterations
+  };
+}
+
+function hashPassword(password) {
+  return derivePasswordCredential(validatePasswordStrength(password), getAuthPepper());
+}
+
+function constantTimeEqual(left, right) {
+  const a = String(left || "");
+  const b = String(right || "");
+  let difference = a.length ^ b.length;
+  const length = Math.max(a.length, b.length);
+  for (let index = 0; index < length; index += 1) difference |= (a.charCodeAt(index % Math.max(1, a.length)) || 0) ^ (b.charCodeAt(index % Math.max(1, b.length)) || 0);
+  return difference === 0;
+}
+
+function verifyPassword(password, account) {
+  if (!account || account.passwordAlgorithm !== PASSWORD_ALGORITHM || Number(account.passwordVersion) !== PASSWORD_VERSION) return false;
+  const credential = derivePasswordCredential(String(password || ""), getAuthPepper(), {
+    salt: account.passwordSalt,
+    iterations: Number(account.passwordIterations || PASSWORD_ITERATIONS)
+  });
+  return constantTimeEqual(credential.passwordHash, account.passwordHash);
+}
+
+function generateTemporaryPassword() {
+  const source = String(Utilities.getUuid()).replace(/-/g, "");
+  return "Pf" + source.slice(0, 5) + source.slice(-5) + "7";
+}
+
+function createSessionToken() {
+  return Utilities.base64EncodeWebSafe(Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    Utilities.newBlob(Utilities.getUuid() + Utilities.getUuid() + new Date().toISOString()).getBytes()
+  )).replace(/=+$/g, "") + "." + String(Utilities.getUuid()).replace(/-/g, "");
+}
+
+function hashSessionToken(token) {
+  const bytes = Utilities.newBlob(String(token || "") + "\u001f" + getAuthPepper()).getBytes();
+  return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, bytes)).replace(/=+$/g, "");
+}
+
+function createReferenceHash(value) {
+  if (!value) return "";
+  const bytes = Utilities.newBlob(String(value) + "\u001f" + getAuthPepper()).getBytes();
+  return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, bytes)).replace(/=+$/g, "").slice(0, 24);
+}
+
+function getSessionPolicy(role) {
+  const normalized = String(role || "").toLowerCase();
+  if (normalized === "student") return { absoluteMinutes: 43200, idleMinutes: 10080 };
+  if (normalized === "professor") return { absoluteMinutes: 720, idleMinutes: 15 };
+  return { absoluteMinutes: 480, idleMinutes: 30 };
+}
+
+function addMinutes(date, minutes) {
+  return new Date(date.getTime() + Number(minutes || 0) * 60000);
+}
+
+function createAuthSession(account, context) {
+  const settings = context || {};
+  const now = new Date();
+  const policy = getSessionPolicy(account.role);
+  const token = createSessionToken();
+  const session = {
+    id: Utilities.getUuid(),
+    accountId: account.id,
+    tokenHash: hashSessionToken(token),
+    deviceId: String(settings.deviceId || ""),
+    deviceName: String(settings.deviceName || "Dispositivo nao identificado").slice(0, 120),
+    createdAt: now.toISOString(),
+    lastUsedAt: now.toISOString(),
+    expiresAt: addMinutes(now, policy.absoluteMinutes).toISOString(),
+    idleExpiresAt: addMinutes(now, policy.idleMinutes).toISOString(),
+    revokedAt: "",
+    revokedReason: "",
+    ipReference: createReferenceHash(settings.ipReference || ""),
+    userAgentReference: createReferenceHash(settings.userAgent || ""),
+    sessionVersion: Number(account.sessionVersion || 1)
+  };
+  upsertRow("sessions", session);
+  return { token: token, session: sanitizeSession(session) };
+}
+
+function sanitizeSession(session) {
+  const safe = Object.assign({}, session || {});
+  delete safe.tokenHash;
+  delete safe.ipReference;
+  delete safe.userAgentReference;
+  return safe;
+}
+
+function getAccountById(accountId) {
+  return readSheet("accounts").find((account) => String(account.id) === String(accountId)) || null;
+}
+
+function revokeSession(sessionId, reason) {
+  const session = readSheet("sessions").find((item) => String(item.id) === String(sessionId));
+  if (!session || session.revokedAt) return false;
+  upsertRow("sessions", Object.assign({}, session, {
+    revokedAt: new Date().toISOString(),
+    revokedReason: String(reason || "revogada"),
+    updatedAt: new Date().toISOString()
+  }));
+  return true;
+}
+
+function revokeAccountSessions(accountId, reason) {
+  const sessions = readSheet("sessions").filter((item) => String(item.accountId) === String(accountId) && !item.revokedAt);
+  sessions.forEach((session) => revokeSession(session.id, reason || "conta_atualizada"));
+  return sessions.length;
+}
+
+function authenticateSessionToken(token, options) {
+  const settings = options || {};
+  if (!token) {
+    const error = new Error("Autenticacao obrigatoria.");
+    error.code = "AUTH_REQUIRED";
+    throw error;
+  }
+  const tokenHash = hashSessionToken(token);
+  const session = readSheet("sessions").find((item) => constantTimeEqual(item.tokenHash, tokenHash));
+  const now = new Date();
+  if (!session || session.revokedAt) {
+    const error = new Error("Sessao invalida ou revogada.");
+    error.code = "INVALID_SESSION";
+    throw error;
+  }
+  if (new Date(session.expiresAt).getTime() <= now.getTime() || new Date(session.idleExpiresAt).getTime() <= now.getTime()) {
+    revokeSession(session.id, "expirada");
+    const error = new Error("Sessao expirada.");
+    error.code = "SESSION_EXPIRED";
+    throw error;
+  }
+  const account = getAccountById(session.accountId);
+  if (!account || account.active === false || String(account.active).toLowerCase() === "false" || Number(account.sessionVersion || 1) !== Number(session.sessionVersion || 1)) {
+    revokeSession(session.id, "conta_inativa_ou_alterada");
+    const error = new Error("Conta inativa ou sessao desatualizada.");
+    error.code = "ACCOUNT_INACTIVE";
+    throw error;
+  }
+  if (settings.touch !== false) {
+    const policy = getSessionPolicy(account.role);
+    upsertRow("sessions", Object.assign({}, session, {
+      lastUsedAt: now.toISOString(),
+      idleExpiresAt: addMinutes(now, policy.idleMinutes).toISOString()
+    }));
+  }
+  return { account: account, session: sanitizeSession(session), token: token };
+}
+
 function doGet(e) {
   const params = e && e.parameter ? e.parameter : {};
   const action = (params.action || "").toLowerCase();
-  const resource = resolveResourceName(params.resource || "");
-  const id = params.id || "";
-
   try {
-    if (action === "setup" || resource === "setup") {
-      return jsonResponse({ ok: true, data: ensureSpreadsheetStructure(null, { fullFormat: true, cleanup: true }) });
-    }
-
-    const setup = ensureApiReady();
-
     if (action === "health") {
-      return jsonResponse({
-        ok: true,
-        data: {
-          spreadsheetId: setup.spreadsheetId,
-          spreadsheetUrl: setup.spreadsheetUrl,
-          schemaVersion: CURRENT_SCHEMA_VERSION,
-          resources: Object.keys(SHEETS),
-          generatedAt: new Date().toISOString()
-        }
-      });
+      ensureApiReady();
+      return jsonResponse({ ok: true, environment: getConfiguredEnvironment(), version: "2026.07" });
     }
-
-    if (action === "exportall") {
-      return jsonResponse({ ok: true, data: exportAllData(setup) });
-    }
-
-    if (!resource) {
-      return jsonResponse({
-        ok: true,
-        spreadsheetId: setup.spreadsheetId,
-        spreadsheetUrl: setup.spreadsheetUrl,
-        schemaVersion: CURRENT_SCHEMA_VERSION,
-        resources: Object.keys(SHEETS)
-      });
-    }
-
-    validateResource(resource);
-    const rows = readSheet(resource);
-    const payload = id ? rows.find((row) => String(row.id) === String(id)) || null : rows;
-    return jsonResponse({ ok: true, data: payload });
+    const error = new Error("Use POST para operacoes da API.");
+    error.code = "METHOD_NOT_ALLOWED";
+    throw error;
   } catch (error) {
     return errorResponse(error);
   }
@@ -219,14 +485,112 @@ function doPost(e) {
     const action = (body.action || "upsert").toLowerCase();
 
     if (action === "setup") {
-      return jsonResponse({ ok: true, data: ensureSpreadsheetStructure(null, { fullFormat: true, cleanup: true }) });
+      const error = new Error("O setup deve ser executado somente pelo editor vinculado a planilha.");
+      error.code = "SETUP_NOT_PUBLIC";
+      throw error;
     }
 
     const setup = ensureApiReady();
+    if (action === "login") return jsonResponse({ ok: true, data: handleLogin(body) });
+    const auth = authenticateSessionToken(body.token);
+
+    if (action === "logout") {
+      revokeSession(auth.session.id, "logout");
+      return jsonResponse({ ok: true, data: { loggedOut: true } });
+    }
+
+    if (action === "session") {
+      return jsonResponse({ ok: true, data: { account: sanitizeAccount(auth.account), session: auth.session } });
+    }
+
+    if (action === "changepassword") {
+      return jsonResponse({ ok: true, data: changeOwnPassword(auth, body) });
+    }
+
+    if (action === "studentbootstrap") {
+      requirePermission(auth.account, "student.self.read");
+      return jsonResponse({ ok: true, data: buildStudentBootstrap(auth.account) });
+    }
+
+    if (action === "studentupsert" || action === "studentdelete") {
+      requirePermission(auth.account, "student.self.write");
+      return jsonResponse({ ok: true, data: handleStudentMutation(auth.account, action, body) });
+    }
+
+    if (action === "professorbootstrap") {
+      requirePermission(auth.account, "professional.read");
+      return jsonResponse({ ok: true, data: buildProfessorBootstrap(auth.account) });
+    }
+
+    if (action === "paymentcontext") {
+      requirePermission(auth.account, "payments.receive");
+      return jsonResponse({ ok: true, data: getProfessorPaymentContext(body.studentId, body.reference) });
+    }
+
+    if (action === "receivepayment") {
+      requirePermission(auth.account, "payments.receive");
+      return jsonResponse({ ok: true, data: receiveStudentPayment(auth.account, body.data || {}) });
+    }
+
+    if (action === "staffpresenceupsert") {
+      requirePermission(auth.account, "staff.presence");
+      return jsonResponse({ ok: true, data: upsertOwnStaffPresence(auth.account, body.data || {}) });
+    }
+
+    if (action === "listaccounts") {
+      requirePermission(auth.account, "users.manage");
+      return jsonResponse({ ok: true, data: readSheet("accounts").map(sanitizeAccount) });
+    }
+
+    if (action === "createaccount") {
+      requirePermission(auth.account, "users.manage");
+      return jsonResponse({ ok: true, data: createManagedAccount(body.data || {}, auth.account) });
+    }
+
+    if (action === "resetpassword") {
+      requirePermission(auth.account, "users.manage");
+      return jsonResponse({ ok: true, data: resetManagedPassword(body.accountId, auth.account) });
+    }
+
+    if (action === "updateaccount") {
+      requirePermission(auth.account, "users.manage");
+      return jsonResponse({ ok: true, data: updateManagedAccount(body.data || {}, auth.account) });
+    }
+
+    if (action === "listsessions") {
+      requirePermission(auth.account, "users.manage");
+      return jsonResponse({ ok: true, data: readSheet("sessions").map(sanitizeSession) });
+    }
+
+    if (action === "revokesession") {
+      requirePermission(auth.account, "users.manage");
+      return jsonResponse({ ok: true, data: { revoked: revokeSession(body.sessionId, "revogada_pela_administracao") } });
+    }
+
+    if (action === "restoredemo") {
+      requirePermission(auth.account, "backups.manage");
+      return jsonResponse({ ok: true, data: restoreDemoSnapshot(body, auth.account) });
+    }
+
+    if (action === "requestgatetoken") {
+      requirePermission(auth.account, "gate.request");
+      return jsonResponse({ ok: true, data: issueGateToken(auth.account, body.deviceId) });
+    }
+
+    if (action === "validategate") {
+      requirePermission(auth.account, "gate.validate");
+      return jsonResponse({ ok: true, data: validateGateToken(auth.account, body.payload, body.deviceId) });
+    }
+
+    if (action === "exportall") {
+      requirePermission(auth.account, "backups.manage");
+      return jsonResponse({ ok: true, data: exportAllData(setup) });
+    }
 
     if (action === "importall") {
+      requirePermission(auth.account, "backups.manage");
       validateCompleteSnapshot(body.snapshot);
-      const snapshot = normalizeSnapshot(body.snapshot, Object.keys(SHEETS));
+      const snapshot = normalizeSnapshot(body.snapshot, getSnapshotResourceNames());
       importAllData(snapshot);
       appendLog(buildAuditLogEntry({
         action: "importAll",
@@ -239,8 +603,6 @@ function doPost(e) {
       return jsonResponse({
         ok: true,
         data: {
-          spreadsheetId: setup.spreadsheetId,
-          spreadsheetUrl: setup.spreadsheetUrl,
           schemaVersion: CURRENT_SCHEMA_VERSION,
           imported: countSnapshotRows(snapshot)
         }
@@ -248,6 +610,7 @@ function doPost(e) {
     }
 
     if (action === "importpartial") {
+      requirePermission(auth.account, "backups.manage");
       const snapshot = normalizePartialSnapshot(body.snapshot || {});
       importPartialData(snapshot);
       appendLog(buildAuditLogEntry({
@@ -261,8 +624,6 @@ function doPost(e) {
       return jsonResponse({
         ok: true,
         data: {
-          spreadsheetId: setup.spreadsheetId,
-          spreadsheetUrl: setup.spreadsheetUrl,
           schemaVersion: CURRENT_SCHEMA_VERSION,
           imported: countSnapshotRows(snapshot)
         }
@@ -272,12 +633,30 @@ function doPost(e) {
     const resource = resolveResourceName(body.resource || "");
     const data = body.data || {};
     validateResource(resource);
+    if (AUTH_RESOURCE_NAMES.includes(resource)) {
+      const error = new Error("Recurso privado de autenticacao.");
+      error.code = "PRIVATE_RESOURCE";
+      throw error;
+    }
+    if (String(auth.account.role) === "student") {
+      const error = new Error("O aluno deve usar os endpoints individuais.");
+      error.code = "FORBIDDEN";
+      throw error;
+    }
+
+    if (action === "read") {
+      authorizeGenericOperation(auth.account, resource, "read");
+      const rows = sanitizeResourceRows(resource, readSheet(resource));
+      const payload = body.id ? rows.find((row) => String(row.id) === String(body.id)) || null : rows;
+      return jsonResponse({ ok: true, data: payload });
+    }
 
     const lock = LockService.getScriptLock();
     lock.waitLock(30000);
 
     try {
       let response;
+      authorizeGenericOperation(auth.account, resource, action);
       if (action === "delete") {
         response = deleteRow(resource, data.id, data.expectedUpdatedAt);
       } else if (action === "upsert") {
@@ -292,7 +671,7 @@ function doPost(e) {
         action: action,
         resource: resource,
         recordId: data.id || response.id || "",
-        data: data,
+        data: Object.assign({}, data, { updatedBy: auth.account.id }),
         response: response,
         result: response && response._conflict ? "conflict" : "success",
         message: response && response._conflict ? response._conflictMessage : "Operacao concluida."
@@ -307,6 +686,579 @@ function doPost(e) {
   }
 }
 
+function normalizeLogin(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function findAccountByLogin(login) {
+  const normalized = normalizeLogin(login);
+  return readSheet("accounts").find((account) => normalizeLogin(account.login) === normalized || normalizeLogin(account.email) === normalized) || null;
+}
+
+function handleLogin(body) {
+  const login = normalizeLogin(body.login);
+  const password = String(body.password || "");
+  if (!login || !password) {
+    const error = new Error("Informe usuario e senha.");
+    error.code = "INVALID_CREDENTIALS";
+    throw error;
+  }
+  const account = findAccountByLogin(login);
+  const now = new Date();
+  if (!account) {
+    derivePasswordCredential(password, getAuthPepper(), { salt: createPasswordSalt(), iterations: PASSWORD_ITERATIONS });
+    const error = new Error("Usuario ou senha invalidos.");
+    error.code = "INVALID_CREDENTIALS";
+    throw error;
+  }
+  if (account.active === false || String(account.active).toLowerCase() === "false") {
+    const error = new Error("Conta indisponivel. Procure a administracao.");
+    error.code = "ACCOUNT_INACTIVE";
+    throw error;
+  }
+  if (account.lockedUntil && new Date(account.lockedUntil).getTime() > now.getTime()) {
+    const error = new Error("Conta temporariamente bloqueada. Tente novamente mais tarde.");
+    error.code = "ACCOUNT_LOCKED";
+    throw error;
+  }
+  if (account.temporaryPasswordExpiresAt && account.mustChangePassword && new Date(account.temporaryPasswordExpiresAt).getTime() <= now.getTime()) {
+    const error = new Error("A senha temporaria expirou. Solicite uma nova a administracao.");
+    error.code = "TEMPORARY_PASSWORD_EXPIRED";
+    throw error;
+  }
+  if (!verifyPassword(password, account)) {
+    const failedAttempts = Number(account.failedAttempts || 0) + 1;
+    const lockedUntil = failedAttempts >= 5 ? addMinutes(now, 15).toISOString() : "";
+    upsertRow("accounts", Object.assign({}, account, {
+      failedAttempts: failedAttempts >= 5 ? 0 : failedAttempts,
+      lockedUntil: lockedUntil,
+      updatedAt: now.toISOString()
+    }));
+    const error = new Error(lockedUntil ? "Conta bloqueada por 15 minutos apos tentativas incorretas." : "Usuario ou senha invalidos.");
+    error.code = lockedUntil ? "ACCOUNT_LOCKED" : "INVALID_CREDENTIALS";
+    throw error;
+  }
+  const upgradedCredential = Number(account.passwordIterations || 0) === PASSWORD_ITERATIONS ? {} : derivePasswordCredential(password, getAuthPepper(), { iterations: PASSWORD_ITERATIONS });
+  const updatedAccount = Object.assign({}, account, upgradedCredential, {
+    failedAttempts: 0,
+    lockedUntil: "",
+    lastLoginAt: now.toISOString(),
+    updatedAt: now.toISOString()
+  });
+  upsertRow("accounts", updatedAccount);
+  const issued = createAuthSession(updatedAccount, {
+    deviceId: body.deviceId,
+    deviceName: body.deviceName,
+    userAgent: body.userAgent,
+    ipReference: body.ipReference
+  });
+  return { token: issued.token, session: issued.session, account: sanitizeAccount(updatedAccount) };
+}
+
+function changeOwnPassword(auth, body) {
+  const account = getAccountById(auth.account.id);
+  if (!account || !verifyPassword(String(body.currentPassword || ""), account)) {
+    const error = new Error("A senha atual nao confere.");
+    error.code = "INVALID_CURRENT_PASSWORD";
+    throw error;
+  }
+  const credential = hashPassword(body.newPassword);
+  const now = new Date().toISOString();
+  const updated = Object.assign({}, account, credential, {
+    mustChangePassword: false,
+    temporaryPasswordExpiresAt: "",
+    passwordChangedAt: now,
+    sessionVersion: Number(account.sessionVersion || 1) + 1,
+    failedAttempts: 0,
+    lockedUntil: "",
+    updatedAt: now
+  });
+  upsertRow("accounts", updated);
+  revokeAccountSessions(account.id, "senha_alterada");
+  const issued = createAuthSession(updated, {
+    deviceId: body.deviceId || auth.session.deviceId,
+    deviceName: body.deviceName || auth.session.deviceName,
+    userAgent: body.userAgent
+  });
+  return { token: issued.token, session: issued.session, account: sanitizeAccount(updated) };
+}
+
+function getStudentIdForAccount(account) {
+  if (String(account && account.role || "") !== "student" || !account.personId) {
+    const error = new Error("Conta de aluno sem vinculo cadastral.");
+    error.code = "STUDENT_LINK_REQUIRED";
+    throw error;
+  }
+  return String(account.personId);
+}
+
+function buildStudentBootstrap(account) {
+  const studentId = getStudentIdForAccount(account);
+  const student = readSheet("students").find((item) => String(item.id) === studentId);
+  if (!student) {
+    const error = new Error("Cadastro do aluno nao encontrado.");
+    error.code = "STUDENT_NOT_FOUND";
+    throw error;
+  }
+  const own = (resource) => sanitizeResourceRows(resource, readSheet(resource).filter((item) => String(item.studentId) === studentId));
+  const workouts = own("workouts");
+  const workoutIds = new Set(workouts.map((item) => String(item.id)));
+  const exerciseIds = new Set();
+  workouts.forEach((workout) => (Array.isArray(workout.exerciseItems) ? workout.exerciseItems : []).forEach((item) => {
+    if (item.exerciseId) exerciseIds.add(String(item.exerciseId));
+  }));
+  const schedule = sanitizeResourceRows("schedule", readSheet("schedule").filter((item) => !item.studentId || String(item.studentId) === studentId));
+  const config = readSheet("config")[0] || {};
+  return {
+    student: sanitizeStudentSelf(student),
+    workouts: workouts,
+    exercises: sanitizeResourceRows("exercises", readSheet("exercises").filter((item) => exerciseIds.has(String(item.id)))),
+    workoutSessions: own("workoutSessions"),
+    exerciseSets: own("exerciseSets"),
+    schedule: schedule,
+    checkins: own("checkins"),
+    assessments: own("assessments"),
+    payments: own("payments"),
+    config: [{
+      id: config.id || "CONFIG-001",
+      appName: config.appName || "Pro Fitness Academia",
+      environment: config.environment || "demo",
+      datasetId: config.datasetId || "",
+      timezone: config.timezone || "America/Sao_Paulo",
+      currency: config.currency || "BRL",
+      supportPhone: config.supportPhone || "",
+      whatsappNumber: config.whatsappNumber || "",
+      paymentAlertDays: config.paymentAlertDays || [7, 3, 0],
+      paymentGraceDays: Number(config.paymentGraceDays || 0),
+      blockAccessOnOverdue: config.blockAccessOnOverdue !== false
+    }]
+  };
+}
+
+function handleStudentMutation(account, action, body) {
+  const studentId = getStudentIdForAccount(account);
+  const resource = resolveResourceName(body.resource || "");
+  if (!["workoutSessions", "exerciseSets"].includes(resource)) {
+    const error = new Error("O aluno nao pode alterar este recurso.");
+    error.code = "FORBIDDEN";
+    throw error;
+  }
+  const data = Object.assign({}, body.data || {}, {
+    studentId: studentId,
+    updatedBy: account.id,
+    source: "app-aluno"
+  });
+  if (action === "studentdelete") {
+    const existing = readSheet(resource).find((item) => String(item.id) === String(data.id) && String(item.studentId) === studentId);
+    if (!existing) {
+      const error = new Error("Registro do aluno nao encontrado.");
+      error.code = "NOT_FOUND";
+      throw error;
+    }
+    return deleteRow(resource, data.id, data.expectedUpdatedAt);
+  }
+  if (resource === "workoutSessions") {
+    const workout = readSheet("workouts").find((item) => String(item.id) === String(data.workoutId) && String(item.studentId) === studentId);
+    if (!workout) {
+      const error = new Error("Treino nao pertence ao aluno autenticado.");
+      error.code = "FORBIDDEN";
+      throw error;
+    }
+  }
+  if (resource === "exerciseSets") {
+    const session = readSheet("workoutSessions").find((item) => String(item.id) === String(data.sessionId) && String(item.studentId) === studentId);
+    if (!session) {
+      const error = new Error("Sessao de treino nao pertence ao aluno autenticado.");
+      error.code = "FORBIDDEN";
+      throw error;
+    }
+  }
+  return upsertRow(resource, data);
+}
+
+function sanitizeStudentSelf(student) {
+  const safe = Object.assign({}, student || {});
+  ["accountId", "enrollmentToken", "updatedBy", "source", "deviceId"].forEach((field) => delete safe[field]);
+  return safe;
+}
+
+function getStaffProfile(account) {
+  return readSheet("users").find((user) => String(user.accountId) === String(account.id) || String(user.id) === String(account.personId)) || null;
+}
+
+function buildProfessorBootstrap(account) {
+  const profile = getStaffProfile(account);
+  const payments = readSheet("payments");
+  const configRecord = readSheet("config")[0] || {};
+  const students = readSheet("students").map((student) => sanitizeStudentForProfessor(student, payments, configRecord));
+  const publicConfig = getProfessorPublicConfig();
+  return {
+    students: students,
+    assessments: sanitizeResourceRows("assessments", readSheet("assessments")),
+    workouts: sanitizeResourceRows("workouts", readSheet("workouts")),
+    schedule: sanitizeResourceRows("schedule", readSheet("schedule")),
+    checkins: sanitizeResourceRows("checkins", readSheet("checkins")),
+    workoutSessions: sanitizeResourceRows("workoutSessions", readSheet("workoutSessions")),
+    exerciseSets: sanitizeResourceRows("exerciseSets", readSheet("exerciseSets")),
+    exercises: sanitizeResourceRows("exercises", readSheet("exercises")),
+    users: profile ? [sanitizeResourceRows("users", [profile])[0]] : [],
+    staffTimeEntries: sanitizeResourceRows("staffTimeEntries", readSheet("staffTimeEntries").filter((entry) => String(entry.staffId) === String(account.personId))),
+    config: [publicConfig]
+  };
+}
+
+function sanitizeStudentForProfessor(student, payments, config) {
+  const safe = sanitizeResourceRows("students", [student])[0];
+  ["monthlyFee", "accountId", "cpf", "enrollmentToken", "gateCode", "accessBlockReason"].forEach((field) => delete safe[field]);
+  safe.operationalAccess = getProfessorOperationalAccess(student, payments, config);
+  return safe;
+}
+
+function getProfessorOperationalAccess(student, paymentRows, configRecord) {
+  if (!student || student.status !== "ativo" || student.appAccessPolicy === "bloqueado" || student.enrollmentStatus !== "ativo") {
+    return { status: "bloqueado", label: "Bloqueado", allowsGate: false, reason: "Acesso indisponivel. Encaminhe o aluno a administracao." };
+  }
+  if (student.appAccessPolicy === "liberado") return { status: "liberado", label: "OK", allowsGate: true, reason: "Acesso autorizado." };
+  const payments = (paymentRows || []).filter((payment) => String(payment.studentId) === String(student.id)).sort((a, b) => String(b.dueDate || "").localeCompare(String(a.dueDate || "")));
+  const month = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || "America/Sao_Paulo", "yyyy-MM");
+  const payment = payments.find((item) => String(item.reference) === month) || payments[0];
+  const config = configRecord || {};
+  if (payment && ["vencido", "pendente", "parcial"].includes(String(payment.status)) && config.blockAccessOnOverdue !== false && String(config.blockAccessOnOverdue) !== "false") {
+    const due = new Date(String(payment.dueDate || "") + "T12:00:00");
+    due.setDate(due.getDate() + Number(config.paymentGraceDays || 0));
+    if (due.getTime() < new Date().getTime()) return { status: "bloqueado", label: "Bloqueado", allowsGate: false, reason: "Acesso indisponivel. Encaminhe o aluno a administracao." };
+  }
+  return { status: "liberado", label: "OK", allowsGate: true, reason: "Acesso autorizado." };
+}
+
+function getProfessorPublicConfig() {
+  const config = readSheet("config")[0] || {};
+  return {
+    id: config.id || "CONFIG-001",
+    appName: config.appName || "Pro Fitness Academia",
+    environment: config.environment || "demo",
+    datasetId: config.datasetId || "",
+    timezone: config.timezone || "America/Sao_Paulo",
+    plans: config.plans || [],
+    modalities: config.modalities || []
+  };
+}
+
+function getProfessorPaymentContext(studentId, reference) {
+  const student = readSheet("students").find((item) => String(item.id) === String(studentId));
+  if (!student) {
+    const error = new Error("Aluno nao encontrado.");
+    error.code = "NOT_FOUND";
+    throw error;
+  }
+  const selectedReference = String(reference || Utilities.formatDate(new Date(), Session.getScriptTimeZone() || "America/Sao_Paulo", "yyyy-MM"));
+  const payment = readSheet("payments").find((item) => String(item.studentId) === String(studentId) && String(item.reference) === selectedReference) || null;
+  return {
+    student: { id: student.id, name: student.name, plan: student.plan },
+    reference: selectedReference,
+    payment: payment ? sanitizeResourceRows("payments", [payment])[0] : null,
+    suggestedAmount: Number(payment && payment.amount || student.monthlyFee || 0)
+  };
+}
+
+function receiveStudentPayment(account, payload) {
+  const context = getProfessorPaymentContext(payload.studentId, payload.reference);
+  if (context.payment && ["pago", "estornado", "cancelado"].includes(String(context.payment.status))) {
+    const error = new Error("Este pagamento ja possui registro definitivo. Ajustes devem ser feitos pela administracao.");
+    error.code = "PAYMENT_LOCKED";
+    throw error;
+  }
+  const amount = Number(payload.amount || context.suggestedAmount || 0);
+  const discount = Math.max(0, Number(payload.discount || 0));
+  const fine = Math.max(0, Number(payload.fine || 0));
+  const netAmount = Math.max(0, amount - discount + fine);
+  const paidAmount = Math.max(0, Number(payload.paidAmount || netAmount));
+  if (amount <= 0 || paidAmount <= 0 || paidAmount > netAmount) {
+    const error = new Error("Valores do recebimento sao invalidos.");
+    error.code = "INVALID_PAYMENT";
+    throw error;
+  }
+  const profile = getStaffProfile(account);
+  const now = new Date();
+  const payment = Object.assign({}, context.payment || {}, {
+    id: context.payment && context.payment.id || Utilities.getUuid(),
+    studentId: context.student.id,
+    reference: context.reference,
+    amount: amount,
+    discount: discount,
+    fine: fine,
+    netAmount: netAmount,
+    paidAmount: paidAmount,
+    dueDate: payload.dueDate || now.toISOString().slice(0, 10),
+    status: paidAmount < netAmount ? "parcial" : "pago",
+    method: String(payload.method || "pix"),
+    paidAt: payload.paidAt || now.toISOString().slice(0, 10),
+    recordedBy: profile && profile.name || account.id,
+    description: "Mensalidade",
+    notes: String(payload.notes || ""),
+    createdAt: context.payment && context.payment.createdAt || now.toISOString(),
+    updatedAt: now.toISOString(),
+    updatedBy: account.id,
+    source: "tablet-professor"
+  });
+  const savedPayment = upsertRow("payments", payment);
+  const movement = upsertRow("movements", {
+    id: Utilities.getUuid(), date: payment.paidAt, time: Utilities.formatDate(now, Session.getScriptTimeZone() || "America/Sao_Paulo", "HH:mm"), type: "entrada", category: "mensalidade",
+    description: "Mensalidade " + payment.reference + " - " + context.student.name, amount: paidAmount, method: payment.method, account: "caixa-principal",
+    studentId: payment.studentId, paymentId: payment.id, status: "confirmado", createdAt: now.toISOString(), updatedAt: now.toISOString(), updatedBy: account.id, source: "tablet-professor"
+  });
+  appendLog(buildAuditLogEntry({ action: "receivePayment", resource: "payments", recordId: savedPayment.id, actor: account.id, result: "success", message: "Recebimento individual registrado pelo professor." }));
+  return { payment: savedPayment, movement: movement, student: context.student };
+}
+
+function upsertOwnStaffPresence(account, payload) {
+  const profile = getStaffProfile(account);
+  const existing = payload.id ? readSheet("staffTimeEntries").find((entry) => String(entry.id) === String(payload.id)) : null;
+  if (existing && String(existing.staffId) !== String(account.personId)) {
+    const error = new Error("Registro de presenca pertence a outro professor.");
+    error.code = "FORBIDDEN";
+    throw error;
+  }
+  return upsertRow("staffTimeEntries", Object.assign({}, existing || {}, payload, {
+    id: existing && existing.id || payload.id || Utilities.getUuid(),
+    staffId: account.personId,
+    staffName: profile && profile.name || account.login,
+    updatedAt: new Date().toISOString(),
+    updatedBy: account.id,
+    source: "tablet-professor"
+  }));
+}
+
+function createManagedAccount(payload, actor) {
+  const login = normalizeLogin(payload.login);
+  const role = String(payload.role || "").toLowerCase();
+  if (!login || !["student", "professor", "admin"].includes(role)) {
+    const error = new Error("Informe login e perfil validos.");
+    error.code = "INVALID_ACCOUNT";
+    throw error;
+  }
+  if (findAccountByLogin(login)) {
+    const error = new Error("Este login ou e-mail ja esta em uso.");
+    error.code = "DUPLICATE_LOGIN";
+    throw error;
+  }
+  const temporaryPassword = generateTemporaryPassword();
+  const now = new Date();
+  const account = Object.assign({
+    id: Utilities.getUuid(), personType: role === "student" ? "student" : "staff", personId: String(payload.personId || ""), login: login,
+    email: normalizeLogin(payload.email), role: role, permissions: Array.isArray(payload.permissions) ? payload.permissions : [], active: true,
+    mustChangePassword: true, temporaryPasswordExpiresAt: addMinutes(now, 72 * 60).toISOString(), failedAttempts: 0, lockedUntil: "", lastLoginAt: "",
+    passwordChangedAt: "", sessionVersion: 1, createdAt: now.toISOString(), updatedAt: now.toISOString()
+  }, hashPassword(temporaryPassword));
+  upsertRow("accounts", account);
+  linkAccountToPerson(account);
+  appendLog(buildAuditLogEntry({ action: "createAccount", resource: "accounts", recordId: account.id, actor: actor.id, result: "success", message: "Conta criada pela administracao." }));
+  return { account: sanitizeAccount(account), temporaryPassword: temporaryPassword };
+}
+
+function linkAccountToPerson(account) {
+  if (!account.personId) return;
+  if (account.role === "student") {
+    const student = readSheet("students").find((item) => String(item.id) === String(account.personId));
+    if (student) upsertRow("students", Object.assign({}, student, { accountId: account.id, enrollmentNumber: student.enrollmentNumber || account.login, updatedAt: new Date().toISOString() }));
+    return;
+  }
+  const user = readSheet("users").find((item) => String(item.id) === String(account.personId));
+  if (user) upsertRow("users", Object.assign({}, user, { accountId: account.id, updatedAt: new Date().toISOString() }));
+}
+
+function resetManagedPassword(accountId, actor) {
+  const account = getAccountById(accountId);
+  if (!account) {
+    const error = new Error("Conta nao encontrada.");
+    error.code = "NOT_FOUND";
+    throw error;
+  }
+  const temporaryPassword = generateTemporaryPassword();
+  const now = new Date();
+  const updated = Object.assign({}, account, hashPassword(temporaryPassword), {
+    mustChangePassword: true, temporaryPasswordExpiresAt: addMinutes(now, 72 * 60).toISOString(), sessionVersion: Number(account.sessionVersion || 1) + 1,
+    failedAttempts: 0, lockedUntil: "", updatedAt: now.toISOString()
+  });
+  upsertRow("accounts", updated);
+  revokeAccountSessions(account.id, "senha_redefinida");
+  appendLog(buildAuditLogEntry({ action: "resetPassword", resource: "accounts", recordId: account.id, actor: actor.id, result: "success", message: "Senha temporaria redefinida." }));
+  return { account: sanitizeAccount(updated), temporaryPassword: temporaryPassword };
+}
+
+function updateManagedAccount(payload, actor) {
+  const account = getAccountById(payload.id);
+  if (!account) {
+    const error = new Error("Conta nao encontrada.");
+    error.code = "NOT_FOUND";
+    throw error;
+  }
+  const updated = Object.assign({}, account, {
+    active: payload.active !== false && String(payload.active) !== "false",
+    permissions: Array.isArray(payload.permissions) ? payload.permissions : account.permissions,
+    sessionVersion: Number(account.sessionVersion || 1) + 1,
+    updatedAt: new Date().toISOString()
+  });
+  upsertRow("accounts", updated);
+  revokeAccountSessions(account.id, "conta_atualizada");
+  appendLog(buildAuditLogEntry({ action: "updateAccount", resource: "accounts", recordId: account.id, actor: actor.id, result: "success", message: "Conta atualizada pela administracao." }));
+  return sanitizeAccount(updated);
+}
+
+function restoreDemoSnapshot(body, actor) {
+  if (getConfiguredEnvironment() !== "demo") {
+    const error = new Error("Restauracao demonstrativa bloqueada fora do ambiente demo.");
+    error.code = "DEMO_ONLY";
+    throw error;
+  }
+  if (String(body.confirmation || "").trim().toUpperCase() !== "RESTAURAR DEMONSTRACAO") {
+    const error = new Error("Frase de confirmacao incorreta.");
+    error.code = "CONFIRMATION_REQUIRED";
+    throw error;
+  }
+  validateCompleteSnapshot(body.snapshot);
+  const snapshot = normalizeSnapshot(body.snapshot, getSnapshotResourceNames());
+  const spreadsheet = getOrCreateSpreadsheet();
+  const backupName = "Pro Fitness - backup antes da restauracao - " + Utilities.formatDate(new Date(), Session.getScriptTimeZone() || "America/Sao_Paulo", "yyyy-MM-dd HH-mm-ss");
+  const backupFile = DriveApp.getFileById(spreadsheet.getId()).makeCopy(backupName);
+  importAllData(snapshot);
+  appendLog(buildAuditLogEntry({ action: "restoreDemo", resource: "snapshot", actor: actor.id, result: "success", message: "Demonstracao restaurada apos backup automatico." }));
+  return { restored: true, backupFileId: backupFile.getId(), imported: countSnapshotRows(snapshot) };
+}
+
+function signGateValue(value) {
+  const signature = Utilities.computeHmacSha256Signature(Utilities.newBlob(String(value)).getBytes(), Utilities.newBlob(getAuthPepper()).getBytes());
+  return Utilities.base64EncodeWebSafe(signature).replace(/=+$/g, "");
+}
+
+function issueGateToken(account, deviceId) {
+  const studentId = getStudentIdForAccount(account);
+  const student = readSheet("students").find((item) => String(item.id) === studentId);
+  const access = getProfessorOperationalAccess(student, readSheet("payments"), readSheet("config")[0] || {});
+  if (!access.allowsGate) return { allowed: false, status: "blocked", reason: "Acesso indisponivel. Procure a administracao." };
+  const token = createSessionToken();
+  const now = new Date();
+  const expiresAt = addMinutes(now, 1).toISOString();
+  const record = {
+    id: Utilities.getUuid(), studentId: studentId, accountId: account.id, tokenHash: hashSessionToken(token), expiresAt: expiresAt,
+    usedAt: "", status: "issued", createdAt: now.toISOString(), deviceId: String(deviceId || "")
+  };
+  upsertRow("gateTokens", record);
+  const signature = signGateValue(token + "|" + expiresAt);
+  return { allowed: true, expiresAt: expiresAt, payload: JSON.stringify({ type: "profitness-gate", version: 1, token: token, expiresAt: expiresAt, signature: signature }) };
+}
+
+function validateGateToken(account, rawPayload, deviceId) {
+  let payload;
+  try {
+    payload = typeof rawPayload === "string" ? JSON.parse(rawPayload) : rawPayload;
+  } catch (error) {
+    return registerGateAttempt(account, null, "invalid", "Codigo invalido.", deviceId);
+  }
+  if (!payload || payload.type !== "profitness-gate" || !constantTimeEqual(signGateValue(String(payload.token || "") + "|" + String(payload.expiresAt || "")), payload.signature)) {
+    return registerGateAttempt(account, null, "invalid", "Assinatura invalida.", deviceId);
+  }
+  const hash = hashSessionToken(payload.token);
+  const tokenRecord = readSheet("gateTokens").find((item) => constantTimeEqual(item.tokenHash, hash));
+  if (!tokenRecord) return registerGateAttempt(account, null, "invalid", "Codigo inexistente.", deviceId);
+  if (tokenRecord.usedAt || tokenRecord.status === "used") return registerGateAttempt(account, tokenRecord, "reused", "Codigo ja utilizado.", deviceId);
+  if (new Date(tokenRecord.expiresAt).getTime() <= Date.now() || String(tokenRecord.expiresAt) !== String(payload.expiresAt)) {
+    upsertRow("gateTokens", Object.assign({}, tokenRecord, { status: "expired" }));
+    return registerGateAttempt(account, tokenRecord, "expired", "Codigo expirado.", deviceId);
+  }
+  const student = readSheet("students").find((item) => String(item.id) === String(tokenRecord.studentId));
+  if (!student) return registerGateAttempt(account, tokenRecord, "not_found", "Aluno inexistente.", deviceId);
+  const access = getProfessorOperationalAccess(student, readSheet("payments"), readSheet("config")[0] || {});
+  const now = new Date();
+  upsertRow("gateTokens", Object.assign({}, tokenRecord, { usedAt: now.toISOString(), status: "used" }));
+  if (!access.allowsGate) return registerGateAttempt(account, tokenRecord, "blocked", "Acesso bloqueado. Encaminhe a administracao.", deviceId);
+  upsertRow("checkins", {
+    id: Utilities.getUuid(), studentId: student.id, date: Utilities.formatDate(now, Session.getScriptTimeZone() || "America/Sao_Paulo", "yyyy-MM-dd"),
+    time: Utilities.formatDate(now, Session.getScriptTimeZone() || "America/Sao_Paulo", "HH:mm"), type: "access", checkedInAt: now.toISOString(), checkedOutAt: "",
+    presenceSource: "catraca-simulada", presenceStatus: "presente", notes: "Entrada validada por QR temporario.", updatedAt: now.toISOString(), updatedBy: account.id, source: "gate-simulator", deviceId: String(deviceId || "")
+  });
+  const result = registerGateAttempt(account, tokenRecord, "allowed", "Acesso liberado.", deviceId);
+  result.student = { id: student.id, name: student.name };
+  return result;
+}
+
+function registerGateAttempt(account, tokenRecord, result, reason, deviceId) {
+  upsertRow("accessAttempts", {
+    id: Utilities.getUuid(), timestamp: new Date().toISOString(), studentId: tokenRecord && tokenRecord.studentId || "", tokenId: tokenRecord && tokenRecord.id || "",
+    result: result, reason: reason, validatedBy: account.id, deviceId: String(deviceId || "")
+  });
+  return { allowed: result === "allowed", result: result, reason: reason };
+}
+
+function getConfiguredEnvironment() {
+  try {
+    const config = readSheet("config")[0] || {};
+    return String(config.environment || "demo").toLowerCase() === "production" ? "production" : "demo";
+  } catch (error) {
+    return "demo";
+  }
+}
+
+function requireTemporaryAdminRole(account) {
+  if (String(account && account.role || "").toLowerCase() !== "admin") {
+    const error = new Error("Operacao exclusiva da administracao.");
+    error.code = "FORBIDDEN";
+    throw error;
+  }
+}
+
+function sanitizeAccount(account) {
+  const safe = Object.assign({}, account || {});
+  ["passwordHash", "passwordSalt", "passwordAlgorithm", "passwordVersion", "passwordIterations", "failedAttempts", "lockedUntil"].forEach((field) => delete safe[field]);
+  safe.permissions = getAccountPermissions(account);
+  return safe;
+}
+
+function getAccountPermissions(account) {
+  const role = String(account && account.role || "").toLowerCase();
+  const defaults = ROLE_PERMISSIONS[role] || [];
+  const custom = Array.isArray(account && account.permissions) ? account.permissions : [];
+  return [...new Set(defaults.concat(custom).map((permission) => String(permission || "").trim()).filter(Boolean))];
+}
+
+function hasPermission(account, permission) {
+  return getAccountPermissions(account).includes(String(permission || ""));
+}
+
+function requirePermission(account, permission) {
+  if (!hasPermission(account, permission)) {
+    const error = new Error("Voce nao possui permissao para esta operacao.");
+    error.code = "FORBIDDEN";
+    throw error;
+  }
+  return true;
+}
+
+function authorizeGenericOperation(account, resource, action) {
+  const operation = String(action || "read").toLowerCase();
+  const professionalResources = ["assessments", "workouts", "schedule", "checkins", "workoutSessions", "exerciseSets", "exercises"];
+  const financeResources = ["payments", "movements", "expenses", "cashClosings"];
+  if (resource === "students") return requirePermission(account, operation === "read" ? "students.read" : "students.write");
+  if (professionalResources.includes(resource)) return requirePermission(account, operation === "read" ? "professional.read" : "professional.write");
+  if (financeResources.includes(resource)) return requirePermission(account, "finance.manage");
+  if (resource === "staffTimeEntries") return requirePermission(account, "staff.presence.read");
+  if (resource === "users") return requirePermission(account, "users.manage");
+  if (resource === "config") return requirePermission(account, operation === "read" ? "settings.manage" : "settings.manage");
+  if (resource === "log") return requirePermission(account, "reports.read");
+  const error = new Error("Operacao nao autorizada para este recurso.");
+  error.code = "FORBIDDEN";
+  throw error;
+}
+
+function sanitizeResourceRows(resource, rows) {
+  return (rows || []).map((row) => {
+    const safe = Object.assign({}, row);
+    if (resource === "users") delete safe.passwordHash;
+    if (resource === "config") delete safe.apiBaseUrl;
+    return safe;
+  });
+}
+
 function onOpen() {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   if (!spreadsheet) {
@@ -317,6 +1269,8 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("Pro Fitness")
     .addItem("Preparar banco de dados", "setupProFitnessSpreadsheet")
+    .addItem("Inicializar autenticacao", "initializeAuthSecrets")
+    .addItem("Criar acessos demonstrativos", "initializeDemoAuthentication")
     .addToUi();
 }
 
@@ -330,6 +1284,38 @@ function setupProFitnessSpreadsheet() {
   const result = ensureSpreadsheetStructure(spreadsheet);
   Logger.log("Pro Fitness pronto em: " + result.spreadsheetUrl);
   return result;
+}
+
+function initializeDemoAuthentication() {
+  ensureApiReady();
+  if (getConfiguredEnvironment() !== "demo") throw new Error("Contas demonstrativas so podem ser criadas no ambiente demo.");
+  initializeAuthSecrets();
+  const now = new Date();
+  const definitions = [
+    { id: "ACC-DEMO-ADMIN", personType: "staff", personId: "USR-ADMIN-001", login: "admin.demo", email: "administracao@exemplo.com", role: "admin" },
+    { id: "ACC-DEMO-PROF", personType: "staff", personId: "USR-PROF-006", login: "prof.rafael", email: "rafael.costa@exemplo.com", role: "professor" },
+    { id: "ACC-DEMO-STUDENT", personType: "student", personId: "ALU-DEMO-001", login: "000001", email: "aluno001@exemplo.com", role: "student" },
+    { id: "ACC-DEMO-BLOCKED", personType: "student", personId: "ALU-DEMO-002", login: "000002", email: "aluno002@exemplo.com", role: "student", lockedUntil: addMinutes(now, 60).toISOString() }
+  ];
+  const accounts = definitions.map((definition) => {
+    const existing = getAccountById(definition.id) || {};
+    const account = Object.assign({}, existing, definition, hashPassword("Demo1234"), {
+      permissions: [], active: true, mustChangePassword: false, temporaryPasswordExpiresAt: "", failedAttempts: 0,
+      lockedUntil: definition.lockedUntil || "", lastLoginAt: existing.lastLoginAt || "", passwordChangedAt: now.toISOString(),
+      sessionVersion: Number(existing.sessionVersion || 1), createdAt: existing.createdAt || now.toISOString(), updatedAt: now.toISOString()
+    });
+    upsertRow("accounts", account);
+    linkAccountToPerson(account);
+    return sanitizeAccount(account);
+  });
+  const expiredSession = {
+    id: "SES-DEMO-EXPIRED", accountId: "ACC-DEMO-STUDENT", tokenHash: "demonstracao-sem-token-original", deviceId: "CELULAR-ANTIGO",
+    deviceName: "Celular antigo", createdAt: addMinutes(now, -180).toISOString(), lastUsedAt: addMinutes(now, -150).toISOString(),
+    expiresAt: addMinutes(now, -120).toISOString(), idleExpiresAt: addMinutes(now, -120).toISOString(), revokedAt: "", revokedReason: "", ipReference: "", userAgentReference: "", sessionVersion: 1
+  };
+  upsertRow("sessions", expiredSession);
+  Logger.log("Acessos demo: admin.demo, prof.rafael, 000001. Senha: Demo1234");
+  return { ok: true, accounts: accounts.map((account) => ({ login: account.login, role: account.role })) };
 }
 
 function ensureApiReady() {
@@ -351,13 +1337,17 @@ function ensureSpreadsheetStructure(spreadsheetOverride, options) {
   const spreadsheet = spreadsheetOverride || getOrCreateSpreadsheet();
   const summary = [];
 
+  migrateLegacyStaffPresenceSheet(spreadsheet);
+
   Object.keys(SHEETS).forEach((resource) => {
     summary.push(ensureSheetStructure(spreadsheet, resource, SHEETS[resource], settings));
   });
 
   seedConfigSheet(spreadsheet);
+  migrateDemoAccountLogins();
   if (settings.cleanup !== false) cleanupUnknownEmptySheets(spreadsheet);
   PropertiesService.getScriptProperties().setProperty(SCHEMA_VERSION_PROPERTY, String(CURRENT_SCHEMA_VERSION));
+  if (getConfiguredEnvironment() === "demo" && readSheet("accounts").length === 0) initializeDemoAuthentication();
 
   return {
     spreadsheetId: spreadsheet.getId(),
@@ -365,6 +1355,22 @@ function ensureSpreadsheetStructure(spreadsheetOverride, options) {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     sheets: summary
   };
+}
+
+function migrateDemoAccountLogins() {
+  if (getConfiguredEnvironment() !== "demo") return;
+  const expected = { "ACC-DEMO-STUDENT": "000001", "ACC-DEMO-BLOCKED": "000002" };
+  readSheet("accounts").forEach((account) => {
+    if (expected[account.id] && String(account.login) !== expected[account.id]) {
+      upsertRow("accounts", Object.assign({}, account, { login: expected[account.id], updatedAt: new Date().toISOString() }));
+    }
+  });
+}
+
+function migrateLegacyStaffPresenceSheet(spreadsheet) {
+  const legacy = spreadsheet.getSheetByName("PontoProfessores");
+  const current = spreadsheet.getSheetByName(SHEETS.staffTimeEntries.sheetName);
+  if (legacy && !current) legacy.setName(SHEETS.staffTimeEntries.sheetName);
 }
 
 function ensureSheetStructure(spreadsheet, resource, definition, options) {
@@ -480,6 +1486,8 @@ function seedConfigSheet(spreadsheet) {
   const initial = {
     id: "CONFIG-001",
     appName: "Pro Fitness Academia",
+    environment: "demo",
+    datasetId: "pro-fitness-demo-2026-07",
     timezone: Session.getScriptTimeZone() || "America/Sao_Paulo",
     currency: "BRL",
     logoUrl: "",
@@ -563,12 +1571,10 @@ function exportAllData(setup) {
   const resolvedSetup = setup || ensureApiReady();
   touchConfigSnapshotMetadata(resolvedSetup);
   const snapshot = {};
-  Object.keys(SHEETS).forEach((resource) => {
-    snapshot[resource] = readSheet(resource);
+  getSnapshotResourceNames().forEach((resource) => {
+    snapshot[resource] = sanitizeResourceRows(resource, readSheet(resource));
   });
   return {
-    spreadsheetId: resolvedSetup.spreadsheetId,
-    spreadsheetUrl: resolvedSetup.spreadsheetUrl,
     schemaVersion: CURRENT_SCHEMA_VERSION,
     snapshot: snapshot
   };
@@ -578,7 +1584,7 @@ function importAllData(snapshot) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    Object.keys(SHEETS).forEach((resource) => rewriteSheet(resource, snapshot[resource]));
+    getSnapshotResourceNames().forEach((resource) => rewriteSheet(resource, snapshot[resource]));
     touchConfigSnapshotMetadata(ensureApiReady());
   } finally {
     lock.releaseLock();
@@ -608,7 +1614,7 @@ function validateCompleteSnapshot(snapshot) {
     error.code = "INVALID_SNAPSHOT";
     throw error;
   }
-  const missing = Object.keys(SHEETS).filter((resource) => !Array.isArray(snapshot[resource]));
+  const missing = getSnapshotResourceNames().filter((resource) => !Array.isArray(snapshot[resource]));
   if (missing.length) {
     const error = new Error("Importacao integral bloqueada. Colecoes ausentes: " + missing.join(", "));
     error.code = "INCOMPLETE_SNAPSHOT";
@@ -646,7 +1652,14 @@ function normalizePartialSnapshot(snapshot) {
     error.code = "INVALID_SNAPSHOT";
     throw error;
   }
-  return normalizeSnapshot(snapshot, Object.keys(snapshot));
+  const resources = Object.keys(snapshot);
+  const privateResources = resources.filter((resource) => AUTH_RESOURCE_NAMES.includes(resolveResourceName(resource)));
+  if (privateResources.length) {
+    const error = new Error("Colecoes privadas de autenticacao nao podem ser importadas como snapshot.");
+    error.code = "PRIVATE_RESOURCE";
+    throw error;
+  }
+  return normalizeSnapshot(snapshot, resources);
 }
 
 function countSnapshotRows(snapshot) {
@@ -662,6 +1675,8 @@ function buildConfigSnapshotMetadata(first, options) {
   return Object.assign({}, current, {
     id: current.id || "CONFIG-001",
     appName: current.appName || "Pro Fitness Academia",
+    environment: current.environment || "demo",
+    datasetId: current.datasetId || "pro-fitness-demo-2026-07",
     timezone: current.timezone || settings.timezone || "America/Sao_Paulo",
     currency: current.currency || "BRL",
     logoUrl: current.logoUrl || "",
@@ -906,7 +1921,7 @@ function buildAuditLogEntry(options) {
     action: settings.action || "operation",
     resource: settings.resource || "",
     recordId: settings.recordId || data.id || "",
-    changedFields: Object.keys(data).filter((key) => !["passwordHash"].includes(key)),
+    changedFields: Object.keys(data).filter((key) => !["passwordHash", "passwordSalt", "password", "temporaryPassword", "token", "tokenHash"].includes(key)),
     actor: data.updatedBy || data.recordedBy || settings.actor || "",
     source: data.source || settings.source || "api",
     deviceId: data.deviceId || settings.deviceId || "",

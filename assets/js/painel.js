@@ -2,6 +2,9 @@ const Store = window.ProFitnessStore;
 const Finance = window.ProFitnessFinance;
 
 let panelState = Store.loadData();
+let authSession = Store.loadAuthSession();
+let managedAccounts = [];
+let gateSimulatorStream = null;
 let selectedStudentId = panelState.students[0] ? panelState.students[0].id : "";
 let activeFilter = "todos";
 let studentSearchTerm = "";
@@ -13,9 +16,9 @@ let financeHistoryStudentId = selectedStudentId;
 let adminSyncPromise = null;
 let adminAutoSyncTimer = null;
 
-const ADMIN_SYNC_QUEUE_KEY = "profitness-admin-sync-queue-v1";
-const ADMIN_PENDING_SNAPSHOT_KEY = "profitness-admin-pending-snapshot-v1";
-const ADMIN_LAST_SYNC_KEY = "profitness-admin-last-sync-v1";
+const ADMIN_SYNC_QUEUE_PREFIX = Store.storageKey("admin-sync-queue-v2");
+const ADMIN_PENDING_SNAPSHOT_PREFIX = Store.storageKey("admin-pending-snapshot-v2");
+const ADMIN_LAST_SYNC_PREFIX = Store.storageKey("admin-last-sync-v2");
 const ADMIN_SYNC_INTERVAL_MS = 60000;
 const ADMIN_SYNC_RESOURCES = ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "exercises", "users", "staffTimeEntries", "config"];
 const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
@@ -117,6 +120,10 @@ const staffReportStartDate = document.getElementById("staffReportStartDate");
 const staffReportEndDate = document.getElementById("staffReportEndDate");
 const staffReportProfessorFilter = document.getElementById("staffReportProfessorFilter");
 
+function adminStorageKey(prefix) {
+  return `${prefix}-${authSession?.account?.id || "anonymous"}`;
+}
+
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (character) => {
     const entities = {
@@ -171,7 +178,7 @@ function getOperationalAccessReason(access) {
 
 function loadAdminSyncQueue() {
   try {
-    const parsed = JSON.parse(localStorage.getItem(ADMIN_SYNC_QUEUE_KEY) || "[]");
+    const parsed = JSON.parse(localStorage.getItem(adminStorageKey(ADMIN_SYNC_QUEUE_PREFIX)) || "[]");
     return Array.isArray(parsed) ? parsed.filter((item) => item && item.resource && item.recordId) : [];
   } catch (error) {
     return [];
@@ -179,13 +186,13 @@ function loadAdminSyncQueue() {
 }
 
 function saveAdminSyncQueue(queue) {
-  localStorage.setItem(ADMIN_SYNC_QUEUE_KEY, JSON.stringify(Array.isArray(queue) ? queue : []));
+  localStorage.setItem(adminStorageKey(ADMIN_SYNC_QUEUE_PREFIX), JSON.stringify(Array.isArray(queue) ? queue : []));
   renderAdminSyncStatus();
 }
 
 function loadAdminPendingSnapshot() {
   try {
-    const parsed = JSON.parse(localStorage.getItem(ADMIN_PENDING_SNAPSHOT_KEY) || "null");
+    const parsed = JSON.parse(localStorage.getItem(adminStorageKey(ADMIN_PENDING_SNAPSHOT_PREFIX)) || "null");
     return parsed && parsed.snapshot ? parsed : null;
   } catch (error) {
     return null;
@@ -194,9 +201,9 @@ function loadAdminPendingSnapshot() {
 
 function saveAdminPendingSnapshot(entry) {
   if (entry && entry.snapshot) {
-    localStorage.setItem(ADMIN_PENDING_SNAPSHOT_KEY, JSON.stringify(entry));
+    localStorage.setItem(adminStorageKey(ADMIN_PENDING_SNAPSHOT_PREFIX), JSON.stringify(entry));
   } else {
-    localStorage.removeItem(ADMIN_PENDING_SNAPSHOT_KEY);
+    localStorage.removeItem(adminStorageKey(ADMIN_PENDING_SNAPSHOT_PREFIX));
   }
   renderAdminSyncStatus();
 }
@@ -226,7 +233,7 @@ function enqueueAdminSyncOperations(operations) {
 }
 
 function formatAdminLastSync() {
-  const value = localStorage.getItem(ADMIN_LAST_SYNC_KEY);
+  const value = localStorage.getItem(adminStorageKey(ADMIN_LAST_SYNC_PREFIX));
   if (!value) return "Ainda nao sincronizado";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "Ainda nao sincronizado";
@@ -239,7 +246,7 @@ function formatAdminLastSync() {
 }
 
 function setAdminLastSync() {
-  localStorage.setItem(ADMIN_LAST_SYNC_KEY, new Date().toISOString());
+  localStorage.setItem(adminStorageKey(ADMIN_LAST_SYNC_PREFIX), new Date().toISOString());
 }
 
 function renderAdminSyncStatus(mode, customText) {
@@ -533,7 +540,7 @@ function setActiveMainSection(sectionName) {
     overview: "Visao geral",
     operation: "Alunos e estatísticas",
     weekly: "Grade semanal",
-    staff: "Equipe e ponto",
+    staff: "Equipe e presenca",
     finance: "Financeiro",
     settings: "Configuracoes"
   };
@@ -3149,36 +3156,21 @@ function renderFinance() {
 
 function renderAccess(student) {
   const access = Store.getAccessState(panelState, student.id);
-  const enrollmentPayload = Store.buildEnrollmentPayload(student);
   const enrollmentCodeBox = document.getElementById("enrollmentCodeBox");
   const enrollmentQr = document.getElementById("enrollmentQr");
   const gateCodeBox = document.getElementById("gateCodeBox");
   const gateQr = document.getElementById("gateQr");
   const gateStateBox = document.getElementById("gateStateBox");
 
-  enrollmentCodeBox.innerHTML = student.enrollmentStatus === "ativo"
-    ? `
-      ${badge("ativo", "matricula concluida")}
-      <div class="detail-copy"><strong>Concluida em:</strong> ${escapeHtml(student.enrollmentCompletedAt ? Store.formatDate(student.enrollmentCompletedAt) : "data indisponivel")}</div>
-      <div class="detail-copy">O QR inicial ja foi consumido. Para refazer a matricula, altere o status para pendente e reemita um novo QR.</div>
-    `
-    : `
-      ${badge("pendente", "matricula pendente")}
-      <div class="detail-copy"><strong>Codigo:</strong> ${escapeHtml(student.enrollmentToken)}</div>
-      <div class="detail-copy">Esse QR funciona apenas uma vez, na primeira matricula do aluno.</div>
-    `;
-  renderQr(enrollmentQr, enrollmentPayload, 190);
+  enrollmentCodeBox.innerHTML = `${badge(student.enrollmentStatus || "ativo", "matricula cadastrada")}<div class="detail-copy"><strong>Numero:</strong> ${escapeHtml(student.enrollmentNumber || student.id)}</div><div class="detail-copy">O aplicativo usa matricula e senha individual.</div>`;
+  enrollmentQr.innerHTML = '<div class="empty-state">A matricula nao utiliza QR fixo.</div>';
 
   gateCodeBox.innerHTML = `
     ${badge(access.status, access.label)}
-    <div class="detail-copy"><strong>Codigo:</strong> ${escapeHtml(student.gateCode)}</div>
+    <div class="detail-copy">O QR temporario e gerado somente no aplicativo autenticado do aluno.</div>
   `;
 
-  if (access.allowsGate) {
-    renderQr(gateQr, Store.buildGatePayload(panelState, student.id), 190);
-  } else {
-    gateQr.innerHTML = `<div class="empty-state">QR bloqueado no momento.</div>`;
-  }
+  gateQr.innerHTML = `<div class="empty-state">${access.allowsGate ? "Acesso apto para gerar QR temporario no celular." : "QR bloqueado no momento."}</div>`;
 
   gateStateBox.textContent = access.allowsGate
     ? "Acesso autorizado pelas regras atuais do sistema."
@@ -3382,7 +3374,7 @@ function getDataAudit() {
   if (missingNames) issues.push(["Alunos sem nome", `${missingNames} cadastro(s) precisam de identificacao.`, "danger"]);
   if (invalidMonthlyFees || invalidFinance) issues.push(["Valores invalidos", `${invalidMonthlyFees + invalidFinance} registro(s) possuem valor negativo.`, "danger"]);
   if (orphanRecords) issues.push(["Registros sem aluno", `${orphanRecords} registro(s) apontam para alunos inexistentes.`, "danger"]);
-  if (staleOpenShifts) issues.push(["Ponto sem saida", `${staleOpenShifts} jornada(s) estao abertas ha mais de 16 horas.`, "warning"]);
+  if (staleOpenShifts) issues.push(["Presenca sem saida", `${staleOpenShifts} permanencia(s) estao abertas ha mais de 16 horas.`, "warning"]);
 
   return {
     issues,
@@ -3629,7 +3621,7 @@ function handleSettingsAction(event) {
   if (!planButton && !modalityButton && !staffButton) return;
   if (staffButton) {
     const professor = (panelState.users || []).find((user) => user.id === staffButton.dataset.deleteStaff);
-    if (!professor || !window.confirm(`Remover ${professor.name} da lista de professores? Os registros de ponto serao preservados.`)) return;
+    if (!professor || !window.confirm(`Remover ${professor.name} da lista de professores? Os registros de presenca serao preservados.`)) return;
     const nextState = Store.clone(panelState);
     nextState.users = nextState.users.filter((user) => user.id !== professor.id);
     saveWithLog(nextState, "staff-removed", "", `Professor ${professor.name} removido da equipe ativa.`);
@@ -3694,8 +3686,8 @@ function renderStaffTimeReport() {
   const average = entries.length ? totalMinutes / entries.length : 0;
   const metrics = [
     ["Tempo total", formatStaffTimeDuration(totalMinutes), `${workedDays} dia(s) trabalhado(s)`, "primary"],
-    ["Jornadas", String(entries.length), "entradas registradas", "neutral"],
-    ["Media por jornada", formatStaffTimeDuration(average), "no periodo filtrado", "success"],
+    ["Presencas", String(entries.length), "entradas registradas", "neutral"],
+    ["Media de permanencia", formatStaffTimeDuration(average), "no periodo filtrado", "success"],
     ["Sem saida", String(incomplete), incomplete ? "requer conferencia" : "todas concluidas", incomplete ? "danger" : "success"]
   ];
   document.getElementById("staffTimeMetrics").innerHTML = metrics.map(([label, value, detail, tone]) => `<article class="staff-time-metric ${tone}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong><small>${escapeHtml(detail)}</small></article>`).join("");
@@ -3704,7 +3696,7 @@ function renderStaffTimeReport() {
   document.getElementById("staffTimeReportPerson").textContent = selectedOption?.value ? selectedOption.textContent : "Toda a equipe";
   document.getElementById("staffTimeTable").innerHTML = entries.length
     ? `<div class="staff-time-table-head"><span>Professor</span><span>Data</span><span>Entrada</span><span>Saida</span><span>Tempo</span><span>Situacao</span></div>${entries.map((entry) => `<article class="staff-time-table-row"><strong data-label="Professor">${escapeHtml(entry.staffName || "Professor")}</strong><span data-label="Data">${escapeHtml(Store.formatDate(entry.date))}</span><span data-label="Entrada">${escapeHtml(formatStaffTimeClock(entry.clockIn))}</span><span data-label="Saida">${entry.clockOut ? escapeHtml(formatStaffTimeClock(entry.clockOut)) : "--:--"}</span><strong data-label="Tempo">${escapeHtml(formatStaffTimeDuration(getStaffTimeMinutes(entry, now)))}</strong><span data-label="Situacao">${badge(entry.clockOut ? "pago" : "pendente", entry.clockOut ? "Concluido" : "Em aberto")}</span></article>`).join("")}`
-    : '<div class="empty-state">Nenhuma marcacao de ponto no periodo selecionado.</div>';
+    : '<div class="empty-state">Nenhum registro de presenca no periodo selecionado.</div>';
 }
 
 function exportStaffTimeCsv() {
@@ -3717,7 +3709,7 @@ function exportStaffTimeCsv() {
   const link = document.createElement("a");
   const objectUrl = URL.createObjectURL(new Blob([content], { type: "text/csv;charset=utf-8" }));
   link.href = objectUrl;
-  link.download = `pro-fitness-ponto-${staffReportStartDate.value}-${staffReportEndDate.value}.csv`;
+  link.download = `pro-fitness-presenca-professores-${staffReportStartDate.value}-${staffReportEndDate.value}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -4584,6 +4576,146 @@ function handleTabKeyboard(event) {
   setActivePanelTab(tabs[nextIndex].dataset.panelTab);
 }
 
+function showAdminAccess(loggedIn) {
+  document.getElementById("adminAuthView").hidden = loggedIn;
+  document.getElementById("adminAppShell").hidden = !loggedIn;
+  if (loggedIn) document.getElementById("adminCurrentUser").textContent = authSession?.account?.login || "Administracao";
+}
+
+async function loginAdministrator(login, password) {
+  const feedback = document.getElementById("adminLoginFeedback");
+  feedback.textContent = "Verificando acesso...";
+  try {
+    const session = await Store.loginRemote(login, password);
+    if (session.account?.role !== "admin") {
+      await Store.logoutRemote();
+      throw new Error("Esta conta nao possui acesso administrativo.");
+    }
+    authSession = session;
+    if (session.account?.mustChangePassword) {
+      document.getElementById("adminLoginCard").hidden = true;
+      document.getElementById("adminPasswordChangeCard").hidden = false;
+      feedback.textContent = "";
+      return;
+    }
+    showAdminAccess(true);
+    await refreshAdminFromRemote({ notify: false });
+    panelState = Store.loadData();
+    renderPanel();
+    renderAdminSyncStatus();
+    feedback.textContent = "";
+  } catch (error) {
+    feedback.textContent = error.message || "Nao foi possivel entrar.";
+  }
+}
+
+async function logoutAdministrator() {
+  await Store.logoutRemote();
+  authSession = null;
+  managedAccounts = [];
+  panelState = Store.migrateData(Store.createEmptySnapshot());
+  Store.saveData(panelState);
+  showAdminAccess(false);
+  document.getElementById("adminLoginCard").hidden = false;
+  document.getElementById("adminPasswordChangeCard").hidden = true;
+}
+
+function renderManagedAccounts() {
+  const target = document.getElementById("accountList");
+  target.innerHTML = managedAccounts.length ? managedAccounts.map((account) => `<article><div><strong>${escapeHtml(account.login)}</strong><span>${escapeHtml(account.role)} · ${account.active === false ? "bloqueada" : "ativa"}</span></div><button class="ghost-button" data-reset-account="${escapeHtml(account.id)}" type="button">Nova senha</button><button class="ghost-button" data-toggle-account="${escapeHtml(account.id)}" type="button">${account.active === false ? "Ativar" : "Bloquear"}</button></article>`).join("") : '<p>Nenhuma conta cadastrada.</p>';
+}
+
+async function loadManagedAccounts() {
+  try {
+    managedAccounts = await Store.listAccountsRemote();
+    renderManagedAccounts();
+  } catch (error) {
+    document.getElementById("accountList").innerHTML = `<p>${escapeHtml(error.message || "Nao foi possivel carregar as contas.")}</p>`;
+  }
+}
+
+async function createManagedAccountFromForm(event) {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(event.currentTarget).entries());
+  try {
+    const result = await Store.createAccountRemote(data);
+    event.currentTarget.reset();
+    await loadManagedAccounts();
+    window.alert(`A senha temporaria de ${result.account.login} e:\n\n${result.temporaryPassword}\n\nEla sera exibida somente agora e devera ser trocada no primeiro acesso.`);
+  } catch (error) {
+    window.alert(error.message || "Nao foi possivel criar a conta.");
+  }
+}
+
+async function handleAccountListAction(event) {
+  const resetButton = event.target.closest("[data-reset-account]");
+  const toggleButton = event.target.closest("[data-toggle-account]");
+  try {
+    if (resetButton) {
+      const result = await Store.resetPasswordRemote(resetButton.dataset.resetAccount);
+      window.alert(`Nova senha temporaria de ${result.account.login}:\n\n${result.temporaryPassword}\n\nEla sera exibida somente agora.`);
+      return;
+    }
+    if (toggleButton) {
+      const account = managedAccounts.find((item) => item.id === toggleButton.dataset.toggleAccount);
+      if (!account) return;
+      await Store.updateAccountRemote({ id: account.id, active: account.active === false, permissions: account.permissions || [] });
+      await loadManagedAccounts();
+    }
+  } catch (error) {
+    window.alert(error.message || "Nao foi possivel alterar a conta.");
+  }
+}
+
+async function stopGateSimulatorCamera() {
+  if (gateSimulatorStream) gateSimulatorStream.getTracks().forEach((track) => track.stop());
+  gateSimulatorStream = null;
+  document.getElementById("gateSimulatorVideo").hidden = true;
+}
+
+async function startGateSimulatorCamera() {
+  if (!("BarcodeDetector" in window) || !navigator.mediaDevices?.getUserMedia) {
+    window.alert("Leitura automatica indisponivel neste navegador. Cole o conteudo do QR no campo.");
+    return;
+  }
+  try {
+    const detector = new BarcodeDetector({ formats: ["qr_code"] });
+    gateSimulatorStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    const video = document.getElementById("gateSimulatorVideo");
+    video.srcObject = gateSimulatorStream; video.hidden = false; await video.play();
+    const scan = async () => {
+      if (!gateSimulatorStream) return;
+      const codes = await detector.detect(video).catch(() => []);
+      if (codes[0]?.rawValue) {
+        document.getElementById("gateSimulatorPayload").value = codes[0].rawValue;
+        await stopGateSimulatorCamera();
+        document.getElementById("gateSimulatorForm").requestSubmit();
+        return;
+      }
+      window.requestAnimationFrame(scan);
+    };
+    window.requestAnimationFrame(scan);
+  } catch (error) {
+    window.alert("Nao foi possivel abrir a camera. Cole o conteudo do QR no campo.");
+  }
+}
+
+async function validateGateSimulator(event) {
+  event.preventDefault();
+  const resultTarget = document.getElementById("gateSimulatorResult");
+  resultTarget.className = "gate-simulator-result";
+  resultTarget.innerHTML = "<strong>Validando...</strong>";
+  try {
+    const result = await Store.validateGateRemote(new FormData(event.currentTarget).get("payload"));
+    resultTarget.classList.add(result.allowed ? "allowed" : "blocked");
+    resultTarget.innerHTML = `<strong>${result.allowed ? "Acesso liberado" : "Acesso recusado"}</strong><p>${escapeHtml(result.reason || result.result)}</p>${result.student ? `<span>${escapeHtml(result.student.name)}</span>` : ""}`;
+    if (result.allowed) await refreshAdminFromRemote({ notify: false });
+  } catch (error) {
+    resultTarget.classList.add("blocked");
+    resultTarget.innerHTML = `<strong>Falha na validacao</strong><p>${escapeHtml(error.message)}</p>`;
+  }
+}
+
 function attachPanelEvents() {
   studentForm.addEventListener("submit", handleStudentSave);
   paymentForm.addEventListener("submit", handlePaymentSave);
@@ -4598,19 +4730,57 @@ function attachPanelEvents() {
   modalityCatalogForm.addEventListener("submit", handleModalityCatalogSave);
   paymentRulesForm.addEventListener("submit", handlePaymentRulesSave);
   staffCatalogForm.addEventListener("submit", handleStaffCatalogSave);
+  document.getElementById("adminLoginForm").addEventListener("submit", async (event) => { event.preventDefault(); const form = new FormData(event.currentTarget); await loginAdministrator(form.get("login"), form.get("password")); });
+  document.getElementById("adminDemoLoginButton").addEventListener("click", () => loginAdministrator("admin.demo", "Demo1234"));
+  document.getElementById("adminPasswordChangeForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const newPassword = String(form.get("newPassword") || "");
+    const feedback = document.getElementById("adminPasswordChangeFeedback");
+    if (newPassword !== String(form.get("confirmPassword") || "")) { feedback.textContent = "A confirmacao nao confere."; return; }
+    try {
+      authSession = await Store.changePasswordRemote(form.get("currentPassword"), newPassword);
+      document.getElementById("adminLoginCard").hidden = false;
+      document.getElementById("adminPasswordChangeCard").hidden = true;
+      showAdminAccess(true); await refreshAdminFromRemote({ notify: false }); panelState = Store.loadData(); renderPanel();
+    } catch (error) { feedback.textContent = error.message || "Nao foi possivel alterar a senha."; }
+  });
+  document.getElementById("cancelAdminPasswordChange").addEventListener("click", logoutAdministrator);
+  document.getElementById("adminLogoutButton").addEventListener("click", logoutAdministrator);
+  document.getElementById("accountForm").addEventListener("submit", createManagedAccountFromForm);
+  document.getElementById("refreshAccountsButton").addEventListener("click", loadManagedAccounts);
+  document.getElementById("accountList").addEventListener("click", handleAccountListAction);
+  document.getElementById("openGateSimulatorButton").addEventListener("click", () => document.getElementById("gateSimulatorDialog").showModal());
+  document.getElementById("closeGateSimulatorButton").addEventListener("click", async () => { await stopGateSimulatorCamera(); document.getElementById("gateSimulatorDialog").close(); });
+  document.getElementById("startGateSimulatorCamera").addEventListener("click", startGateSimulatorCamera);
+  document.getElementById("gateSimulatorForm").addEventListener("submit", validateGateSimulator);
   assessmentForm.elements.weight.addEventListener("input", updateImcPreview);
   assessmentForm.elements.height.addEventListener("input", updateImcPreview);
 
-  document.getElementById("resetDemoButton").addEventListener("click", () => {
-    if (!window.confirm("Restaurar os dados ficticios de demonstracao? A base atual deste computador sera substituida.")) return;
-    const demoState = Store.resetData();
-    selectedStudentId = demoState.students[0] ? demoState.students[0].id : "";
-    activePanelTab = "ficha";
-    activeMainSection = "overview";
-    savePanelState(demoState);
+  document.getElementById("resetDemoButton").addEventListener("click", async () => {
+    if (!Store.isDemoEnvironment() || !window.confirm("A API criara uma copia completa da planilha antes de restaurar os dados ficticios. Deseja continuar?")) return;
+    const phrase = window.prompt("Digite RESTAURAR DEMONSTRACAO para confirmar:");
+    if (phrase !== "RESTAURAR DEMONSTRACAO") {
+      window.alert("Restauracao cancelada: frase de confirmacao incorreta.");
+      return;
+    }
+    try {
+      const demoResponse = await fetch("assets/data/demo.json", { cache: "no-store" });
+      if (!demoResponse.ok) throw new Error("Modelo oficial de demonstracao indisponivel.");
+      const demoFile = await demoResponse.json();
+      const demoSnapshot = demoFile.snapshot || demoFile;
+      await Store.restoreDemoRemote(demoSnapshot, phrase);
+      panelState = Store.migrateData(demoSnapshot);
+      Store.saveData(panelState);
+      selectedStudentId = panelState.students[0]?.id || "";
+      renderPanel();
+      window.alert("Demonstracao restaurada. Uma copia da planilha anterior foi criada automaticamente.");
+    } catch (error) {
+      window.alert(error.message || "Nao foi possivel restaurar a demonstracao.");
+    }
   });
 
-  document.getElementById("setupSheetsButton").addEventListener("click", async () => {
+  document.querySelector("#setupSheetsButton")?.addEventListener("click", async () => {
     if (!Store.isRemoteConfigured()) {
       window.alert("Configure a URL do Web App em app-config.js antes de preparar o Sheets.");
       return;
@@ -4873,7 +5043,7 @@ function attachPanelEvents() {
   });
 
   window.addEventListener("storage", (event) => {
-    if (event.key === Store.STORAGE_KEY || event.key === ADMIN_SYNC_QUEUE_KEY || event.key === ADMIN_PENDING_SNAPSHOT_KEY) {
+    if (event.key === Store.STORAGE_KEY || String(event.key || "").startsWith(ADMIN_SYNC_QUEUE_PREFIX) || String(event.key || "").startsWith(ADMIN_PENDING_SNAPSHOT_PREFIX)) {
       panelState = Store.loadData();
       renderPanel();
       renderAdminSyncStatus();
@@ -4903,6 +5073,14 @@ resetExpenseForm();
 renderPanel();
 renderAdminSyncStatus();
 (async function initializeAdminPanel() {
+  Store.applyRuntimeEnvironment();
+  document.getElementById("resetDemoButton").hidden = !Store.isDemoEnvironment();
+  if (authSession?.account?.role !== "admin") {
+    authSession = null;
+    showAdminAccess(false);
+    return;
+  }
+  showAdminAccess(true);
   await flushAdminSyncQueue({ notify: false });
   panelState = Store.loadData();
   if (!getAdminPendingCount() && Store.isRemoteConfigured() && navigator.onLine !== false) {

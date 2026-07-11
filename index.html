@@ -9,9 +9,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/style.css?v=20260711-aluno-v1" />
+    <link rel="stylesheet" href="assets/css/style.css?v=20260711-auth6" />
+    <link rel="manifest" href="manifest.webmanifest" />
   </head>
-  <body>
+<body>
+    <div class="environment-badge" data-environment-badge hidden></div>
     <div class="student-app-shell">
       <section class="enrollment-view" id="onboardingView">
         <div class="enrollment-visual">
@@ -32,43 +34,33 @@
 
         <div class="enrollment-panel">
           <div id="enrollmentWelcome">
+            <span class="section-kicker">AREA DO ALUNO</span>
+            <h2>Entre no seu aplicativo</h2>
+            <p>Use o numero de matricula informado pela Pro Fitness e sua senha.</p>
+            <form id="studentLoginForm" class="student-form login-form">
+              <label for="studentLogin">Matricula</label>
+              <input id="studentLogin" inputmode="numeric" name="login" autocomplete="username" placeholder="Ex.: 000123" required />
+              <label for="studentPassword">Senha</label>
+              <input id="studentPassword" type="password" name="password" autocomplete="current-password" required />
+              <button class="primary-action full" type="submit">Entrar</button>
+            </form>
+            <button class="text-action full" id="futureLoginButton" type="button">Acessar demonstracao</button>
+            <p class="form-feedback" id="studentLoginFeedback" aria-live="polite"></p>
+            <p id="onboardingHint" hidden></p>
+          </div>
+
+          <div id="passwordChangeCard" hidden>
             <span class="section-kicker">PRIMEIRO ACESSO</span>
-            <h2>Ative seu aplicativo</h2>
-            <p>Na academia, use o codigo ou QR entregue pela equipe para concluir sua matricula uma unica vez.</p>
-            <button class="primary-action full" id="openEnrollmentButton" type="button">Fazer minha matricula</button>
-            <button class="text-action full" id="futureLoginButton" type="button">Ver demonstracao do app</button>
-          </div>
-
-          <div id="enrollmentStartActions" hidden>
-            <button class="back-action" id="backEnrollmentButton" type="button">Voltar</button>
-            <span class="section-kicker">ATIVACAO</span>
-            <h2>Leia ou informe o codigo</h2>
-            <p>O codigo de matricula e de uso unico.</p>
-            <button class="primary-action full" id="startScanButton" type="button">Ler QR de matricula</button>
-            <button class="secondary-action full" id="stopScanButton" type="button" hidden>Fechar camera</button>
-            <div class="form-separator"><span>ou</span></div>
-            <form id="manualEnrollmentForm" class="student-form">
-              <label for="enrollmentCode">Codigo de matricula</label>
-              <input id="enrollmentCode" type="text" name="enrollmentCode" placeholder="Ex.: MAT-ABC123" autocomplete="off" required />
-              <button class="secondary-action full" type="submit">Continuar</button>
+            <h2>Crie sua senha definitiva</h2>
+            <p>A senha temporaria deve ser alterada antes de acessar seus dados.</p>
+            <form id="studentPasswordChangeForm" class="student-form login-form">
+              <label>Senha temporaria<input type="password" name="currentPassword" autocomplete="current-password" required /></label>
+              <label>Nova senha<input type="password" name="newPassword" autocomplete="new-password" minlength="8" required /></label>
+              <label>Confirmar nova senha<input type="password" name="confirmPassword" autocomplete="new-password" minlength="8" required /></label>
+              <button class="primary-action full" type="submit">Salvar nova senha</button>
             </form>
-            <p class="form-feedback" id="onboardingHint"></p>
-          </div>
-
-          <div id="enrollmentCard" hidden>
-            <button class="back-action" id="cancelEnrollmentButton" type="button">Voltar</button>
-            <span class="section-kicker">CONFIRMACAO</span>
-            <h2>Confira seus dados</h2>
-            <form id="enrollmentForm" class="student-form form-grid">
-              <input type="hidden" name="studentId" />
-              <label>Nome<input type="text" name="name" required /></label>
-              <label>Telefone<input type="tel" name="phone" required /></label>
-              <label>E-mail<input type="email" name="email" required /></label>
-              <label>Data de nascimento<input type="date" name="birthDate" required /></label>
-              <label class="wide">Objetivo<input type="text" name="goal" required /></label>
-              <label class="consent-row wide"><input type="checkbox" name="acceptTerms" required /><span>Confirmo que os dados estao corretos.</span></label>
-              <button class="primary-action full wide" type="submit">Concluir matricula</button>
-            </form>
+            <button class="text-action full" id="cancelPasswordChange" type="button">Sair</button>
+            <p class="form-feedback" id="passwordChangeFeedback" aria-live="polite"></p>
           </div>
         </div>
       </section>
@@ -122,6 +114,7 @@
           <section class="app-screen" id="evolutionScreen" data-screen-panel="evolution">
             <div class="screen-heading"><div><span class="section-kicker">SEU PROGRESSO</span><h1>Evolucao</h1></div><select id="evolutionPeriod" aria-label="Periodo"><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="90">90 dias</option></select></div>
             <section class="metric-grid" id="evolutionMetricGrid"></section>
+            <article class="feature-card physical-evolution-card"><div class="section-heading"><div><span class="section-kicker">AVALIACAO FISICA</span><h2>Medidas e composicao</h2></div></div><div class="physical-evolution-grid" id="physicalEvolutionGrid"></div><div class="history-list" id="physicalEvolutionHistory"></div></article>
             <article class="chart-card"><div class="section-heading"><div><span class="section-kicker">CONSISTENCIA</span><h2>Treinos por semana</h2></div></div><div class="bar-chart" id="workoutConsistencyChart"></div></article>
             <article class="feature-card"><div class="section-heading"><div><span class="section-kicker">CARGAS E SERIES</span><h2>Por exercicio</h2></div></div><div class="exercise-progress-list" id="exerciseProgressList"></div></article>
           </section>
@@ -187,10 +180,11 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="assets/vendor/qrcode.min.js"></script>
     <script src="assets/js/app-config.js"></script>
-    <script src="assets/js/finance-core.js?v=20260711-financeiro-fase2"></script>
-    <script src="assets/js/shared-data.js?v=20260711-schema3-aluno2"></script>
-    <script src="assets/js/app.js?v=20260711-aluno-v2"></script>
+    <script src="assets/js/finance-core.js?v=20260711-auth6"></script>
+    <script src="assets/js/shared-data.js?v=20260711-auth6"></script>
+    <script src="assets/js/app.js?v=20260711-auth6"></script>
+    <script src="assets/js/pwa.js"></script>
   </body>
 </html>

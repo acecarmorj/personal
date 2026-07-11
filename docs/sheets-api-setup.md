@@ -1,85 +1,60 @@
-# Integracao com Google Sheets
+# Integracao segura com Google Sheets
 
 ## Arquivos oficiais
 
 - `apps-script/api.gs`: fonte editavel da API.
-- `api.txt`: copia obrigatoria e identica da API, mantida na raiz.
-- `apps-script/.clasp.json`: unica configuracao do Clasp.
-- `assets/js/app-config.js`: URL do Web App.
-- `assets/js/shared-data.js`: modelos, armazenamento local e comunicacao remota.
+- `api.txt`: copia obrigatoria e byte a byte identica.
+- `apps-script/.clasp.json`: configuracao do projeto Apps Script.
+- `assets/js/app-config.js`: URL, ambiente e identificador da demonstracao.
 
-## Publicacao segura
+## Preparacao pelo editor
 
-1. Abra a planilha que sera usada como banco.
-2. Acesse `Extensoes > Apps Script` nessa propria planilha.
-3. Substitua o codigo pelo conteudo de `apps-script/api.gs`.
-4. Execute `setupProFitnessSpreadsheet()` e autorize o acesso.
-5. Confirme que a resposta informa `schemaVersion: 3`.
-6. Publique uma **nova versao** do Web App.
-7. Confirme ou atualize a URL em `assets/js/app-config.js`.
-8. Teste `?action=health` e `?action=exportAll` antes de usar o sistema.
+1. Abra a planilha vinculada e acesse `Extensoes > Apps Script`.
+2. Substitua o codigo por `apps-script/api.gs`.
+3. Execute `setupProFitnessSpreadsheet()` pelo editor.
+4. O primeiro setup cria automaticamente o pepper se ele ainda nao existir.
+5. Em demonstracao, o primeiro setup tambem cria as contas demo uma unica vez; depois importe `assets/data/demo.json`.
+6. Publique uma nova versao do Web App executada pelo proprietario e acessivel por qualquer pessoa.
+7. O acesso anonimo ao Web App permite abrir o login; a API valida token e permissao internamente em toda operacao protegida.
+8. Confirme `schemaVersion: 6` no retorno do setup e teste somente `GET ?action=health` sem autenticacao.
 
-## Endpoints
+`setup`, inicializacao do pepper e criacao das contas demo nunca sao expostos pela interface ou por endpoint publico.
 
-- `GET ?action=setup`: cria, migra e formata a estrutura completa.
-- `GET ?action=health`: informa planilha, recursos e versao do esquema.
-- `GET ?action=exportAll`: exporta todas as colecoes e atualiza os metadados sem apagar catalogos.
-- `GET ?resource=students`: consulta um recurso.
-- `POST action=upsert`: cria ou atualiza um registro.
-- `POST action=delete`: exclui por ID e aceita `expectedUpdatedAt` para impedir a remocao de uma versao alterada.
-- `POST action=importAll`: substituicao integral, aceita somente snapshot completo.
-- `POST action=importPartial`: substitui apenas as colecoes enviadas.
+## Superficie da API
+
+- Publico: `GET action=health` e `POST action=login`.
+- Sessao: `logout`, `session` e `changePassword`.
+- Aluno: `studentBootstrap`, `studentUpsert`, `studentDelete` e `requestGateToken`.
+- Professor: `professorBootstrap`, `paymentContext`, `receivePayment` e `staffPresenceUpsert`.
+- Administracao: snapshot, CRUD autorizado, contas, sessoes, importacao, exportacao e restauracao demo.
+- Catraca simulada: `validateGate`, exigindo `gate.validate`.
+
+Tokens sao enviados somente no corpo de requisicoes POST. `health` nao revela planilha, recursos, contagens ou IDs internos.
+
+## Permissoes principais
+
+- Aluno: apenas seus dados e registros de execucao.
+- Professor: `professional.read`, `professional.write`, `payments.receive`, `staff.presence` e `gate.validate`.
+- Administrador: `professional.read`, `finance.manage`, `users.manage`, `backups.manage`, `staff.presence.read` e `gate.validate`.
+- Administrador nao recebe `professional.write` e professor nao recebe `finance.manage` por padrao.
 
 ## Sincronizacao
 
-### Notebook
+- Notebook, tablet e celular possuem armazenamento e filas separados por ambiente, superficie e conta.
+- O aluno sincroniza somente sessoes e series proprias.
+- O professor recebe pacote operacional sem financeiro geral e registra recebimento por endpoint dedicado.
+- O administrador pode exportar e importar snapshot operacional; `Contas`, `Sessoes`, tokens e tentativas de acesso nunca entram no snapshot.
+- Conflitos continuam protegidos por `updatedAt` e `expectedUpdatedAt`.
 
-- Salva primeiro no `localStorage`.
-- Mantem fila persistente de operacoes pendentes.
-- Restauracoes integrais usam uma unica chamada `importAll`; se o envio falhar, o snapshot completo permanece pendente no navegador.
-- Reenvia ao abrir o painel, a cada minuto, quando a internet volta ou ao clicar em `Sincronizar agora`.
-- Mostra quantidade pendente, ultimo envio e falhas da API.
-- Uma falha nao e ignorada e nao apaga o dado local.
+## Restauracao demonstrativa
 
-### Tablet
+- Exige administrador com `backups.manage`.
+- Exige ambiente `demo` e frase `RESTAURAR DEMONSTRACAO`.
+- Cria uma copia completa da planilha no Drive antes de importar.
+- Falha do backup impede a restauracao.
+- O servidor recusa a operacao em producao.
 
-- Mantem a fila propria do professor.
-- Salva e trabalha offline.
-- Reenvia automaticamente ao recuperar a conexao.
+## Testes
 
-### Celular do aluno
-
-- Sincroniza somente aluno, sessoes, series e check-ins alterados pelo aplicativo.
-- Consolida mudancas repetidas da mesma serie antes do envio.
-- Nao atualiza a base remota enquanto existir alteracao local pendente.
-- O botao de status permite repetir o envio manualmente.
-
-### Conflitos
-
-- A API compara `updatedAt`.
-- Um registro antigo nao substitui silenciosamente um registro mais novo.
-- Uma exclusao informa `expectedUpdatedAt` e e bloqueada se o registro remoto tiver sido editado.
-- Em conflito, a operacao permanece pendente para conferencia.
-
-## Teste de integracao recomendado
-
-1. Criar ou editar um aluno no tablet.
-2. Confirmar a linha na planilha.
-3. Sincronizar o notebook e conferir o aluno.
-4. Registrar um pagamento no notebook.
-5. Confirmar `Pagamentos` e `Movimentacoes` na planilha.
-6. Desligar a internet, fazer uma alteracao e confirmar a pendencia.
-7. Restaurar a internet e verificar o envio sem duplicacao.
-8. Tentar excluir offline um registro alterado em outro dispositivo e confirmar que a exclusao fica pendente.
-9. Iniciar um treino no aluno, concluir uma serie e confirmar as linhas em `SessoesTreino` e `SeriesRealizadas`.
-
-## Testes automatizados
-
-- `node tests/smoke.mjs`: valida o repositorio de desenvolvimento, incluindo sintaxe, API, HTML e regras funcionais.
-- `node tests/smoke.mjs --package`: valida uma copia final limpa e exige ausencia de `.git`, `.gitignore` e `backups`.
-
-## Observacoes
-
-- A API nao cria outra planilha automaticamente.
-- Requisicoes comuns nao executam redimensionamento e formatacao completa de todas as abas.
-- Depois de qualquer mudanca estrutural, execute novamente o `setup` e publique uma nova versao.
+- `node tests/smoke.mjs`: sintaxe, esquema, permissoes, PWA, pacote por perfil e base ficticia.
+- `node tests/smoke.mjs --package`: valida copia limpa sem `.git` ou backups operacionais.

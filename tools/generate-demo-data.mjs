@@ -75,6 +75,9 @@ const students = names.map((name, index) => {
   const createdAt = addDays("2026-04-20", index % 73);
   return {
     id: `ALU-DEMO-${pad(number)}`,
+    enrollmentNumber: String(number).padStart(6, "0"),
+    cpf: "",
+    accountId: "",
     name,
     phone: `(22) 99${String(100000 + number).slice(-6)}-${String(1000 + number).slice(-4)}`,
     email: `aluno${pad(number)}@exemplo.com`,
@@ -152,6 +155,10 @@ const workouts = students.flatMap((student, studentIndex) => ["A", "B"].map((div
     ...metadata(studentIndex + divisionIndex, "2026-07-05T14:00:00.000Z")
   };
 }));
+workouts.filter((workout) => workout.studentId === "ALU-DEMO-017").forEach((workout) => {
+  workout.status = "encerrado";
+  workout.notes = "Aluno sem treino ativo para demonstrar a pendencia profissional.";
+});
 
 const assessments = students.flatMap((student, index) => {
   const height = 1.56 + (index % 16) * 0.018;
@@ -240,6 +247,9 @@ const individualSchedule = students.flatMap((student, index) => [0, 1, 2].map((p
   };
 }));
 const schedule = [...weeklyClasses, ...individualSchedule];
+schedule.find((item) => item.id === "GRD-DEMO-13").notes = "Turma lotada para demonstracao.";
+schedule.find((item) => item.id === "GRD-DEMO-13").capacity = 0;
+schedule.find((item) => item.id === "AGE-DEMO-020-3").status = "cancelada";
 
 const payments = [];
 const movements = [];
@@ -299,6 +309,24 @@ MONTHS.forEach((month, monthIndex) => {
     }
   });
 });
+const partialPayment = payments.find((payment) => payment.reference === "2026-07" && payment.studentId === "ALU-DEMO-016");
+partialPayment.status = "parcial";
+partialPayment.paidAmount = Number((partialPayment.netAmount / 2).toFixed(2));
+partialPayment.notes = "Pagamento parcial ficticio para demonstracao.";
+const reversedPayment = payments.find((payment) => payment.reference === "2026-05" && payment.studentId === "ALU-DEMO-020");
+reversedPayment.status = "estornado";
+reversedPayment.reversalReason = "Estorno ficticio para demonstracao.";
+reversedPayment.reversedBy = "Administracao";
+reversedPayment.reversedAt = "2026-05-20";
+const partialMovement = movements.find((movement) => movement.paymentId === partialPayment.id);
+if (partialMovement) partialMovement.amount = partialPayment.paidAmount;
+const reversedMovement = movements.find((movement) => movement.paymentId === reversedPayment.id);
+if (reversedMovement) {
+  reversedMovement.status = "estornado";
+  reversedMovement.voidReason = reversedPayment.reversalReason;
+  reversedMovement.voidedBy = reversedPayment.reversedBy;
+  reversedMovement.voidedAt = reversedPayment.reversedAt;
+}
 
 const expenseSeeds = [
   ["Aluguel", "Imobiliaria Carmo", "aluguel", 4200, "administrativo"],
@@ -490,6 +518,18 @@ checkins.filter((checkin) => checkin.type === "workout").forEach((checkin, sessi
     ...metadata(sessionIndex, endedAt)
   });
 });
+const interruptedSession = workoutSessions[0];
+interruptedSession.status = "interrompida";
+interruptedSession.pain = "moderada";
+interruptedSession.notes = "Treino interrompido apos relato de dor no joelho.";
+interruptedSession.completedSets = Math.max(1, interruptedSession.totalSets - 4);
+exerciseSets.filter((set) => set.sessionId === interruptedSession.id).slice(-4).forEach((set) => {
+  set.status = "pendente";
+  set.completedAt = "";
+});
+for (let index = checkins.length - 1; index >= 0; index -= 1) {
+  if (checkins[index].studentId === "ALU-DEMO-018" && checkins[index].date >= "2026-06-01") checkins.splice(index, 1);
+}
 
 const staffTimeEntries = [];
 professors.forEach(([staffId, staffName], professorIndex) => {
@@ -516,7 +556,7 @@ professors.forEach(([staffId, staffName], professorIndex) => {
         status: leaveOpen ? "aberto" : "concluido",
         source: "tablet-professor-demo",
         deviceId: `TABLET-DEMO-${professorIndex + 1}`,
-        notes: leaveOpen ? "Jornada aberta para demonstrar o acompanhamento em tempo real." : "",
+        notes: leaveOpen ? "Presenca aberta para demonstrar o acompanhamento em tempo real." : "",
         createdAt: clockIn.toISOString(),
         updatedAt: clockOut || clockIn.toISOString(),
         updatedBy: staffName
@@ -558,13 +598,15 @@ const users = [
 const config = [{
   id: "CONFIG-001",
   appName: "Pro Fitness Academia",
+  environment: "demo",
+  datasetId: "pro-fitness-demo-2026-07-auth5",
   timezone: "America/Sao_Paulo",
   currency: "BRL",
   logoUrl: "",
   supportPhone: "(22) 98823-3216",
   apiBaseUrl: "https://script.google.com/macros/s/AKfycbxv5kc71SaSMhe10SQR0kqQQO11aFNInVAJFmH1zTif5SqefNDnZ1F60xBN_VrU0lFGIw/exec",
   lastSnapshotAt: new Date().toISOString(),
-  schemaVersion: 3,
+  schemaVersion: 6,
   plans: planCatalog,
   modalities: ["Musculacao", "Natacao", "Hidroginastica", "Karate", "Jiu-jitsu", "Ballet", "Zumba", "Funcional"],
   costCenters: ["geral", "musculacao", "natacao", "lutas", "aulas", "administrativo"],
@@ -612,11 +654,11 @@ const defaultBackupDir = path.resolve(process.cwd(), "..", "PersonalPro-backups"
 const outputFile = outputIndex >= 0 ? process.argv[outputIndex + 1] : path.join(defaultBackupDir, "demo-50-alunos.json");
 const absoluteOutput = path.resolve(process.cwd(), outputFile);
 fs.mkdirSync(path.dirname(absoluteOutput), { recursive: true });
-fs.writeFileSync(absoluteOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 8, generatedAt: new Date().toISOString(), demo: true, snapshot }, null, 2)}
+fs.writeFileSync(absoluteOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 9, generatedAt: new Date().toISOString(), demo: true, snapshot }, null, 2)}
 `, "utf8");
 const emptyOutput = path.join(path.dirname(absoluteOutput), "base-limpa-pro-fitness.json");
 const emptySnapshot = Object.fromEntries(Object.keys(snapshot).map((key) => [key, []]));
-fs.writeFileSync(emptyOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 8, generatedAt: new Date().toISOString(), clean: true, snapshot: emptySnapshot }, null, 2)}
+fs.writeFileSync(emptyOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 9, generatedAt: new Date().toISOString(), clean: true, snapshot: emptySnapshot }, null, 2)}
 `, "utf8");
 
 const currentOverdue = payments.filter((payment) => payment.reference === "2026-07" && payment.status === "vencido").length;

@@ -1,10 +1,17 @@
 # Arquitetura dos paineis Pro Fitness
 
+## Ambientes
+
+- A configuracao `environment` separa `demo` de `production`.
+- Dados, sessoes, identificacao do dispositivo e filas offline usam um namespace proprio por ambiente.
+- A interface identifica claramente a demonstracao e a restauracao ficticia fica desabilitada em producao.
+- Nenhum dado da base real do cliente faz parte da demonstracao atual.
+
 ## Painel administrativo (`painel.html`)
 
 - Uso em notebook.
-- Financeiro, configuracoes, indicadores, relatorios, consultas e ponto da equipe.
-- Treinos, avaliacoes, agenda profissional e presencas ficam somente para consulta.
+- Financeiro, configuracoes, indicadores, relatorios, consultas e presenca da equipe.
+- Treinos, avaliacoes, restricoes, agenda profissional e informacoes medicas ficam somente para consulta com `professional.read`.
 - Possui fila de sincronizacao persistente, status visivel, reenvio automatico e botao manual.
 - Restauracao de backup exige snapshot completo, mostra um resumo e usa uma unica importacao integral.
 - Se a importacao falhar, o snapshot restaurado permanece localmente pendente e bloqueia uma leitura remota que poderia sobrescreve-lo.
@@ -13,9 +20,10 @@
 
 - Uso em tablet de 8,7 polegadas.
 - Cadastro operacional, ficha profissional, treinos, avaliacoes, agenda, acesso e presencas.
-- Recebe a mensalidade somente do aluno selecionado, sem abrir caixa, despesas ou relatorios gerais.
+- Recebe a mensalidade somente do aluno selecionado com `payments.receive`, sem receber `finance.manage` ou abrir caixa, despesas, estornos, inadimplentes e relatorios gerais.
+- Possui `professional.read` e `professional.write` para treinos, avaliacoes, restricoes e agenda.
 - Exibe somente `OK` ou `Bloqueado` como situacao operacional do aluno.
-- Possui fila offline propria e ponto de entrada e saida do professor.
+- Possui fila offline propria e registro operacional de presenca e permanencia do professor, sem finalidade trabalhista.
 
 ## Aplicativo do aluno (`index.html`)
 

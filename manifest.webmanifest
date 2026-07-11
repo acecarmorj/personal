@@ -1,0 +1,19 @@
+{
+  "name": "Pro Fitness Academia",
+  "short_name": "Pro Fitness",
+  "description": "Aplicativos da Pro Fitness Academia de Carmo-RJ.",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eeeeea",
+  "theme_color": "#f4c928",
+  "icons": [
+    { "src": "assets/images/pf-app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Aluno", "url": "./index.html" },
+    { "name": "Professor", "url": "./prof.html" },
+    { "name": "Administracao", "url": "./painel.html" }
+  ]
+}

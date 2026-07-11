@@ -1415,3 +1415,232 @@ ATUALIZACAO - 2026-07-11 - NOVO APLICATIVO MOBILE DO ALUNO
 - Auditoria de encerramento identificou que alunos ficticios ja ativos nao conseguiam passar pela matricula e ainda nao havia login; criado acesso demonstrativo restrito a IDs `ALU-DEMO-*`.
 - O acesso demonstrativo grava sessao `demo-preview`, usa somente dados ficticios existentes e nao e habilitado automaticamente em uma base real sem esses IDs.
 - Correcao publicada pelo commit `b4000ff`; workflow `29159144358` concluido com sucesso e verificacao publica confirmou botao, restricao aos IDs ficticios e cache `20260711-aluno-v2`.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 1
+======================================================================
+- Iniciada a execucao do roteiro aprovado de 16 etapas para autenticacao, seguranca, demonstracao e entrega.
+- Confirmado que o trabalho permanece concentrado em `D:\PersonalPro`.
+- Estado inicial confirmado limpo na branch `main`, sincronizada com `origin/main`, no commit `380e496`.
+- Criada copia externa completa em `D:\PersonalPro-backups\antes-autenticacao-20260711-141028`.
+- Confirmado que `api.txt` e `apps-script/api.gs` estavam byte a byte identicos antes das alteracoes.
+- Smoke tests do repositorio e `git diff --check` executados sem erros como linha de base.
+- Nenhuma base real de cliente sera usada nesta entrega; todos os cadastros permanecem ficticios ate a aprovacao formal.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 2
+======================================================================
+- Criada configuracao explicita de ambiente em `app-config.js`, atualmente definida como `demo`.
+- Adicionados identificador do conjunto ficticio, rotulo visual e permissao controlada para restauracao demonstrativa.
+- Dados locais, sessao do aluno, identificacao do dispositivo e filas offline agora usam namespace separado por ambiente.
+- A instalacao de producao nao reutilizara dados ou sessoes locais da demonstracao.
+- Os tres modulos exibem o selo `Ambiente de demonstracao`; ele desaparece automaticamente em producao.
+- A restauracao da base ficticia passou a falhar de forma segura quando executada fora do ambiente demo.
+- Formalizada a regra `payments.receive`: professor recebe somente do aluno selecionado, sem acesso ao financeiro geral.
+- Formalizadas `professional.read` e `professional.write`: administrador consulta dados profissionais e professor edita por padrao.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 3
+======================================================================
+- API elevada para `schemaVersion: 4` com migracao aditiva e sem apagar colunas existentes.
+- Alunos receberam `enrollmentNumber`, `cpf` e `accountId`; a matricula permanece independente do CPF.
+- Perfis de funcionarios em `Usuarios` receberam `accountId` e `cpf`, preservando compatibilidade com a estrutura anterior.
+- Criadas as abas privadas `Contas` e `Sessoes` com campos versionados de credenciais, bloqueio, dispositivo, expiracao e revogacao.
+- `Contas` e `Sessoes` foram excluidas dos snapshots operacionais, exportacoes comuns e importacoes parciais.
+- Config passou a registrar `environment`, `datasetId` e a versao atual do esquema.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 4
+======================================================================
+- Implementado PBKDF2-HMAC-SHA256 com salt individual, 18.000 iteracoes, versao do algoritmo e chave derivada de 256 bits.
+- Adicionado pepper exclusivo do servidor em Script Properties, inicializado somente pelo editor com `initializeAuthSecrets()`.
+- Criadas validacao minima de senha, comparacao em tempo constante e gerador de senha temporaria de exibicao unica.
+- O modelo permite elevar iteracoes ou trocar a versao do algoritmo futuramente sem invalidar a estrutura das contas.
+- Logs tecnicos passaram a excluir hash, salt, senha, senha temporaria, token e hash de token da lista de campos alterados.
+- Testes automatizados cobrem determinismo, diferenca entre senhas e metadados do algoritmo.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 5
+======================================================================
+- Criados tokens opacos aleatorios; somente o hash com pepper e armazenado na planilha.
+- Sessoes registram conta, dispositivo, nome do aparelho, uso, expiracao absoluta, expiracao por inatividade, revogacao e versao.
+- Politicas definidas por perfil: aluno com sessao longa, professor com inatividade curta para tablet compartilhado e administrador com jornada limitada.
+- Referencias de IP e user-agent sao irreversiveis e truncadas, sem armazenar os valores originais.
+- Criadas revogacao individual, revogacao de todas as sessoes da conta e invalidacao por `sessionVersion`.
+- O navegador recebeu armazenamento de sessao separado por ambiente; o token original permanece somente no dispositivo.
+- Requisicoes POST passam a transportar o token no corpo, evitando exposicao em parametros de URL.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 6
+======================================================================
+- A API publica por GET agora aceita somente `health`; qualquer outra operacao exige POST.
+- `health` retorna apenas `ok`, ambiente e versao publica, sem ID da planilha, URL, recursos ou contagens.
+- Setup remoto foi bloqueado e removido do painel; a estrutura so pode ser preparada pelo editor vinculado a planilha.
+- Exportacao, importacao, leitura, escrita e exclusao passaram a exigir sessao valida.
+- Exportacao e importacao exigem administracao e deixaram de revelar identificadores internos da planilha.
+- Contas e sessoes nao podem ser acessadas pelo CRUD generico.
+- Snapshots sanitizam hashes antigos de `Usuarios` e informacoes internas de configuracao.
+- O app deixou de enviar token por URL e passou a solicitar snapshots protegidos por POST.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 7
+======================================================================
+- Criada matriz de capacidades por conta, permitindo permissoes adicionais sem depender apenas do perfil.
+- Professor recebeu `payments.receive`, mas nao `finance.manage`; caixa, despesas, fechamento, faturamento, inadimplentes, estornos e configuracoes continuam administrativos.
+- Administrador recebeu `professional.read`, mas nao `professional.write`; treinos, avaliacoes, restricoes e agenda so podem ser editados pelo professor por padrao.
+- CRUD generico passou a validar capacidade por recurso e operacao no servidor.
+- O registro de professores foi oficialmente definido como presenca e permanencia operacional, sem natureza de ponto trabalhista.
+- Permissoes renomeadas para `staff.presence` e `staff.presence.read`.
+- Aba migrada de `PontoProfessores` para `PresencaProfessores`, preservando registros existentes durante o setup.
+- Telas, relatorios, exportacao e documentacao deixaram de usar termos como jornada e espelho de ponto.
+- Testes automatizados confirmam os limites entre professor e administrador.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 8
+======================================================================
+- Aplicativo do aluno passou a iniciar pela tela de login com matricula e senha.
+- Matriculas sao tratadas como texto e preservam zeros a esquerda; CPF nao e usado como credencial.
+- API implementou login com resposta uniforme, bloqueio de 15 minutos apos cinco tentativas e controle de senha temporaria expirada.
+- Primeiro acesso exige troca da senha temporaria antes de qualquer dado individual ser exibido.
+- Troca de senha revoga todas as sessoes anteriores, incrementa `sessionVersion` e entrega um novo token ao aparelho atual.
+- Saida encerra a sessao no servidor e remove os vinculos locais do aluno.
+- O botao demonstrativo passou a usar uma conta ficticia autenticada, sem contornar o login.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 9
+======================================================================
+- Criado `studentBootstrap`, que exige conta de aluno autenticada e entrega somente o pacote individual.
+- O pacote contem o proprio cadastro sanitizado, treinos, exercicios vinculados, sessoes, series, agenda permitida, presencas, avaliacoes, mensalidades e configuracao publica minima.
+- Outros alunos, usuarios, contas, sessoes, caixa, despesas, fechamentos, presenca de professores, logs e configuracoes internas nao sao enviados ao celular.
+- O aplicativo do aluno deixou de chamar `exportAll` e passou a reconstruir seu armazenamento somente com o pacote individual.
+- Armazenamento local foi separado por ambiente e superficie, impedindo compartilhamento entre aluno, professor e administracao.
+- Fila offline passou a ser identificada pela conta autenticada e sincroniza somente `workoutSessions` e `exerciseSets`.
+- API valida no servidor se a sessao, serie e treino pertencem ao aluno antes de gravar ou excluir.
+- Aluno continua sem permissao para criar presenca, alterar mensalidade, editar prescricao ou modificar o proprio cadastro pelo CRUD.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 10
+======================================================================
+- Tablet passou a exigir login individual do professor e identifica permanentemente a conta conectada.
+- Criados bloqueio manual, bloqueio automatico apos cinco minutos sem atividade, desbloqueio por senha e troca segura de professor.
+- Conteudo operacional permanece oculto antes do login e durante o bloqueio.
+- Armazenamento e fila offline do tablet passaram a ser separados por conta; cada operacao registra a conta que a originou.
+- Criado `professorBootstrap`, sem snapshot financeiro ou administrativo.
+- Professores recebem alunos com apenas situacao operacional `OK` ou `Bloqueado`, alem dos dados profissionais necessarios.
+- Consulta financeira passou a ocorrer somente depois de selecionar um aluno e uma competencia.
+- Baixa usa o endpoint dedicado `receivePayment`, validado por `payments.receive`, e cria a movimentacao correspondente no servidor.
+- Pagamentos ja concluidos, cancelados ou estornados ficam bloqueados para alteracao pelo professor.
+- Presenca e permanencia usam `staffPresenceUpsert`, que sempre forca o professor da sessao e impede lancamento em nome de outra pessoa.
+- Tablet deixou de chamar `exportAll`; sessoes, series, dificuldades, dores e cargas realizadas fazem parte do pacote profissional.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 11
+======================================================================
+- Painel administrativo passou a exigir login e permanece oculto ate a validacao de uma conta `admin`.
+- Filas e restauracoes pendentes do notebook foram separadas pela conta administrativa autenticada.
+- Criada gestao de contas para aluno, professor e administrador, com login unico, vinculo ao cadastro e senha temporaria de exibicao unica.
+- Administrador pode bloquear/ativar conta e redefinir senha; ambas as operacoes revogam sessoes existentes.
+- API recebeu listagem sanitizada de contas e sessoes, sem hashes, salts ou tokens.
+- Restauracao demonstrativa exige sessao administrativa, `backups.manage`, ambiente demo, confirmacao inicial e a frase exata `RESTAURAR DEMONSTRACAO`.
+- Antes da restauracao, a API cria automaticamente uma copia completa da planilha no Google Drive; falha no backup impede a substituicao.
+- O servidor recusa a restauracao demonstrativa quando `environment=production`, mesmo que o navegador tente forcar a chamada.
+- Contas e sessoes nao sao apagadas junto com o snapshot ficticio, preservando o acesso administrativo durante a demonstracao.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 12
+======================================================================
+- Ficha do professor recebeu a aba `Resultados`, priorizando o ciclo prescricao, execucao, analise e ajuste.
+- Cada sessao mostra conclusao ou interrupcao, duracao, series previstas/realizadas, dificuldade, dor, observacoes e cargas por exercicio.
+- Resumo profissional informa sessoes concluidas, tempo total, relatos de dor e treinos interrompidos.
+- Evolucao do aluno passou a combinar desempenho dos treinos com peso, IMC, gordura corporal, cintura e historico de avaliacoes.
+- Cronometro ganhou coluna estavel, largura minima, texto sem quebra e titulo com `min-width: 0`, evitando corte em celulares estreitos.
+- Removida a fonte de 0,49 rem da navegacao; rotulos de series e medidas receberam tamanhos mais legiveis.
+- Layout de resultados se adapta ao tablet e a evolucao fisica usa cards compactos no celular.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 13
+======================================================================
+- API elevada para `schemaVersion: 5` com `TokensAcesso` e `TentativasAcesso` privadas.
+- QR fixo foi substituido por credencial assinada, opaca, valida por 60 segundos e de uso unico.
+- Somente aluno autenticado e com acesso liberado consegue solicitar um QR temporario.
+- Validacao confere assinatura, existencia, expiracao, reutilizacao, aluno e situacao atual no servidor.
+- Toda tentativa registra resultado e motivo; acesso autorizado cria a entrada pela catraca simulada.
+- Codigo usado nao pode ser reapresentado, reduzindo o risco de captura de tela ou compartilhamento.
+- Painel administrativo recebeu leitor simulado com camera quando suportada e campo manual como alternativa.
+- Simulador demonstra acesso liberado, bloqueado, codigo invalido, expirado, reutilizado e aluno inexistente sem depender do modelo da catraca real.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 14
+======================================================================
+- Criados `manifest.webmanifest`, icone proprio, registro PWA e service worker compartilhado.
+- Aluno, professor e administracao podem ser instalados como aplicativo e possuem atalhos no manifesto.
+- Shell dos tres modulos, estilos, scripts e imagem institucional ficam disponiveis offline apos a primeira carga.
+- Navegacao usa estrategia online-primeiro com fallback do cache; arquivos estaticos usam cache local versionado.
+- Service worker ignora POST e nao armazena chamadas, tokens ou respostas autenticadas da API.
+- Biblioteca `qrcodejs` foi incorporada em `assets/vendor`, removendo a dependencia do CDN para gerar o QR.
+- Ambiente `file://` continua funcional sem tentar registrar service worker, facilitando testes locais simples.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 15
+======================================================================
+- Gerada base oficial restauravel em `assets/data/demo.json`, contendo somente dados ficticios.
+- Confirmados 50 alunos, 6 professores, 3 meses, 150 mensalidades, 10 por cento de inadimplencia atual, 200 sessoes, 3.200 series e 372 presencas de professores.
+- Mensalidade base permanece R$ 89,90 e cada modalidade adicional acrescenta R$ 30,00.
+- Incluidos casos de acesso liberado/bloqueado, pagamento parcial, estorno, aluno sem treino ativo, restricao, dor, treino interrompido, ausencia recente, aula lotada e agendamento cancelado.
+- Matriculas ficticias usam seis digitos e preservam zeros a esquerda; `000001` e a conta demonstrativa do aluno.
+- Criada funcao editorial `initializeDemoAuthentication()` para gerar admin, professor, aluno, conta bloqueada e sessao expirada com salts individuais.
+- Credenciais oficiais da demonstracao: `admin.demo`, `prof.rafael` e `000001`, todos com senha `Demo1234`.
+- A criacao dessas contas e recusada em producao e elas nao fazem parte do snapshot operacional.
+- Restauracao do painel passou a carregar o modelo oficial de 50 alunos, em vez da pequena amostra interna antiga.
+- Backup totalmente limpo foi atualizado fora do repositorio em `D:\PersonalPro-backups\base-limpa-pro-fitness.json`.
+
+
+======================================================================
+CORRECAO - 2026-07-11 - DESEMPENHO SEGURO DO LOGIN
+======================================================================
+- Teste remoto identificou login de 69 segundos com PBKDF2 baseado em chamadas repetidas a `Utilities`.
+- PBKDF2-HMAC-SHA256 foi reimplementado integralmente no V8 para eliminar a latencia de chamadas nativas por iteracao.
+- Iteracoes foram elevadas de 18.000 para 120.000, mantendo salt individual, pepper do servidor, bloqueio por tentativas e versao do algoritmo.
+- Teste automatizado compara o hash produzido com `crypto.pbkdf2Sync` do Node para garantir compatibilidade com o padrao.
+- Contas antigas sao verificadas com seus parametros originais e atualizadas automaticamente para 120.000 iteracoes no primeiro login correto.
+
+
+======================================================================
+CORRECAO - 2026-07-11 - MATRICULAS COM ZERO A ESQUERDA
+======================================================================
+- Teste remoto detectou conversao de `000001` para numero `1` na coluna `login` do Sheets.
+- API elevada para `schemaVersion: 6`; `login` passou a integrar as colunas obrigatoriamente formatadas como texto.
+- Migracao restaura `000001` e `000002` nas contas ficticias pelos IDs estaveis, sem alterar hashes ou recriar contas.
+- Testes futuros de login usam a matricula completa com seis digitos.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 16
+======================================================================
+- Smoke tests do repositorio e do pacote limpo concluidos sem erros.
+- Servidor local confirmou HTTP 200 para aluno, painel, professor, manifesto, service worker, QR local e base ficticia.
+- Automacao visual integrada do navegador nao estava disponivel nesta sessao; validacoes de HTML, IDs, CSS, HTTP e integracao remota foram executadas como alternativa.
+- API enviada pelo Clasp e reimplantada na mesma URL publica como versao 12.
+- Primeira chamada `health` migrou a planilha para `schemaVersion: 6`, criou abas privadas e preservou a resposta publica minima.
+- Base ficticia oficial importada remotamente com 50 alunos, 150 pagamentos, 1.283 check-ins, 200 sessoes, 3.200 series e 372 presencas de professores.
+- Teste remoto confirmou login de admin, professor e aluno com PBKDF2 de 120.000 iteracoes em 6,6 a 8,7 segundos.
+- Administrador recebeu 50 alunos sem `Contas` ou `Sessoes` e foi bloqueado ao tentar gravar treino sem `professional.write`.
+- Professor recebeu 50 alunos sem colecao de pagamentos, teve leitura financeira geral bloqueada e consultou somente a mensalidade selecionada.
+- Aluno `000001` recebeu apenas `ALU-DEMO-001`, sem outros alunos, usuarios ou exportacao integral.
+- QR temporario foi aceito uma vez e recusado como reutilizado na segunda tentativa; a base operacional foi restaurada ao modelo oficial depois do teste.
+- Cache final atualizado para `20260711-auth6` e service worker para `profitness-shell-2026-07-auth6`.
