@@ -330,9 +330,89 @@ assert.match(read("assets/js/shared-data.js"), /LOCAL_DEMO_ACCOUNTS/, "Credencia
 assert.doesNotMatch(professorHtml, /profDemoLoginButton|Acessar como professor demonstrativo/, "Login do professor nao deve exibir botao de demonstracao");
 assert.doesNotMatch(panelHtml, /adminDemoLoginButton|Acessar demonstracao administrativa/, "Login administrativo nao deve exibir botao de demonstracao");
 assert.match(read("assets/js/shared-data.js"), /LOCAL_DEMO_ACCOUNTS\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
+assert.match(read("assets/js/shared-data.js"), /localDemoRuntimeSnapshot/, "Base demonstrativa grande deve permanecer somente em memoria");
+assert.doesNotMatch(read("assets/js/shared-data.js"), /localStorage\.setItem\(LOCAL_DEMO_MASTER_KEY/, "Base demonstrativa completa nao deve ser duplicada no localStorage");
+assert.match(read("sw.js"), /profitness-shell-2026-07-auth9/, "Service worker deve invalidar o cache da versao com erro de cota");
 assert.match(studentHtml, /assets\/js\/demo-data\.js/, "Aluno deve carregar a base demo incorporada");
 assert.match(professorHtml, /assets\/js\/demo-data\.js/, "Professor deve carregar a base demo incorporada");
 assert.match(panelHtml, /assets\/js\/demo-data\.js/, "Administrador deve carregar a base demo incorporada");
+
+class QuotaStorage {
+  constructor(limit) {
+    this.limit = limit;
+    this.values = new Map();
+  }
+
+  get length() { return this.values.size; }
+  key(index) { return [...this.values.keys()][index] ?? null; }
+  getItem(key) { return this.values.has(String(key)) ? this.values.get(String(key)) : null; }
+  removeItem(key) { this.values.delete(String(key)); }
+  setItem(key, value) {
+    const next = new Map(this.values);
+    next.set(String(key), String(value));
+    const used = [...next].reduce((total, [itemKey, itemValue]) => total + itemKey.length + itemValue.length, 0);
+    if (used > this.limit) {
+      const error = new Error("Quota exceeded");
+      error.name = "QuotaExceededError";
+      throw error;
+    }
+    this.values = next;
+  }
+}
+
+async function validateDemoLoginWithSmallStorage(pageName, login, expectedRole) {
+  const localStorage = new QuotaStorage(256 * 1024);
+  const runtimeWindow = {
+    PROFITNESS_CONFIG: { environment: "demo", allowDemoReset: true },
+    location: { pathname: `/${pageName}` },
+    setTimeout,
+    clearTimeout
+  };
+  const context = {
+    window: runtimeWindow,
+    localStorage,
+    navigator: { platform: "Teste", userAgent: "PersonalPro smoke" },
+    AbortController,
+    Array,
+    Boolean,
+    Date,
+    Intl,
+    JSON,
+    Map,
+    Math,
+    Number,
+    Object,
+    Promise,
+    Set,
+    String,
+    clearTimeout,
+    console,
+    setTimeout
+  };
+  vm.runInNewContext(read("assets/js/demo-data.js"), context);
+  vm.runInNewContext(read("assets/js/shared-data.js"), context);
+  const store = runtimeWindow.ProFitnessStore;
+  const session = await store.loginRemote(login, "Demo1234");
+  assert.equal(session.account.role, expectedRole, `${pageName} deve autenticar o perfil demonstrativo correto`);
+  const bootstrap = expectedRole === "student"
+    ? await store.fetchStudentBootstrap()
+    : expectedRole === "professor"
+      ? await store.fetchProfessorBootstrap()
+      : store.loadData();
+  const snapshot = expectedRole === "admin" ? bootstrap : {
+      ...store.createEmptySnapshot(),
+      ...bootstrap,
+      ...(bootstrap.student ? { students: [bootstrap.student] } : {})
+    };
+  if (expectedRole === "admin") assert.equal(snapshot.students.length, 50, "Painel demo deve carregar os 50 alunos sem persistir a base");
+  store.saveData(snapshot);
+  const storageKeys = [...localStorage.values.keys()];
+  assert.ok(!storageKeys.some((key) => key.includes("demo-master") || key.endsWith("-data-v1")), `${pageName} nao deve persistir a base demonstrativa grande`);
+}
+
+await validateDemoLoginWithSmallStorage("index.html", "000001", "student");
+await validateDemoLoginWithSmallStorage("prof.html", "prof.rafael", "professor");
+await validateDemoLoginWithSmallStorage("painel.html", "admin.demo", "admin");
 
 if (packageMode) {
   const allowedRootFiles = new Set(["index.html", "painel.html", "prof.html", "api.txt", "HISTORICO_DESENVOLVIMENTO.txt", "manifest.webmanifest", "sw.js"]);

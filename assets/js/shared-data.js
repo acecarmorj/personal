@@ -10,6 +10,7 @@
   const SESSION_KEY = `${STORAGE_NAMESPACE}-student-session-v1`;
   const AUTH_SESSION_KEY = `${STORAGE_NAMESPACE}-auth-session-v1`;
   const LOCAL_DEMO_MASTER_KEY = `${STORAGE_NAMESPACE}-demo-master-v1`;
+  let localDemoRuntimeSnapshot = null;
   const API_PLACEHOLDER = "COLE_A_URL_DO_WEB_APP_AQUI";
   const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
   const LOCAL_DEMO_ACCOUNTS = {
@@ -957,6 +958,14 @@
   }
 
   function loadData() {
+    if (isLocalDemoSession()) {
+      localStorage.removeItem(LOCAL_DEMO_MASTER_KEY);
+      localStorage.removeItem(STORAGE_KEY);
+      if (!localDemoRuntimeSnapshot || !snapshotHasMeaningfulData(localDemoRuntimeSnapshot)) {
+        localDemoRuntimeSnapshot = getEmbeddedDemoSnapshot();
+      }
+      return localDemoRuntimeSnapshot;
+    }
     const raw = localStorage.getItem(STORAGE_KEY);
     const preEnvironment = isDemoEnvironment() ? localStorage.getItem(PRE_ENVIRONMENT_STORAGE_KEY) : null;
     const legacy = isDemoEnvironment() ? localStorage.getItem(LEGACY_STORAGE_KEY) : null;
@@ -1058,9 +1067,11 @@
         sessionVersion: 1
       }
     };
-    const demoSnapshot = getEmbeddedDemoSnapshot();
-    localStorage.setItem(LOCAL_DEMO_MASTER_KEY, JSON.stringify(demoSnapshot));
-    saveData(demoSnapshot);
+    // A base oficial supera a cota do localStorage em alguns navegadores.
+    // Mantemos os dados ficticios em memoria e persistimos somente a sessao.
+    localStorage.removeItem(LOCAL_DEMO_MASTER_KEY);
+    localStorage.removeItem(STORAGE_KEY);
+    localDemoRuntimeSnapshot = getEmbeddedDemoSnapshot();
     return saveAuthSession(session);
   }
 
@@ -1118,17 +1129,15 @@
 
   function StoreSafeDemoSnapshot() {
     if (isLocalDemoSession()) {
-      try {
-        const master = JSON.parse(localStorage.getItem(LOCAL_DEMO_MASTER_KEY) || "null");
-        if (master && snapshotHasMeaningfulData(master)) return migrateData(master);
-      } catch (error) {
-        // Recria a base oficial abaixo quando o cache local estiver invalido.
-      }
+      if (localDemoRuntimeSnapshot && snapshotHasMeaningfulData(localDemoRuntimeSnapshot)) return localDemoRuntimeSnapshot;
+      localStorage.removeItem(LOCAL_DEMO_MASTER_KEY);
+      localStorage.removeItem(STORAGE_KEY);
+      localDemoRuntimeSnapshot = getEmbeddedDemoSnapshot();
+      return localDemoRuntimeSnapshot;
     }
     const current = loadData();
     if (snapshotHasMeaningfulData(current)) return current;
     const demo = getEmbeddedDemoSnapshot();
-    localStorage.setItem(LOCAL_DEMO_MASTER_KEY, JSON.stringify(demo));
     saveData(demo);
     return demo;
   }
@@ -1312,7 +1321,6 @@
         createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), source: "demonstracao-local"
       });
       snapshot.movements.unshift(movement);
-      localStorage.setItem(LOCAL_DEMO_MASTER_KEY, JSON.stringify(snapshot));
       saveData(snapshot);
       return { payment: clone(normalized), movement: clone(movement), student: student ? { id: student.id, name: student.name, plan: student.plan } : null };
     }
@@ -1529,7 +1537,23 @@
   }
 
   function saveData(data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(migrateData(data)));
+    const normalized = migrateData(data);
+    if (isLocalDemoSession()) {
+      localDemoRuntimeSnapshot = normalized;
+      localStorage.removeItem(LOCAL_DEMO_MASTER_KEY);
+      localStorage.removeItem(STORAGE_KEY);
+      return normalized;
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    } catch (error) {
+      if (!isDemoEnvironment()) throw error;
+      // Recupera automaticamente caches grandes deixados por versoes anteriores.
+      localDemoRuntimeSnapshot = normalized;
+      localStorage.removeItem(LOCAL_DEMO_MASTER_KEY);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    return normalized;
   }
 
   function getAuthSessionExpiry(session) {
@@ -1546,6 +1570,7 @@
   }
 
   function clearAuthenticatedLocalData() {
+    localDemoRuntimeSnapshot = null;
     [AUTH_SESSION_KEY, SESSION_KEY, STORAGE_KEY, LOCAL_DEMO_MASTER_KEY].forEach((key) => localStorage.removeItem(key));
     if (typeof localStorage?.length === "number" && typeof localStorage?.key === "function") {
       const keys = [];

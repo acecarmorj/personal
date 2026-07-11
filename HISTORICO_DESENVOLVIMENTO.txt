@@ -15,6 +15,8 @@ ATENCAO OBRIGATORIA PARA QUALQUER IA OU DESENVOLVEDOR
 
 REGRAS FIXAS DO PROJETO
 -----------------------
+- A academia tera aproximadamente 500 alunos; listagens, filtros, relatorios, sincronizacao e armazenamento devem ser projetados para esse volume.
+- Os 50 alunos atuais pertencem somente a base ficticia de demonstracao e nao representam o limite do sistema.
 - O foco atual e o painel administrativo completo em painel.html, para computador/notebook de 15 polegadas.
 - O painel desktop deve priorizar leitura facil, fontes confortaveis, operacao rapida e ausencia de textos explicativos.
 - Nao adaptar painel.html como painel principal de celular. O painel movel sera criado depois, separado e resumido.
@@ -1723,3 +1725,18 @@ ATUALIZACAO - 11/07/2026 - API PUBLICA MIGRADA PARA SCHEMA 7
 - Tentativa de reutilizar a acao temporaria recebeu `AUTH_REQUIRED`, confirmando sua remocao.
 - `apps-script/api.gs` e `api.txt` permanecem byte a byte identicos.
 - Smoke tests do repositorio e do pacote limpo concluidos com sucesso apos a reimplantacao.
+
+
+======================================================================
+CORRECAO - 11/07/2026 - LOGIN DEMO E COTA DO LOCALSTORAGE
+======================================================================
+- Identificado em navegadores reais o erro `Setting the value exceeded the quota` ao entrar como aluno, professor ou administrador.
+- A causa era a base ficticia completa, com 50 alunos e 3.200 series, gravada simultaneamente nas chaves de dados da tela e de base-mestre demonstrativa.
+- A base oficial incorporada passou a permanecer somente em memoria durante a sessao demonstrativa; o localStorage guarda apenas sessao, dispositivo e preferencias pequenas.
+- Chaves grandes deixadas por versoes anteriores sao removidas automaticamente no proximo login demonstrativo.
+- Ao recarregar uma sessao demo, a base oficial e reconstruida de `assets/js/demo-data.js`, sem depender do cache grande antigo.
+- Aluno continua recebendo somente seu pacote individual; professor recebe o pacote operacional; administrador preserva a demonstracao completa com 50 alunos.
+- Alteracoes feitas durante a demonstracao permanecem na memoria da sessao e a base original e recomposta apos um novo carregamento.
+- Cache dos HTMLs e do service worker elevado de `auth8` para `auth9` para substituir imediatamente o JavaScript com erro.
+- Teste automatizado novo simula localStorage limitado a 256 KB e confirma login de `000001`, `prof.rafael` e `admin.demo` sem gravar a base completa.
+- Smoke tests do repositorio e do pacote limpo concluidos com sucesso.

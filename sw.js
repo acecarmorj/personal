@@ -1,4 +1,4 @@
-const CACHE_NAME = "profitness-shell-2026-07-auth8";
+const CACHE_NAME = "profitness-shell-2026-07-auth9";
 const APP_SHELL = [
   "./",
   "./index.html",
