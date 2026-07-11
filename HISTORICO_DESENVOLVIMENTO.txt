@@ -226,3 +226,15 @@ PROXIMOS PONTOS RECOMENDADOS
   um Web App antigo ainda nao retorna as novas colecoes.
 - Teste isolado no Edge validou as cinco abas, criacao de movimento, despesa e mensalidade, calculo do
   valor liquido, relatorio, exportacao CSV e ausencia de transbordamento em todas as abas a 320 px.
+
+[10/07/2026] Correcao da tela bloqueada no app do aluno
+- Corrigida a regra CSS que fazia elementos com o atributo hidden continuarem visiveis.
+- A janela do leitor de QR deixou de aparecer sobre o app antes de o aluno solicitar a camera.
+- A tela de matricula agora aparece somente quando nao existe uma sessao valida neste celular.
+- Depois da matricula, o app oculta corretamente a entrada inicial e abre diretamente o painel do aluno.
+- O botao "Fazer minha matricula" foi preservado para o primeiro acesso, sem abrir a camera automaticamente.
+- Fluxos sem sessao, abertura da matricula e sessao ativa foram testados no Edge em 320 px, sem erros ou
+  transbordamento lateral.
+- Instalado e autorizado o clasp 3.3.0 com a conta acecarmorj@gmail.com.
+- Projeto Apps Script vinculado localmente pelo Script ID 1PN1oVX1AvRHPJpZfm3pWiJ38BBz2X2eYeW5IIfcrytyORYt48rX55oc_.
+- A configuracao local do clasp usa apps-script como raiz e preserva o manifesto V8 da implantacao atual.
