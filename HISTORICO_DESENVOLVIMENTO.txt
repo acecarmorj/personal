@@ -1407,4 +1407,8 @@ ATUALIZACAO - 2026-07-11 - NOVO APLICATIVO MOBILE DO ALUNO
 - Base ficticia atualizada importada com 50 alunos, 150 pagamentos, 200 sessoes e 3.200 series; o primeiro aluno possui 4 sessoes e 64 series para demonstracao.
 - Conferencia remota confirmou 16 recursos, 5 inadimplentes atuais, avisos 7/3/0, bloqueio ativo e WhatsApp configurado.
 - Teste incremental remoto criou e removeu uma sessao e uma serie temporarias com sucesso; nenhum registro operacional de teste permaneceu.
-- Nesta entrada, validacao final do pacote e publicacao do frontend no GitHub ainda estao pendentes.
+- Smoke do repositorio e smoke de pacote limpo concluidos com sucesso no estado final da entrega.
+- Frontend, API espelhada, testes e documentacao publicados no GitHub pelo commit `f374116` da branch `main`.
+- Workflow `Publish PersonalPro` numero `29159008017` concluido com sucesso no GitHub Pages.
+- Verificacao publica confirmou HTTP 200 no novo `index.html`, painel e professor, com fila do aluno, sessoes, regras financeiras e IDs de exercicio presentes.
+- Verificacao final confirmou API publica em `schemaVersion: 3`, 16 recursos e frontend atualizado em `https://acecarmorj.github.io/personal/`.
