@@ -5,6 +5,7 @@
   const API_PLACEHOLDER = "COLE_A_URL_DO_WEB_APP_AQUI";
   const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
   const SYNC_DEVICE_KEY = "profitness-sync-device-v1";
+  const SNAPSHOT_RESOURCES = ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "exercises", "users", "staffTimeEntries", "config", "log"];
 
   function dateToSaoPauloISO(date) {
     return new Intl.DateTimeFormat("en-CA", {
@@ -293,6 +294,31 @@
       closedBy: closing.closedBy || "Administracao",
       closedAt: closing.closedAt || new Date().toISOString(),
       notes: closing.notes || ""
+    };
+  }
+
+  function createCheckinRecord(overrides) {
+    const checkin = overrides || {};
+    const hasExplicitPresenceSource = Object.prototype.hasOwnProperty.call(checkin, "presenceSource");
+    return {
+      id: checkin.id || uid("CK"),
+      studentId: checkin.studentId || "",
+      workoutId: checkin.workoutId || "",
+      date: checkin.date || todayISO(),
+      time: checkin.time || "",
+      type: checkin.type || "access",
+      checkedInAt: checkin.checkedInAt || "",
+      checkedOutAt: checkin.checkedOutAt || "",
+      presenceSource: checkin.presenceSource || checkin.entrySource || (!hasExplicitPresenceSource ? checkin.source || "" : ""),
+      presenceStatus: checkin.presenceStatus || "",
+      usedLoad: checkin.usedLoad || "",
+      difficulty: checkin.difficulty || "",
+      pain: checkin.pain || "",
+      notes: checkin.notes || "",
+      updatedAt: checkin.updatedAt || checkin.checkedOutAt || checkin.checkedInAt || new Date().toISOString(),
+      updatedBy: checkin.updatedBy || "",
+      source: hasExplicitPresenceSource ? checkin.source || "" : checkin.syncSource || "",
+      deviceId: checkin.deviceId || ""
     };
   }
 
@@ -791,7 +817,7 @@
       ],
       staffTimeEntries: [],
       config: [
-        { id: "CFG-001", timezone: "America/Sao_Paulo", currency: "BRL", appName: "Pro Fitness Academia", supportPhone: "(22) 98823-3216" }
+        { id: "CFG-001", timezone: "America/Sao_Paulo", currency: "BRL", appName: "Pro Fitness Academia", supportPhone: "(22) 98823-3216", schemaVersion: 2 }
       ],
       log: []
     };
@@ -813,7 +839,7 @@
       movements: Array.isArray(data.movements) ? data.movements.map(createMovementRecord) : base.movements,
       expenses: Array.isArray(data.expenses) ? data.expenses.map(createExpenseRecord) : base.expenses,
       cashClosings: Array.isArray(data.cashClosings) ? data.cashClosings.map(createCashClosingRecord) : base.cashClosings,
-      checkins: Array.isArray(data.checkins) ? data.checkins : base.checkins,
+      checkins: Array.isArray(data.checkins) ? data.checkins.map(createCheckinRecord) : base.checkins.map(createCheckinRecord),
       exercises: Array.isArray(data.exercises) ? data.exercises : base.exercises,
       users: Array.isArray(data.users) ? data.users : base.users,
       staffTimeEntries: safeArray(data.staffTimeEntries).map(createStaffTimeEntryRecord),
@@ -870,7 +896,10 @@
     const data = await fetchJson(apiBaseUrl, options, 20000);
 
     if (!data.ok) {
-      throw new Error(data.message || "Falha ao comunicar com a API do Sheets.");
+      const error = new Error(data.message || "Falha ao comunicar com a API do Sheets.");
+      error.code = data.errorCode || "REMOTE_ERROR";
+      error.remoteStatus = data.status || 0;
+      throw error;
     }
 
     return data;
@@ -881,7 +910,9 @@
     const data = await fetchJson(exportUrl, {}, 60000);
 
     if (!data.ok) {
-      throw new Error(data.message || "Falha ao exportar snapshot remoto.");
+      const error = new Error(data.message || "Falha ao exportar snapshot remoto.");
+      error.code = data.errorCode || "REMOTE_ERROR";
+      throw error;
     }
 
     return data.data && data.data.snapshot ? data.data.snapshot : data.data || {};
@@ -892,7 +923,9 @@
     const data = await fetchJson(setupUrl, {}, 20000);
 
     if (!data.ok) {
-      throw new Error(data.message || "Falha ao preparar a planilha.");
+      const error = new Error(data.message || "Falha ao preparar a planilha.");
+      error.code = data.errorCode || "REMOTE_ERROR";
+      throw error;
     }
 
     return data.data;
@@ -903,7 +936,9 @@
     const data = await fetchJson(healthUrl, {}, 12000);
 
     if (!data.ok) {
-      throw new Error(data.message || "Falha ao consultar a API.");
+      const error = new Error(data.message || "Falha ao consultar a API.");
+      error.code = data.errorCode || "REMOTE_ERROR";
+      throw error;
     }
 
     return data.data;
@@ -927,15 +962,21 @@
     return data.data;
   }
 
-  async function deleteRemoteRecord(resource, recordId) {
+  async function deleteRemoteRecord(resource, recordId, expectedUpdatedAt) {
     if (!resource || !recordId) {
       throw new Error("Registro remoto invalido.");
     }
     const data = await requestRemote("POST", {
       action: "delete",
       resource: resource,
-      data: { id: recordId }
+      data: { id: recordId, expectedUpdatedAt: expectedUpdatedAt || "" }
     });
+    if (data.data?._conflict) {
+      const conflict = new Error(data.data._conflictMessage || "Conflito de sincronizacao.");
+      conflict.code = "SYNC_CONFLICT";
+      conflict.remoteRecord = data.data;
+      throw conflict;
+    }
     return data.data;
   }
 
@@ -957,7 +998,12 @@
       });
       beforeMap.forEach((record, recordId) => {
         if (!afterMap.has(recordId)) {
-          operations.push({ action: "delete", resource, recordId, data: { id: recordId } });
+          operations.push({
+            action: "delete",
+            resource,
+            recordId,
+            data: { id: recordId, expectedUpdatedAt: record.updatedAt || "" }
+          });
         }
       });
     });
@@ -971,7 +1017,7 @@
     const operations = buildRemoteRecordOperations(beforeSnapshot, afterSnapshot, resources);
     for (const operation of operations) {
       if (operation.action === "delete") {
-        await deleteRemoteRecord(operation.resource, operation.recordId);
+        await deleteRemoteRecord(operation.resource, operation.recordId, operation.data?.expectedUpdatedAt);
       } else {
         await upsertRemoteRecord(operation.resource, operation.data);
       }
@@ -979,13 +1025,48 @@
     return { sent: operations.length };
   }
 
+  function validateCompleteSnapshot(snapshot) {
+    const missing = SNAPSHOT_RESOURCES.filter((resource) => !Array.isArray(snapshot?.[resource]));
+    if (missing.length) {
+      const error = new Error(`Backup incompleto. Colecoes ausentes: ${missing.join(", ")}.`);
+      error.code = "INCOMPLETE_SNAPSHOT";
+      error.missingResources = missing;
+      throw error;
+    }
+    return true;
+  }
+
+  function getSnapshotSummary(snapshot) {
+    const summary = {};
+    SNAPSHOT_RESOURCES.forEach((resource) => {
+      summary[resource] = Array.isArray(snapshot?.[resource]) ? snapshot[resource].length : null;
+    });
+    return summary;
+  }
+
   async function pushRemoteSnapshot(snapshot) {
     const normalized = normalizeSnapshot(snapshot);
+    validateCompleteSnapshot(normalized);
     const data = await requestRemote("POST", {
       action: "importAll",
       snapshot: normalized
     });
-    saveData(normalized);
+    return data.data;
+  }
+
+  async function pushRemotePartialSnapshot(snapshot) {
+    const partial = {};
+    Object.keys(snapshot || {}).forEach((resource) => {
+      if (!SNAPSHOT_RESOURCES.includes(resource)) {
+        throw new Error(`Colecao desconhecida: ${resource}.`);
+      }
+      if (!Array.isArray(snapshot[resource])) {
+        throw new Error(`A colecao ${resource} precisa ser uma lista.`);
+      }
+      partial[resource] = clone(snapshot[resource]);
+    });
+    if (!Object.keys(partial).length) throw new Error("Nenhuma colecao foi informada.");
+    const data = await requestRemote("POST", { action: "importPartial", snapshot: partial });
     return data.data;
   }
 
@@ -1337,6 +1418,7 @@
     clone: clone,
     createCode: createCode,
     createCashClosingRecord: createCashClosingRecord,
+    createCheckinRecord: createCheckinRecord,
     createExpenseRecord: createExpenseRecord,
     createMovementRecord: createMovementRecord,
     createPaymentRecord: createPaymentRecord,
@@ -1367,6 +1449,7 @@
     migrateData: migrateData,
     normalizeSnapshot: normalizeSnapshot,
     pushRemoteSnapshot: pushRemoteSnapshot,
+    pushRemotePartialSnapshot: pushRemotePartialSnapshot,
     regenerateEnrollmentToken: regenerateEnrollmentToken,
     regenerateGateCode: regenerateGateCode,
     resetData: resetData,
@@ -1374,6 +1457,8 @@
     saveStudentSession: saveStudentSession,
     setupRemoteSpreadsheet: setupRemoteSpreadsheet,
     snapshotHasMeaningfulData: snapshotHasMeaningfulData,
+    getSnapshotSummary: getSnapshotSummary,
+    validateCompleteSnapshot: validateCompleteSnapshot,
     shouldAutoSyncToRemote: shouldAutoSyncToRemote,
     shouldUseRemoteOnLoad: shouldUseRemoteOnLoad,
     syncSnapshotChanges: syncSnapshotChanges,

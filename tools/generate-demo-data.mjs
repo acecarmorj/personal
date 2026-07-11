@@ -401,7 +401,7 @@ students.forEach((student, studentIndex) => {
       type: "access",
       checkedInAt: entry.toISOString(),
       checkedOutAt: exit.toISOString(),
-      source: "catraca-demo",
+      presenceSource: "catraca-demo",
       presenceStatus: "outside",
       usedLoad: "",
       difficulty: "",
@@ -422,7 +422,7 @@ students.forEach((student, studentIndex) => {
       type: "workout",
       checkedInAt: "",
       checkedOutAt: "",
-      source: "tablet-professor",
+      presenceSource: "tablet-professor",
       presenceStatus: "",
       usedLoad: `${20 + (studentIndex % 8) * 5} kg`,
       difficulty: workoutIndex % 3 === 0 ? "moderada" : "leve",
@@ -506,6 +506,7 @@ const config = [{
   supportPhone: "(22) 98823-3216",
   apiBaseUrl: "https://script.google.com/macros/s/AKfycbxv5kc71SaSMhe10SQR0kqQQO11aFNInVAJFmH1zTif5SqefNDnZ1F60xBN_VrU0lFGIw/exec",
   lastSnapshotAt: new Date().toISOString(),
+  schemaVersion: 2,
   plans: planCatalog,
   modalities: ["Musculacao", "Natacao", "Hidroginastica", "Karate", "Jiu-jitsu", "Ballet", "Zumba", "Funcional"],
   costCenters: ["geral", "musculacao", "natacao", "lutas", "aulas", "administrativo"],
@@ -517,7 +518,12 @@ const log = Array.from({ length: 24 }, (_, index) => ({
   action: index % 3 === 0 ? "student-updated" : index % 3 === 1 ? "workout-updated" : "assessment-created",
   resource: index % 3 === 0 ? "students" : index % 3 === 1 ? "workouts" : "assessments",
   recordId: students[index % students.length].id,
-  payload: JSON.stringify({ message: "Evento ficticio para demonstracao do historico.", source: SOURCE })
+  changedFields: ["updatedAt", "status"],
+  actor: "Equipe de demonstracao",
+  source: SOURCE,
+  deviceId: "DEMO-DATASET",
+  result: "success",
+  message: "Evento ficticio para demonstracao do historico."
 }));
 
 const snapshot = {
@@ -538,13 +544,16 @@ const snapshot = {
 };
 
 const outputIndex = process.argv.indexOf("--output");
-const outputFile = outputIndex >= 0 ? process.argv[outputIndex + 1] : "backups/demo-50-alunos.json";
+const defaultBackupDir = path.resolve(process.cwd(), "..", "PersonalPro-backups");
+const outputFile = outputIndex >= 0 ? process.argv[outputIndex + 1] : path.join(defaultBackupDir, "demo-50-alunos.json");
 const absoluteOutput = path.resolve(process.cwd(), outputFile);
 fs.mkdirSync(path.dirname(absoluteOutput), { recursive: true });
-fs.writeFileSync(absoluteOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 6, generatedAt: new Date().toISOString(), demo: true, snapshot }, null, 2)}\n`, "utf8");
-const emptyOutput = path.resolve(process.cwd(), "backups/base-limpa-pro-fitness.json");
+fs.writeFileSync(absoluteOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 7, generatedAt: new Date().toISOString(), demo: true, snapshot }, null, 2)}
+`, "utf8");
+const emptyOutput = path.join(path.dirname(absoluteOutput), "base-limpa-pro-fitness.json");
 const emptySnapshot = Object.fromEntries(Object.keys(snapshot).map((key) => [key, []]));
-fs.writeFileSync(emptyOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 6, generatedAt: new Date().toISOString(), clean: true, snapshot: emptySnapshot }, null, 2)}\n`, "utf8");
+fs.writeFileSync(emptyOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 7, generatedAt: new Date().toISOString(), clean: true, snapshot: emptySnapshot }, null, 2)}
+`, "utf8");
 
 const currentOverdue = payments.filter((payment) => payment.reference === "2026-07" && payment.status === "vencido").length;
 console.log(JSON.stringify({

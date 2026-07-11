@@ -2,46 +2,61 @@
 
 ## Painel administrativo (`painel.html`)
 
-- Uso principal em notebook.
-- Interface exclusiva para computador ou notebook; celular nao e um alvo de uso administrativo.
-- Responsavel por financeiro, indicadores, configuracoes e consultas administrativas.
-- Pode receber mensalidades e consultar informacoes operacionais consolidadas.
-- Nao cria ou edita treinos, avaliacoes, agenda profissional ou registros de acesso.
-- Nao exibe medidas corporais, restricoes medicas ou detalhes profissionais.
+- Uso em notebook.
+- Financeiro, configuracoes, indicadores, relatorios, consultas e ponto da equipe.
+- Treinos, avaliacoes, agenda profissional e presencas ficam somente para consulta.
+- Possui fila de sincronizacao persistente, status visivel, reenvio automatico e botao manual.
+- Restauracao de backup exige snapshot completo, mostra um resumo e usa uma unica importacao integral.
+- Se a importacao falhar, o snapshot restaurado permanece localmente pendente e bloqueia uma leitura remota que poderia sobrescreve-lo.
 
 ## Painel do professor (`prof.html`)
 
-- Uso principal em tablet de 8,7 polegadas.
-- Responsavel pelo cadastro operacional do aluno, ficha profissional, treinos, avaliacoes, agenda e acesso.
-- Pode receber a mensalidade do aluno selecionado, sem acesso ao caixa, despesas ou relatorios financeiros.
-- Exibe somente o estado operacional `OK` ou `Bloqueado`.
-- Salva primeiro no aparelho e sincroniza os registros alterados com a API.
-- Registra entrada e saida dos professores no tablet, inclusive sem internet.
+- Uso em tablet de 8,7 polegadas.
+- Cadastro operacional, ficha profissional, treinos, avaliacoes, agenda, acesso e presencas.
+- Recebe a mensalidade somente do aluno selecionado, sem abrir caixa, despesas ou relatorios gerais.
+- Exibe somente `OK` ou `Bloqueado` como situacao operacional do aluno.
+- Possui fila offline propria e ponto de entrada e saida do professor.
 
-## Ponto da equipe
+## Aplicativo do aluno (`index.html`)
 
-- Os professores sao cadastrados em Configuracoes no painel administrativo.
-- Cada marcacao e gravada em `staffTimeEntries` e sincronizada com a aba `PontoProfessores`.
-- O painel exibe o espelho de ponto por professor e periodo, com totais, jornadas abertas, CSV e impressao/PDF.
-- O ponto nao e uma lista de chamada de alunos e nao altera o fluxo de presenca dos alunos.
-
-## App do aluno (`index.html`)
-
-- Fora do escopo das melhorias atuais.
-- Nao deve ser alterado durante as fases do painel administrativo e do professor.
+- Consulta individual, treino, agenda e QR de acesso.
+- Nao substitui os paineis administrativo e profissional.
 
 ## Dados compartilhados
 
-- `assets/js/shared-data.js` define modelos, armazenamento local e sincronizacao.
-- `apps-script/api.gs` e a fonte principal da API.
-- `api.txt` deve permanecer byte a byte identico a `apps-script/api.gs`.
-- Alteracoes de esquema devem ser aditivas e executadas por `setupProFitnessSpreadsheet()`.
-- Registros sincronizados recebem `updatedAt`, `updatedBy`, `source` e `deviceId` quando a aba oferece essas colunas.
-- A API compara `updatedAt` e nao permite que uma versao antiga sobrescreva silenciosamente uma versao mais nova.
-- Conflitos e falhas permanecem na fila do tablet; o indicador de pendencia tambem funciona como tentativa manual.
+- `assets/js/shared-data.js`: modelos, migracoes locais e comunicacao com a API.
+- `apps-script/api.gs`: API oficial e esquema da planilha.
+- `api.txt`: copia textual identica da API.
+- `assets/js/finance-core.js`: calculos financeiros reutilizados.
 
-## Publicacao
+## Regras de sincronizacao
 
-- O frontend e publicado somente depois da validacao conjunta das fases.
-- A API deve ser publicada antes do frontend quando houver novas colunas ou recursos.
-- Nunca publicar uma fase intermediaria sem validacao local.
+- Alteracoes comuns sao enviadas registro por registro.
+- `updatedAt` protege contra sobrescrita por versao antiga.
+- Exclusoes tambem transportam a versao conhecida e sao bloqueadas quando o registro remoto mudou.
+- `presenceSource` registra a origem da presenca; `source` registra a origem tecnica da sincronizacao.
+- Falhas permanecem em fila local no notebook ou tablet.
+- `importAll` e exclusivo para snapshots completos; `importPartial` nao altera colecoes ausentes.
+
+## Estrutura do pacote
+
+A raiz deve conter apenas:
+
+- `index.html`
+- `painel.html`
+- `prof.html`
+- `api.txt`
+- `HISTORICO_DESENVOLVIMENTO.txt`
+
+Pastas permitidas:
+
+- `.github/`
+- `apps-script/`
+- `assets/`
+- `docs/`
+- `tests/`
+- `tools/`
+
+Nao incluir `.git`, `backups`, copias antigas ou arquivos soltos duplicados no ZIP entregue.
+
+O repositorio e validado com `node tests/smoke.mjs`. Uma copia final limpa deve ser validada separadamente com `node tests/smoke.mjs --package`.

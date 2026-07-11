@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="assets/css/painel.css?v=20260711-final-fases" rel="stylesheet"/>
+<link href="assets/css/painel.css?v=20260711-schema2-sync2" rel="stylesheet"/>
 </head>
 <body>
 <div class="dashboard-shell">
@@ -48,6 +48,13 @@
 <button class="ghost-button danger-button" id="resetDemoButton">Restaurar demonstracao</button>
 </div>
 </details>
+</div>
+<div class="admin-sync-status" id="adminSyncStatus" aria-live="polite">
+<span class="admin-sync-dot" id="adminConnectionDot"></span>
+<strong id="adminConnectionText">Dados deste computador</strong>
+<button class="admin-sync-pending" hidden id="adminPendingSyncButton" type="button">0 pendencias</button>
+<span id="adminLastSyncText">Ainda nao sincronizado</span>
+<button class="ghost-button admin-sync-now" id="retryAdminSyncButton" type="button">Sincronizar agora</button>
 </div>
 </div>
 <section class="main-section overview-section" data-main-panel="overview" id="overviewSection">
@@ -1019,8 +1026,8 @@ Motivo do bloqueio ou observacao
 </dialog>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="assets/js/app-config.js"></script>
-<script src="assets/js/shared-data.js?v=20260711-final-fases3"></script>
+<script src="assets/js/shared-data.js?v=20260711-schema2-sync2"></script>
 <script src="assets/js/finance-core.js?v=20260711-financeiro-fase2"></script>
-<script src="assets/js/painel.js?v=20260711-final-fases2"></script>
+<script src="assets/js/painel.js?v=20260711-schema2-sync2"></script>
 </body>
 </html>

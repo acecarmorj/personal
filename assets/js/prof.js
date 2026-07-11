@@ -126,7 +126,7 @@
             action: "delete",
             resource,
             recordId,
-            data: { id: recordId },
+            data: { id: recordId, expectedUpdatedAt: record.updatedAt || "" },
             queuedAt: new Date().toISOString()
           });
         }
@@ -224,7 +224,7 @@
 
   async function sendProfessorSyncOperation(operation) {
     if (operation.action === "delete") {
-      return Store.deleteRemoteRecord(operation.resource, operation.recordId);
+      return Store.deleteRemoteRecord(operation.resource, operation.recordId, operation.data?.expectedUpdatedAt);
     }
     return Store.upsertRemoteRecord(operation.resource, operation.data);
   }
@@ -675,7 +675,7 @@
       <article class="presence-history-row">
         <div>
           <strong>${escapeHtml(entry ? Store.formatDateTime(entry) : "Entrada não informada")}</strong>
-          <span>${escapeHtml(checkin.source || "registro manual")}</span>
+          <span>${escapeHtml(checkin.presenceSource || checkin.source || "registro manual")}</span>
         </div>
         <div class="presence-exit">
           <span>Saída</span>
@@ -1766,7 +1766,7 @@ function startNewProfessorStudent() {
       type: "access",
       checkedInAt: now.toISOString(),
       checkedOutAt: "",
-      source: "painel-professor-tablet",
+      presenceSource: "painel-professor-tablet",
       presenceStatus: "inside",
       usedLoad: "",
       difficulty: "",

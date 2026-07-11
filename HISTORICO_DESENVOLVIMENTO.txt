@@ -1,7 +1,7 @@
 PRO FITNESS ACADEMIA - HISTORICO DE DESENVOLVIMENTO
 =====================================================
 
-ULTIMA ATUALIZACAO: 10/07/2026
+ULTIMA ATUALIZACAO: 11/07/2026
 
 ATENCAO OBRIGATORIA PARA QUALQUER IA OU DESENVOLVEDOR
 -----------------------------------------------------
@@ -31,16 +31,26 @@ ESTRUTURA ATUAL
 D:\PersonalPro\
   index.html                         App do aluno.
   painel.html                        Painel administrativo desktop.
-  api.txt                           Copia textual obrigatoria e identica de apps-script\api.gs.
+  prof.html                          Painel do professor para tablet.
+  api.txt                            Copia textual obrigatoria e identica de apps-script\api.gs.
   HISTORICO_DESENVOLVIMENTO.txt      Registro obrigatorio de todas as alteracoes.
-  assets\css\                       Estilos ativos do app e do painel.
-  assets\js\                        Configuracao, dados compartilhados e logica ativa.
+  assets\css\                       Estilos ativos das interfaces.
+  assets\js\                        Configuracao, dados, financeiro e logica ativa.
   assets\images\                    Imagens utilizadas pelas telas.
-  apps-script\api.gs                Fonte principal editavel da API do Google Apps Script.
+  apps-script\api.gs                Fonte principal editavel da API.
   apps-script\appsscript.json        Manifesto do Apps Script.
-  apps-script\.clasp.json            Vinculo local do clasp; executar o clasp dentro desta pasta.
-  docs\                             Guias atuais da planilha e da integracao.
-  .github\workflows\               Publicacao automatica no GitHub Pages.
+  apps-script\.clasp.json            Unico vinculo local do Clasp.
+  docs\                             Documentacao atual da arquitetura, planilha e publicacao.
+  tests\                            Testes automatizados do pacote.
+  tools\                            Ferramentas de desenvolvimento e geracao de dados ficticios.
+  .github\workflows\               Publicacao automatica do frontend.
+
+NAO DEVEM SER INCLUIDOS NO ZIP FINAL
+-----------------------------------
+- Pasta .git.
+- Pasta backups.
+- Copias antigas ou duplicadas de JS, CSS, GS, Markdown ou configuracoes na raiz.
+- Arquivos temporarios, caches ou resultados gerados por testes.
 
 HISTORICO
 ---------
@@ -1286,3 +1296,74 @@ ATUALIZACAO - 2026-07-11 - BASE FICTICIA PARA DEMONSTRACAO
 - Conferencia remota confirmou competencias 2026-05, 2026-06 e 2026-07, 10 por cento de inadimplencia, datas validas e Zumba.
 - A pasta backups foi adicionada ao .gitignore para nunca publicar dados operacionais no GitHub.
 - O tempo limite de leitura do snapshot remoto foi ampliado de 20 para 60 segundos para suportar a base demonstrativa com mais de 2.000 registros.
+
+
+[11/07/2026] Correcao completa de API, sincronizacao e estrutura - base PersonalPro(17).zip
+- A versao-base utilizada nesta rodada foi exclusivamente PersonalPro(17).zip.
+- A estrutura da API passou para schemaVersion 2.
+- Corrigida a perda de catalogos em touchConfigSnapshotMetadata(): planos, modalidades, centros de custo e metadados existentes agora sao preservados.
+- A exportacao atualiza lastSnapshotAt antes de montar o snapshot retornado.
+- Corrigida a duplicidade de source em Checkins: presenceSource representa a origem operacional da presenca e source representa a origem tecnica da sincronizacao.
+- Criada migracao segura para planilhas antigas com uma ou duas colunas source, preservando os valores existentes.
+- Check-ins locais antigos sao migrados automaticamente para presenceSource.
+- importAll agora exige todas as colecoes do snapshot e bloqueia restauracoes incompletas antes de apagar qualquer aba.
+- Criado importPartial para substituir somente as colecoes explicitamente enviadas.
+- A restauracao de backup no notebook passou a validar a estrutura e mostrar data, alunos, pagamentos, treinos, avaliacoes, movimentacoes e despesas antes da confirmacao.
+- O backup administrativo passou para schemaVersion 7.
+- Criada fila persistente de sincronizacao no notebook, com salvamento local antes do envio, consolidacao por registro, reenvio automatico, tentativa ao recuperar internet e tentativa manual.
+- Adicionado status visivel no notebook: sincronizando, sincronizado, pendente, offline, API indisponivel e dados locais.
+- Removidas falhas silenciosas de sincronizacao do painel administrativo.
+- Conflitos por updatedAt permanecem pendentes e nao substituem silenciosamente a versao mais recente da planilha.
+- Requisicoes comuns da API deixaram de formatar e redimensionar todas as abas; a preparacao completa ficou concentrada no setup e nas migracoes de esquema.
+- O Log remoto deixou de armazenar o payload completo. Agora guarda apenas acao, recurso, ID, nomes dos campos, responsavel, origem, dispositivo, resultado e mensagem.
+- Respostas de erro da API passaram a incluir errorCode consistente.
+- Atualizados apps-script/api.gs, api.txt, assets/js/shared-data.js, assets/js/painel.js, assets/js/prof.js, painel.html, assets/css/painel.css e tools/generate-demo-data.mjs.
+- Atualizados docs/estrutura-planilha.md, docs/sheets-api-setup.md e docs/arquitetura-paineis.md.
+- Removidos do pacote final .git, backups e .gitignore, mantendo somente a estrutura oficial.
+- Os testes automatizados foram ampliados para configuracoes, cabecalhos unicos, importacao segura, migracao de check-ins, fila administrativa, estrutura limpa, gerador de dados e igualdade da API.
+- api.txt permanece byte a byte identico a apps-script/api.gs.
+
+VALIDACOES DESTA ENTREGA
+------------------------
+- Sintaxe validada em todos os JavaScripts ativos e na API.
+- Testes automatizados executados com sucesso.
+- IDs dos tres HTMLs conferidos e sem duplicidade.
+- Referencias getElementById conferidas.
+- Cabecalhos da API conferidos e sem nomes duplicados.
+- Teste puro confirmou preservacao de plans, modalities e costCenters nos metadados da Config.
+- Teste confirmou bloqueio de snapshot incompleto e funcionamento da importacao parcial.
+- Teste confirmou migracao local de source antigo para presenceSource.
+- Estrutura da raiz conferida sem arquivos antigos, .git ou backups.
+- Integridade do ZIP conferida apos a compactacao.
+
+OBSERVACAO DE PUBLICACAO
+------------------------
+- Para aplicar schemaVersion 2 na planilha real, substituir o codigo publicado, executar setupProFitnessSpreadsheet() e publicar uma nova versao do Web App.
+- A comunicacao real com script.google.com nao pode ser confirmada neste ambiente sem acesso de rede; os testes locais e estruturais foram concluidos.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - CORRECOES DE RESTAURACAO, CONFLITOS E ENTREGA
+======================================================================
+- Criada copia de seguranca externa em D:\PersonalPro-backups antes das correcoes, sem adicionar backups ao projeto.
+- Separada a validacao do repositorio da validacao do pacote final: `node tests/smoke.mjs` aceita a estrutura de desenvolvimento e `--package` exige a raiz limpa de entrega.
+- A restauracao integral deixou de gerar uma operacao remota para cada registro e passou a usar uma unica chamada `importAll`.
+- Criada pendencia persistente para snapshot integral: se a API ou a internet falhar, a base restaurada permanece salva neste computador e sera reenviada automaticamente.
+- Enquanto houver restauracao integral pendente, a leitura remota fica bloqueada para nao sobrescrever os dados locais restaurados.
+- A fila incremental anterior e descartada somente quando o administrador confirma que deseja substituir toda a base por um backup completo.
+- Exclusoes do painel e do tablet agora enviam `expectedUpdatedAt`, correspondente a versao conhecida antes da remocao local.
+- A API compara a versao na exclusao e preserva a linha quando ela foi alterada por outro dispositivo, devolvendo conflito para manter a operacao pendente.
+- Atualizados `apps-script/api.gs` e `api.txt`, mantendo as duas copias byte a byte identicas.
+- Atualizadas as referencias de cache em `index.html`, `painel.html` e `prof.html` para carregar os JavaScripts corrigidos; o CSS alterado do painel recebeu a mesma versao.
+- Atualizados os guias de arquitetura, estrutura da planilha e publicacao da API com as novas regras de restauracao, exclusao e testes.
+- Ampliados os testes automatizados para validar restauracao integral, protecao de exclusao e os modos repositorio/pacote.
+- Testes locais de sintaxe, smoke do repositorio, smoke do pacote limpo e integridade da API foram executados com sucesso antes da etapa de publicacao.
+- Servidor local em `http://127.0.0.1:4173/` respondeu HTTP 200 para aluno, painel, professor e os tres JavaScripts alterados; a automacao visual de navegador nao estava disponivel nesta sessao.
+- API enviada pelo Clasp, criada como versao imutavel 8 e reimplantada na URL publica existente `AKfycbxv5kc71SaSMhe10SQR0kqQQO11aFNInVAJFmH1zTif5SqefNDnZ1F60xBN_VrU0lFGIw`.
+- `setup` remoto executado na planilha `1GgKofWojTW6EgrJCnA3Z4ZOZvgmzeyc1refIz2Inj8Y`; a resposta confirmou `schemaVersion: 2` e migrou Config e Log.
+- `health` e `exportAll` confirmaram 14 recursos, 50 alunos, 150 pagamentos, 1.300 check-ins, 372 jornadas e preservacao dos catalogos da Config.
+- A verificacao remota confirmou `presenceSource`, uma unica propriedade tecnica `source` em Checkins e ausencia de `payload` no Log.
+- Teste remoto controlado criou e editou um exercicio temporario, bloqueou a exclusao com versao antiga e permitiu a exclusao com a versao atual; nenhum registro operacional de teste permaneceu.
+- Na revisao final, removida a regravacao local feita depois de `pushRemoteSnapshot`: uma edicao realizada durante o envio do backup nao pode mais ser substituida pela copia anterior.
+- Adicionado teste de regressao garantindo que o envio remoto de snapshot nao chama `saveData` ao concluir.
+- A API esta atualizada e validada; o frontend ainda aguarda a publicacao final no GitHub.

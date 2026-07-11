@@ -10,7 +10,14 @@ let activeMainSection = "overview";
 let activeWeeklyDay = new Date().getDay();
 let activeFinanceTab = "summary";
 let financeHistoryStudentId = selectedStudentId;
+let adminSyncPromise = null;
+let adminAutoSyncTimer = null;
 
+const ADMIN_SYNC_QUEUE_KEY = "profitness-admin-sync-queue-v1";
+const ADMIN_PENDING_SNAPSHOT_KEY = "profitness-admin-pending-snapshot-v1";
+const ADMIN_LAST_SYNC_KEY = "profitness-admin-last-sync-v1";
+const ADMIN_SYNC_INTERVAL_MS = 60000;
+const ADMIN_SYNC_RESOURCES = ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "exercises", "users", "staffTimeEntries", "config"];
 const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
 const WEEK_DAYS = [
   { value: 1, label: "Segunda-feira", short: "Seg" },
@@ -161,12 +168,240 @@ function getOperationalAccessReason(access) {
   return access.reason || "Verifique as regras atuais de acesso.";
 }
 
+function loadAdminSyncQueue() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ADMIN_SYNC_QUEUE_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed.filter((item) => item && item.resource && item.recordId) : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveAdminSyncQueue(queue) {
+  localStorage.setItem(ADMIN_SYNC_QUEUE_KEY, JSON.stringify(Array.isArray(queue) ? queue : []));
+  renderAdminSyncStatus();
+}
+
+function loadAdminPendingSnapshot() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ADMIN_PENDING_SNAPSHOT_KEY) || "null");
+    return parsed && parsed.snapshot ? parsed : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function saveAdminPendingSnapshot(entry) {
+  if (entry && entry.snapshot) {
+    localStorage.setItem(ADMIN_PENDING_SNAPSHOT_KEY, JSON.stringify(entry));
+  } else {
+    localStorage.removeItem(ADMIN_PENDING_SNAPSHOT_KEY);
+  }
+  renderAdminSyncStatus();
+}
+
+function getAdminPendingCount() {
+  return loadAdminSyncQueue().length + (loadAdminPendingSnapshot() ? 1 : 0);
+}
+
+function buildAdminSyncOperations(beforeState, afterState) {
+  return Store.buildRemoteRecordOperations(beforeState, afterState, ADMIN_SYNC_RESOURCES).map((operation) => ({
+    ...operation,
+    id: Store.uid("SYNCADM"),
+    queuedAt: new Date().toISOString()
+  }));
+}
+
+function enqueueAdminSyncOperations(operations) {
+  if (!Array.isArray(operations) || !operations.length) return;
+  const orderedKeys = [];
+  const byRecord = new Map();
+  loadAdminSyncQueue().concat(operations).forEach((operation) => {
+    const key = `${operation.resource}:${operation.recordId}`;
+    if (!byRecord.has(key)) orderedKeys.push(key);
+    byRecord.set(key, operation);
+  });
+  saveAdminSyncQueue(orderedKeys.map((key) => byRecord.get(key)).filter(Boolean));
+}
+
+function formatAdminLastSync() {
+  const value = localStorage.getItem(ADMIN_LAST_SYNC_KEY);
+  if (!value) return "Ainda nao sincronizado";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "Ainda nao sincronizado";
+  return `Ultima sincronizacao ${new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(parsed)}`;
+}
+
+function setAdminLastSync() {
+  localStorage.setItem(ADMIN_LAST_SYNC_KEY, new Date().toISOString());
+}
+
+function renderAdminSyncStatus(mode, customText) {
+  const dot = document.getElementById("adminConnectionDot");
+  const text = document.getElementById("adminConnectionText");
+  const pendingButton = document.getElementById("adminPendingSyncButton");
+  const lastSync = document.getElementById("adminLastSyncText");
+  if (!dot || !text || !pendingButton || !lastSync) return;
+
+  const pending = getAdminPendingCount();
+  pendingButton.hidden = pending === 0;
+  pendingButton.textContent = pending === 1 ? "1 pendencia" : `${pending} pendencias`;
+  pendingButton.title = loadAdminPendingSnapshot()?.lastError || loadAdminSyncQueue()[0]?.lastError || "Clique para tentar novamente";
+  lastSync.textContent = formatAdminLastSync();
+
+  const resolved = mode || (pending ? "pending" : navigator.onLine === false ? "offline" : Store.isRemoteConfigured() ? "online" : "local");
+  dot.className = `admin-sync-dot ${resolved}`;
+  document.body.classList.toggle("admin-syncing", resolved === "syncing");
+  const labels = {
+    syncing: "Sincronizando",
+    online: "Dados sincronizados",
+    pending: navigator.onLine === false ? "Sem internet — salvo neste computador" : "Alteracoes aguardando envio",
+    offline: "Sem internet — salvo neste computador",
+    error: "API indisponivel — dados locais preservados",
+    local: "Dados deste computador"
+  };
+  text.textContent = customText || labels[resolved] || labels.local;
+}
+
+async function sendAdminSyncOperation(operation) {
+  if (operation.action === "delete") {
+    return Store.deleteRemoteRecord(operation.resource, operation.recordId, operation.data?.expectedUpdatedAt);
+  }
+  return Store.upsertRemoteRecord(operation.resource, operation.data);
+}
+
+async function flushAdminSyncQueue(options) {
+  const settings = options || {};
+  if (adminSyncPromise) return adminSyncPromise;
+  adminSyncPromise = (async () => {
+    if (!Store.isRemoteConfigured()) {
+      renderAdminSyncStatus("local");
+      return false;
+    }
+    if (navigator.onLine === false) {
+      renderAdminSyncStatus("offline");
+      return false;
+    }
+    if (!loadAdminPendingSnapshot() && !loadAdminSyncQueue().length) {
+      renderAdminSyncStatus("online");
+      return true;
+    }
+
+    renderAdminSyncStatus("syncing", "Enviando alteracoes");
+    let sent = 0;
+    const pendingSnapshot = loadAdminPendingSnapshot();
+    if (pendingSnapshot) {
+      renderAdminSyncStatus("syncing", "Sincronizando restauracao completa");
+      await Store.pushRemoteSnapshot(pendingSnapshot.snapshot);
+      saveAdminPendingSnapshot(null);
+      sent += 1;
+    }
+    while (loadAdminSyncQueue().length) {
+      const operation = loadAdminSyncQueue()[0];
+      await sendAdminSyncOperation(operation);
+      const latest = loadAdminSyncQueue();
+      const index = latest.findIndex((item) => item.id === operation.id);
+      if (index >= 0) {
+        latest.splice(index, 1);
+        saveAdminSyncQueue(latest);
+      }
+      sent += 1;
+    }
+    setAdminLastSync();
+    renderAdminSyncStatus("online");
+    if (settings.notify && sent) window.alert(sent === 1 ? "Alteracao sincronizada." : `${sent} alteracoes sincronizadas.`);
+    return true;
+  })().catch((error) => {
+    const pendingSnapshot = loadAdminPendingSnapshot();
+    if (pendingSnapshot) {
+      saveAdminPendingSnapshot({
+        ...pendingSnapshot,
+        lastError: error?.message || "Falha de sincronizacao",
+        lastAttemptAt: new Date().toISOString()
+      });
+    } else {
+      const queue = loadAdminSyncQueue();
+      if (queue[0]) {
+        queue[0] = { ...queue[0], lastError: error?.message || "Falha de sincronizacao", lastAttemptAt: new Date().toISOString() };
+        saveAdminSyncQueue(queue);
+      }
+    }
+    renderAdminSyncStatus(getAdminPendingCount() ? "pending" : navigator.onLine === false ? "offline" : "error");
+    if (settings.notify) {
+      window.alert(error?.code === "SYNC_CONFLICT"
+        ? "Existe uma versao mais recente na planilha. A alteracao permaneceu pendente para conferencia."
+        : "Os dados estao salvos neste computador e o envio sera tentado novamente.");
+    }
+    return false;
+  }).finally(() => {
+    adminSyncPromise = null;
+    document.body.classList.remove("admin-syncing");
+  });
+  return adminSyncPromise;
+}
+
+async function refreshAdminFromRemote(options) {
+  const settings = options || {};
+  if (!Store.isRemoteConfigured()) {
+    renderAdminSyncStatus("local");
+    if (settings.notify) window.alert("Configure a URL do Web App antes de sincronizar.");
+    return false;
+  }
+  if (navigator.onLine === false) {
+    renderAdminSyncStatus("offline");
+    if (settings.notify) window.alert("Sem internet. Os dados continuam salvos neste computador.");
+    return false;
+  }
+
+  const baseline = JSON.stringify(Store.loadData());
+  const flushed = await flushAdminSyncQueue({ notify: false });
+  if (!flushed || getAdminPendingCount()) {
+    if (settings.notify) window.alert("Ainda existem alteracoes aguardando envio. Resolva a sincronizacao antes de atualizar a base.");
+    return false;
+  }
+
+  try {
+    renderAdminSyncStatus("syncing", "Atualizando dados");
+    const remoteRaw = await Store.fetchRemoteSnapshot();
+    const currentLocal = Store.loadData();
+    if (JSON.stringify(currentLocal) !== baseline) {
+      renderAdminSyncStatus("pending", "Alteracao local detectada durante a atualizacao");
+      if (settings.notify) window.alert("Houve uma alteracao local durante a atualizacao. A base remota nao substituiu os dados deste computador.");
+      return false;
+    }
+    if (Store.snapshotHasMeaningfulData(remoteRaw) || !Store.snapshotHasMeaningfulData(currentLocal)) {
+      panelState = Store.migrateData(remoteRaw);
+      Store.saveData(panelState);
+    } else {
+      panelState = currentLocal;
+    }
+    setAdminLastSync();
+    renderPanel();
+    renderAdminSyncStatus("online");
+    if (settings.notify) window.alert("Dados sincronizados com o Google Sheets.");
+    return true;
+  } catch (error) {
+    panelState = Store.loadData();
+    renderPanel();
+    renderAdminSyncStatus("error");
+    if (settings.notify) window.alert(`Nao foi possivel atualizar: ${error.message}`);
+    return false;
+  }
+}
+
 function savePanelState(nextState) {
   const previousState = panelState;
   panelState = Store.migrateData(nextState);
   Store.saveData(panelState);
-  Store.syncSnapshotChanges(previousState, panelState).catch(() => null);
+  enqueueAdminSyncOperations(buildAdminSyncOperations(previousState, panelState));
   renderPanel();
+  renderAdminSyncStatus(getAdminPendingCount() ? "pending" : undefined);
+  flushAdminSyncQueue({ notify: false });
 }
 
 function saveWithLog(nextState, action, studentId, message) {
@@ -3094,7 +3329,7 @@ function downloadTextFile(content, filename, type) {
 function downloadDataBackup() {
   const backup = {
     app: "Pro Fitness Academia",
-    schemaVersion: 6,
+    schemaVersion: 7,
     exportedAt: new Date().toISOString(),
     snapshot: Store.clone(panelState)
   };
@@ -3144,7 +3379,7 @@ function getDataAudit() {
       ["Alunos", students.length],
       ["Registros relacionados", relatedCollections.reduce((sum, key) => sum + (panelState[key] || []).length, 0)],
       ["Pendencias", issues.length],
-      ["Versao do backup", "6"]
+      ["Versao do backup", "7"]
     ]
   };
 }
@@ -3166,15 +3401,37 @@ async function restoreDataBackup(event) {
   try {
     const parsed = JSON.parse(await file.text());
     const snapshot = parsed.snapshot || parsed.data || parsed;
-    if (!snapshot || !Array.isArray(snapshot.students)) throw new Error("O arquivo nao contem uma estrutura de dados valida.");
-    const restored = Store.migrateData(snapshot);
-    if (!window.confirm(`Restaurar o backup com ${restored.students.length} aluno(s)? Os dados atuais serao substituidos.`)) return;
-    panelState = restored;
+    Store.validateCompleteSnapshot(snapshot);
+    const summary = Store.getSnapshotSummary(snapshot);
+    const exportedAt = parsed.exportedAt ? Store.formatDateTime(parsed.exportedAt) : "nao informada";
+    const confirmation = [
+      `Data do backup: ${exportedAt}`,
+      `Alunos: ${summary.students}`,
+      `Pagamentos: ${summary.payments}`,
+      `Treinos: ${summary.workouts}`,
+      `Avaliacoes: ${summary.assessments}`,
+      `Movimentacoes: ${summary.movements}`,
+      `Despesas: ${summary.expenses}`,
+      "",
+      "Os dados atuais serao substituidos. Deseja continuar?"
+    ].join("\n");
+    if (!window.confirm(confirmation)) return;
+
+    panelState = Store.migrateData(snapshot);
     Store.saveData(panelState);
-    if (Store.isRemoteConfigured()) await Store.syncSnapshotIfConfigured(panelState);
+    saveAdminSyncQueue([]);
+    saveAdminPendingSnapshot({
+      snapshot: panelState,
+      queuedAt: new Date().toISOString(),
+      sourceFile: file.name
+    });
     selectedStudentId = panelState.students[0]?.id || "";
     renderPanel();
-    window.alert("Backup restaurado com sucesso.");
+    renderAdminSyncStatus(getAdminPendingCount() ? "pending" : undefined);
+    const synchronized = await flushAdminSyncQueue({ notify: false });
+    window.alert(getAdminPendingCount()
+      ? "Backup restaurado neste computador. A copia completa permanece pendente e sera reenviada sem substituir estes dados locais."
+      : synchronized ? "Backup restaurado e sincronizado com sucesso." : "Backup restaurado neste computador.");
   } catch (error) {
     window.alert(`Nao foi possivel restaurar o backup: ${error.message}`);
   } finally {
@@ -4076,7 +4333,7 @@ function toggleStudentPresence(student) {
     type: "access",
     checkedInAt: now.toISOString(),
     checkedOutAt: "",
-    source: "painel-administrativo",
+    presenceSource: "painel-administrativo",
     presenceStatus: "inside",
     usedLoad: "",
     difficulty: "",
@@ -4313,12 +4570,12 @@ function attachPanelEvents() {
   assessmentForm.elements.height.addEventListener("input", updateImcPreview);
 
   document.getElementById("resetDemoButton").addEventListener("click", () => {
-    panelState = Store.resetData();
-    selectedStudentId = panelState.students[0] ? panelState.students[0].id : "";
+    if (!window.confirm("Restaurar os dados ficticios de demonstracao? A base atual deste computador sera substituida.")) return;
+    const demoState = Store.resetData();
+    selectedStudentId = demoState.students[0] ? demoState.students[0].id : "";
     activePanelTab = "ficha";
     activeMainSection = "overview";
-    Store.syncSnapshotIfConfigured(panelState).catch(() => null);
-    renderPanel();
+    savePanelState(demoState);
   });
 
   document.getElementById("setupSheetsButton").addEventListener("click", async () => {
@@ -4327,28 +4584,17 @@ function attachPanelEvents() {
       return;
     }
     try {
-      await Store.setupRemoteSpreadsheet();
+      const result = await Store.setupRemoteSpreadsheet();
+      renderAdminSyncStatus("online", `Planilha preparada — estrutura ${result.schemaVersion || "atual"}`);
       window.alert("Planilha preparada com sucesso.");
     } catch (error) {
       window.alert(error.message);
     }
   });
 
-  document.getElementById("syncSheetsButton").addEventListener("click", async () => {
-    if (!Store.isRemoteConfigured()) {
-      window.alert("Configure a URL do Web App em app-config.js antes de sincronizar.");
-      return;
-    }
-    try {
-      const remoteSnapshot = await Store.fetchRemoteSnapshot();
-      panelState = Store.migrateData(remoteSnapshot);
-      Store.saveData(panelState);
-      renderPanel();
-      window.alert("Dados atualizados a partir do Google Sheets.");
-    } catch (error) {
-      window.alert(error.message);
-    }
-  });
+  document.getElementById("syncSheetsButton").addEventListener("click", () => refreshAdminFromRemote({ notify: true }));
+  document.getElementById("retryAdminSyncButton").addEventListener("click", () => refreshAdminFromRemote({ notify: true }));
+  document.getElementById("adminPendingSyncButton").addEventListener("click", () => flushAdminSyncQueue({ notify: true }));
 
   document.getElementById("newWorkoutButton").addEventListener("click", createNewWorkout);
   document.getElementById("newAssessmentButton").addEventListener("click", createNewAssessment);
@@ -4594,9 +4840,25 @@ function attachPanelEvents() {
     saveWithLog(nextState, "gate-qr-regenerated", student.id, "QR da roleta regenerado no painel.");
   });
 
-  window.addEventListener("storage", () => {
-    panelState = Store.loadData();
-    renderPanel();
+  window.addEventListener("storage", (event) => {
+    if (event.key === Store.STORAGE_KEY || event.key === ADMIN_SYNC_QUEUE_KEY || event.key === ADMIN_PENDING_SNAPSHOT_KEY) {
+      panelState = Store.loadData();
+      renderPanel();
+      renderAdminSyncStatus();
+    }
+  });
+
+  window.addEventListener("online", () => {
+    renderAdminSyncStatus(getAdminPendingCount() ? "pending" : "online", "Internet restabelecida");
+    flushAdminSyncQueue({ notify: false });
+  });
+  window.addEventListener("offline", () => renderAdminSyncStatus("offline"));
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") flushAdminSyncQueue({ notify: false });
+  });
+  adminAutoSyncTimer = window.setInterval(() => flushAdminSyncQueue({ notify: false }), ADMIN_SYNC_INTERVAL_MS);
+  window.addEventListener("beforeunload", () => {
+    if (adminAutoSyncTimer) window.clearInterval(adminAutoSyncTimer);
   });
 }
 
@@ -4607,11 +4869,16 @@ expenseMonthFilter.value = Store.currentMonth();
 resetMovementForm();
 resetExpenseForm();
 renderPanel();
-Store.hydrateFromRemoteIfConfigured().then((remoteState) => {
-  panelState = remoteState;
-  if (!selectedStudentId && panelState.students[0]) {
-    selectedStudentId = panelState.students[0].id;
+renderAdminSyncStatus();
+(async function initializeAdminPanel() {
+  await flushAdminSyncQueue({ notify: false });
+  panelState = Store.loadData();
+  if (!getAdminPendingCount() && Store.isRemoteConfigured() && navigator.onLine !== false) {
+    await refreshAdminFromRemote({ notify: false });
+    panelState = Store.loadData();
   }
+  if (!selectedStudentId && panelState.students[0]) selectedStudentId = panelState.students[0].id;
   autoGenerateCurrentMonthFinance();
   renderPanel();
-});
+  renderAdminSyncStatus(getAdminPendingCount() ? "pending" : undefined);
+})();

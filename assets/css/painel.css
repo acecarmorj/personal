@@ -7388,3 +7388,77 @@ textarea {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* 2026-07-11 - status de sincronizacao segura do notebook */
+.panel-navigation-shell {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.admin-sync-status {
+  grid-column: 1 / -1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 14px;
+  border: 1px solid rgba(255,255,255,0.82);
+  border-radius: 14px;
+  background: rgba(255,254,250,0.9);
+  box-shadow: var(--shadow-card);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.admin-sync-status strong {
+  color: var(--ink);
+  font-size: 0.88rem;
+}
+
+.admin-sync-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #8b8b84;
+  box-shadow: 0 0 0 4px rgba(139,139,132,0.12);
+}
+
+.admin-sync-dot.online { background: #23804d; box-shadow: 0 0 0 4px rgba(35,128,77,0.14); }
+.admin-sync-dot.syncing { background: #c79b00; box-shadow: 0 0 0 4px rgba(199,155,0,0.16); animation: admin-sync-pulse 1s ease-in-out infinite; }
+.admin-sync-dot.pending { background: #d58512; box-shadow: 0 0 0 4px rgba(213,133,18,0.15); }
+.admin-sync-dot.offline,
+.admin-sync-dot.error { background: #b43c31; box-shadow: 0 0 0 4px rgba(180,60,49,0.14); }
+.admin-sync-dot.local { background: #6f746f; }
+
+.admin-sync-pending {
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: #6b4300;
+  font-weight: 800;
+  background: #fff0bd;
+  cursor: pointer;
+}
+
+.admin-sync-status #adminLastSyncText {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.admin-sync-now {
+  min-height: 34px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+}
+
+body.admin-syncing .admin-sync-now { pointer-events: none; opacity: 0.58; }
+
+@keyframes admin-sync-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.75); opacity: 0.65; }
+}
+
+@media (max-width: 900px) {
+  .admin-sync-status { flex-wrap: wrap; }
+  .admin-sync-status #adminLastSyncText { margin-left: 0; }
+}
