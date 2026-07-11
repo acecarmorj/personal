@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="assets/css/painel.css?v=20260711-auth9" rel="stylesheet"/>
+<link href="assets/css/painel.css?v=20260711-admin-compact1" rel="stylesheet"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 </head>
 <body>
@@ -21,29 +21,29 @@
 <img alt="Fachada da Pro Fitness Academia" src="assets/images/pro-fitness-fachada.png"/>
 </figure>
 </header>
-<div class="admin-session-bar"><div><span>Administrador conectado</span><strong id="adminCurrentUser">-</strong></div><button class="ghost-button" id="adminLogoutButton" type="button">Sair</button></div>
+<div class="admin-session-bar"><div><span>Sessao</span><strong id="adminCurrentUser">-</strong></div><button class="ghost-button" id="adminLogoutButton" type="button">Sair</button></div>
 <div class="panel-navigation-shell">
 <nav aria-label="Areas do painel" class="main-section-nav">
 <button aria-pressed="true" class="main-section-button active" data-main-section="overview" type="button">
-<span>Visão geral</span>
+<span>Painel</span>
 </button>
 <button aria-pressed="false" class="main-section-button" data-main-section="operation" type="button">
-<span>Alunos e estatísticas</span>
+<span>Alunos</span>
 </button>
 <button aria-pressed="false" class="main-section-button" data-main-section="weekly" type="button">
-<span>Grade semanal</span>
+<span>Grade</span>
 </button>
 <button aria-pressed="false" class="main-section-button" data-main-section="staff" type="button">
-<span>Equipe e presenca</span>
+<span>Equipe</span>
 </button>
 <button aria-pressed="false" class="main-section-button finance-nav-button" data-main-section="finance" type="button">
 <span>Financeiro</span>
 </button>
-<button aria-pressed="false" class="main-section-button" data-main-section="settings" type="button"><span>Configuracoes</span></button>
+<button aria-pressed="false" class="main-section-button" data-main-section="settings" type="button"><span>Config</span></button>
 </nav>
 <div class="panel-utility-actions">
 <label class="global-student-search"><span class="visually-hidden">Busca global de aluno</span><input autocomplete="off" id="globalStudentSearch" list="globalStudentSearchList" placeholder="Localizar aluno" type="search"/><datalist id="globalStudentSearchList"></datalist></label>
-<a class="ghost-button" href="index.html">App do aluno</a>
+<a class="ghost-button" href="index.html">Aluno</a>
 <details class="system-menu">
 <summary>Ferramentas</summary>
 <div class="system-menu-popover">
@@ -58,7 +58,7 @@
 <strong id="adminConnectionText">Dados deste computador</strong>
 <button class="admin-sync-pending" hidden id="adminPendingSyncButton" type="button">0 pendencias</button>
 <span id="adminLastSyncText">Ainda nao sincronizado</span>
-<button class="ghost-button admin-sync-now" id="retryAdminSyncButton" type="button">Sincronizar agora</button>
+<button class="ghost-button admin-sync-now" id="retryAdminSyncButton" type="button">Sincronizar</button>
 </div>
 </div>
 <section class="main-section overview-section" data-main-panel="overview" id="overviewSection">
@@ -67,7 +67,7 @@
 <h2 id="overviewDate">Hoje na Pro Fitness</h2>
 </div>
 <div class="overview-lead-actions">
-<button class="primary-button" id="openStudentsOverviewButton" type="button">Ver alunos</button>
+<button class="primary-button" id="openStudentsOverviewButton" type="button">Alunos</button>
 </div>
 </article>
 <section class="overview-grid" id="metricGrid"></section>
@@ -132,7 +132,7 @@
 <section class="main-section operation-section" data-main-panel="operation" hidden="" id="operationSection">
 <article class="dashboard-card operation-command-bar">
 <label class="operation-search-field">
-<span>Buscar aluno</span>
+<span class="visually-hidden">Buscar aluno</span>
 <input autocomplete="off" id="studentSearchFilter" placeholder="Nome, telefone ou plano" type="search"/>
 </label>
 <div class="operation-command-actions">
@@ -186,7 +186,7 @@
 </div>
 <section class="student-tab-panel active" data-panel="ficha" id="tabFicha" role="tabpanel"><section class="sub-card module-card admin-readonly-card">
 <div class="section-head compact-head">
-<div><h3>Resumo administrativo</h3></div>
+<div><h3>Resumo</h3></div>
 <span class="readonly-chip">Somente consulta</span>
 </div>
 <div class="admin-student-data-grid" id="adminStudentSummary"></div>
@@ -229,7 +229,7 @@ Observacoes gerais
 </section>
 <section aria-labelledby="planDataTitle" class="student-form-section">
 <div class="student-form-section-head">
-<h3 id="planDataTitle">Plano e mensalidade</h3>
+<h3 id="planDataTitle">Plano</h3>
 </div>
 <div class="form-grid student-form-grid">
 <label class="full">
@@ -653,7 +653,7 @@ Motivo do bloqueio ou observacao
 <article class="dashboard-card weekly-admin-list-card">
 <div class="section-head weekly-admin-list-head">
 <div>
-<h2>Programacao semanal</h2>
+<h2>Grade semanal</h2>
 </div>
 <span class="result-count" id="weeklyScheduleCount">0 horarios</span>
 </div>
@@ -682,14 +682,14 @@ Motivo do bloqueio ou observacao
 </section>
 <section class="main-section staff-section" data-main-panel="staff" hidden="" id="staffSection">
 <header class="dashboard-card staff-report-hero">
-<div><p class="eyebrow">Gestao da equipe</p><h2>Presenca dos professores</h2><p>Acompanhe entradas, saidas e o tempo de permanencia na academia, sem finalidade trabalhista.</p></div>
-<div class="staff-report-actions"><button class="ghost-button" id="exportStaffTimeCsvButton" type="button">Exportar CSV</button><button class="primary-button" id="printStaffTimeReportButton" type="button">Imprimir relatorio</button></div>
+<div><p class="eyebrow">Equipe</p><h2>Presenca dos professores</h2><p>Entradas, saidas e permanencia. Registro operacional, sem finalidade trabalhista.</p></div>
+<div class="staff-report-actions"><button class="ghost-button" id="exportStaffTimeCsvButton" type="button">Exportar CSV</button><button class="primary-button" id="printStaffTimeReportButton" type="button">Imprimir</button></div>
 </header>
 <article class="dashboard-card staff-report-filters">
 <label>De<input id="staffReportStartDate" type="date"/></label>
 <label>Ate<input id="staffReportEndDate" type="date"/></label>
 <label>Professor<select id="staffReportProfessorFilter"><option value="">Toda a equipe</option></select></label>
-<button class="primary-button" id="applyStaffTimeFiltersButton" type="button">Aplicar filtros</button>
+<button class="primary-button" id="applyStaffTimeFiltersButton" type="button">Aplicar</button>
 </article>
 <section class="staff-time-metrics" id="staffTimeMetrics"></section>
 <article class="dashboard-card staff-time-report" id="staffTimePrintableReport">
@@ -699,19 +699,19 @@ Motivo do bloqueio ou observacao
 </article>
 </section>
 <section class="main-section settings-section" data-main-panel="settings" hidden="" id="settingsSection">
-<header class="dashboard-card settings-head"><div><h2>Configuracoes administrativas</h2><p>Planos e modalidades usados nos cadastros e relatorios.</p></div></header>
+<header class="dashboard-card settings-head"><div><h2>Configuracoes</h2></div></header>
 <section class="settings-grid">
-<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Planos</h2></div></div><form class="settings-inline-form" id="planCatalogForm"><label>Nome<input name="name" required type="text"/></label><label>Valor mensal<input min="0" name="monthlyFee" step="0.01" type="number"/></label><button class="primary-button" type="submit">Adicionar plano</button></form><div class="settings-list" id="planCatalogList"></div></article>
-<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Modalidades</h2></div></div><form class="settings-inline-form" id="modalityCatalogForm"><label>Nome<input name="name" required type="text"/></label><button class="primary-button" type="submit">Adicionar modalidade</button></form><div class="settings-list" id="modalityCatalogList"></div></article>
-<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Regras do app do aluno</h2><p>Avisos e bloqueio da mensalidade.</p></div></div><form class="settings-inline-form" id="paymentRulesForm"><label>Dias de aviso<input name="paymentAlertDays" placeholder="7, 3, 0" required type="text"/></label><label>Dias de tolerancia<input min="0" name="paymentGraceDays" required type="number"/></label><label>WhatsApp<input name="whatsappNumber" placeholder="5522988233216" type="text"/></label><label class="checkbox-row"><input name="blockAccessOnOverdue" type="checkbox"/><span>Bloquear acesso apos a tolerancia</span></label><button class="primary-button" type="submit">Salvar regras</button></form></article>
-<article class="dashboard-card settings-card staff-settings-card"><div class="section-head"><div><h2>Professores</h2><p>Os nomes cadastrados ficam disponiveis no registro de presenca do tablet.</p></div></div><form class="settings-inline-form staff-inline-form" id="staffCatalogForm"><label>Nome<input name="name" required type="text"/></label><label>E-mail<input name="email" type="email"/></label><button class="primary-button" type="submit">Adicionar professor</button></form><div class="settings-list" id="staffCatalogList"></div></article>
-<article class="dashboard-card settings-card account-settings-card"><div class="section-head"><div><h2>Usuarios e acessos</h2><p>Crie credenciais temporarias e bloqueie contas sem visualizar senhas.</p></div><button class="ghost-button" id="refreshAccountsButton" type="button">Atualizar</button></div><form class="settings-inline-form account-inline-form" id="accountForm"><label>Perfil<select name="role"><option value="student">Aluno</option><option value="professor">Professor</option><option value="admin">Administrador</option></select></label><label>ID do cadastro<input name="personId" required/></label><label>Login / matricula<input name="login" required/></label><label>E-mail<input name="email" type="email"/></label><button class="primary-button" type="submit">Gerar acesso temporario</button></form><div class="settings-list account-list" id="accountList"><p>Carregue as contas para gerenciar acessos.</p></div></article>
-<article class="dashboard-card settings-card security-settings-card"><div class="section-head"><div><h2>Sessoes ativas</h2><p>Aparelhos conectados e acessos que podem ser encerrados.</p></div><button class="ghost-button" id="refreshSessionsButton" type="button">Atualizar</button></div><div class="settings-list security-list" id="sessionList"><p>Carregue as sessoes para consultar os aparelhos conectados.</p></div></article>
-<article class="dashboard-card settings-card security-settings-card"><div class="section-head"><div><h2>Tentativas de login</h2><p>Ultimas entradas aceitas, recusadas e bloqueadas.</p></div><button class="ghost-button" id="refreshLoginAttemptsButton" type="button">Atualizar</button></div><div class="settings-list security-list" id="loginAttemptList"><p>Carregue as tentativas para consultar o historico recente.</p></div></article>
+<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Planos</h2></div></div><form class="settings-inline-form" id="planCatalogForm"><label>Nome<input name="name" required type="text"/></label><label>Valor mensal<input min="0" name="monthlyFee" step="0.01" type="number"/></label><button class="primary-button" type="submit">Adicionar</button></form><div class="settings-list" id="planCatalogList"></div></article>
+<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Modalidades</h2></div></div><form class="settings-inline-form" id="modalityCatalogForm"><label>Nome<input name="name" required type="text"/></label><button class="primary-button" type="submit">Adicionar</button></form><div class="settings-list" id="modalityCatalogList"></div></article>
+<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Regras do aluno</h2></div></div><form class="settings-inline-form" id="paymentRulesForm"><label>Dias de aviso<input name="paymentAlertDays" placeholder="7, 3, 0" required type="text"/></label><label>Dias de tolerancia<input min="0" name="paymentGraceDays" required type="number"/></label><label>WhatsApp<input name="whatsappNumber" placeholder="5522988233216" type="text"/></label><label class="checkbox-row"><input name="blockAccessOnOverdue" type="checkbox"/><span>Bloquear acesso apos a tolerancia</span></label><button class="primary-button" type="submit">Salvar</button></form></article>
+<article class="dashboard-card settings-card staff-settings-card"><div class="section-head"><div><h2>Professores</h2></div></div><form class="settings-inline-form staff-inline-form" id="staffCatalogForm"><label>Nome<input name="name" required type="text"/></label><label>E-mail<input name="email" type="email"/></label><button class="primary-button" type="submit">Adicionar</button></form><div class="settings-list" id="staffCatalogList"></div></article>
+<article class="dashboard-card settings-card account-settings-card"><div class="section-head"><div><h2>Usuarios e acessos</h2></div><button class="ghost-button" id="refreshAccountsButton" type="button">Atualizar</button></div><form class="settings-inline-form account-inline-form" id="accountForm"><label>Perfil<select name="role"><option value="student">Aluno</option><option value="professor">Professor</option><option value="admin">Administrador</option></select></label><label>ID do cadastro<input name="personId" required/></label><label>Login / matricula<input name="login" required/></label><label>E-mail<input name="email" type="email"/></label><button class="primary-button" type="submit">Gerar acesso</button></form><div class="settings-list account-list" id="accountList"><p>Carregue as contas para gerenciar acessos.</p></div></article>
+<article class="dashboard-card settings-card security-settings-card"><div class="section-head"><div><h2>Sessoes ativas</h2></div><button class="ghost-button" id="refreshSessionsButton" type="button">Atualizar</button></div><div class="settings-list security-list" id="sessionList"><p>Carregue as sessoes para consultar os aparelhos conectados.</p></div></article>
+<article class="dashboard-card settings-card security-settings-card"><div class="section-head"><div><h2>Tentativas de login</h2></div><button class="ghost-button" id="refreshLoginAttemptsButton" type="button">Atualizar</button></div><div class="settings-list security-list" id="loginAttemptList"><p>Carregue as tentativas para consultar o historico recente.</p></div></article>
 </section>
 <article class="dashboard-card admin-quality-card"><div class="section-head"><div><h2>Qualidade cadastral</h2></div></div><div class="admin-quality-grid" id="adminQualityGrid"></div></article>
 <article class="dashboard-card data-tools-card">
-<div class="section-head"><div><p class="eyebrow">Seguranca operacional</p><h2>Dados, importacao e backup</h2><p>Use estas ferramentas antes de migracoes ou alteracoes em grande volume.</p></div></div>
+<div class="section-head"><div><h2>Dados e backup</h2></div></div>
 <div class="data-tools-actions">
 <button class="primary-button" id="downloadDataBackupButton" type="button">Baixar backup JSON</button>
 <label class="ghost-button file-action" for="restoreDataBackupInput">Restaurar backup<input accept="application/json,.json" hidden id="restoreDataBackupInput" type="file"/></label>
@@ -742,7 +742,7 @@ Motivo do bloqueio ou observacao
 <nav aria-label="Modulos financeiros" class="finance-subnav">
 <button aria-pressed="true" class="finance-tab active" data-finance-tab="summary" type="button">Resumo</button>
 <button aria-pressed="false" class="finance-tab" data-finance-tab="payments" type="button">Mensalidades</button>
-<button aria-pressed="false" class="finance-tab" data-finance-tab="cash" type="button">Caixa diario</button>
+<button aria-pressed="false" class="finance-tab" data-finance-tab="cash" type="button">Caixa</button>
 <button aria-pressed="false" class="finance-tab" data-finance-tab="expenses" type="button">Despesas</button>
 <button aria-pressed="false" class="finance-tab" data-finance-tab="reports" type="button">Relatorios</button>
 </nav>
@@ -1038,7 +1038,7 @@ Motivo do bloqueio ou observacao
 <script src="assets/js/demo-data.js?v=20260711-auth9"></script>
 <script src="assets/js/shared-data.js?v=20260711-auth9"></script>
 <script src="assets/js/finance-core.js?v=20260711-auth9"></script>
-<script src="assets/js/painel.js?v=20260711-auth9"></script>
+<script src="assets/js/painel.js?v=20260711-admin-compact1"></script>
 <script src="assets/js/pwa.js"></script>
 </body>
 </html>

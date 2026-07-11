@@ -1740,3 +1740,21 @@ CORRECAO - 11/07/2026 - LOGIN DEMO E COTA DO LOCALSTORAGE
 - Cache dos HTMLs e do service worker elevado de `auth8` para `auth9` para substituir imediatamente o JavaScript com erro.
 - Teste automatizado novo simula localStorage limitado a 256 KB e confirma login de `000001`, `prof.rafael` e `admin.demo` sem gravar a base completa.
 - Smoke tests do repositorio e do pacote limpo concluidos com sucesso.
+
+
+======================================================================
+ATUALIZACAO LOCAL - 11/07/2026 - PAINEL ADMINISTRATIVO COMPACTO
+======================================================================
+- Alteracoes mantidas somente em `D:\PersonalPro`; nenhuma publicacao no GitHub foi realizada nesta etapa.
+- Navegacao principal resumida para `Painel`, `Alunos`, `Grade`, `Equipe`, `Financeiro` e `Config`.
+- Os seis modulos passaram a ocupar uma unica linha no desktop, com botoes menores e rotulos sem quebra.
+- Cabecalho fotografico reduzido de 168 para 124 pixels, preservando a imagem institucional com menor consumo vertical.
+- Barra de sessao, utilitarios, pesquisa global e status de sincronizacao foram compactados e mantiveram todas as funcoes.
+- Textos repetitivos foram removidos ou encurtados em alunos, grade, equipe, financeiro e configuracoes.
+- A observacao de que a presenca dos professores e registro operacional sem finalidade trabalhista foi preservada em formato mais direto.
+- Indicadores, graficos, cards, filtros, ficha do aluno, grade, relatorio da equipe, financeiro e formularios receberam espacamentos mais eficientes para notebook e desktop.
+- Fontes continuaram legiveis e os controles principais preservaram areas confortaveis de clique.
+- Cache individual de `painel.css` e `painel.js` identificado como `20260711-admin-compact1` para a revisao local.
+- Testes atualizados para exigir os seis rotulos curtos e a grade de navegacao em uma linha.
+- Smoke tests do repositorio e do pacote limpo concluidos com sucesso.
+- Servidor local iniciado em `http://127.0.0.1:4173/painel` e confirmou HTTP 200 com os seis modulos compactos.

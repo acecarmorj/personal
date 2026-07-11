@@ -261,7 +261,11 @@ const studentJs = read("assets/js/app.js");
 const studentHtml = read("index.html");
 const professorJs = read("assets/js/prof.js");
 const professorHtml = read("prof.html");
-assert.match(panelHtml, /Resumo administrativo/, "Painel administrativo deve possuir resumo de consulta");
+assert.match(panelHtml, /data-panel="ficha"[\s\S]*?<h3>Resumo<\/h3>/, "Painel administrativo deve possuir resumo de consulta");
+for (const label of ["Painel", "Alunos", "Grade", "Equipe", "Financeiro", "Config"]) {
+  assert.match(panelHtml, new RegExp(`<span>${label}<\\/span>`), `Navegacao administrativa deve exibir ${label}`);
+}
+assert.match(read("assets/css/painel.css"), /grid-template-columns:\s*repeat\(6,\s*minmax\(76px,\s*1fr\)\)/, "Navegacao desktop deve manter os seis modulos em uma linha");
 assert.doesNotMatch(panelHtml, /id="newStudentButton"/, "Painel administrativo nao deve cadastrar aluno");
 assert.match(professorHtml, /id="newProfessorStudent"/, "Painel do professor deve cadastrar aluno");
 assert.match(professorHtml, /id="toggleStaffClockButton"/, "Painel do professor deve registrar entrada e saida");

@@ -7544,6 +7544,405 @@ form[aria-busy="true"] button[type="submit"]::after {
   to { transform: rotate(360deg); }
 }
 
+/* 2026-07-11 - densidade operacional do painel administrativo desktop */
+@media screen and (min-width: 1000px) {
+  .dashboard-shell {
+    padding: 14px 18px 24px;
+    gap: 10px;
+  }
+
+  .photo-only-header {
+    height: 124px;
+    border-radius: 18px;
+  }
+
+  .admin-session-bar {
+    min-height: 36px;
+    padding: 5px 10px;
+    border-radius: 11px;
+  }
+
+  .admin-session-bar > div {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .admin-session-bar .ghost-button {
+    min-height: 30px;
+    padding: 6px 10px;
+  }
+
+  .panel-navigation-shell {
+    gap: 7px;
+  }
+
+  .panel-navigation-shell .main-section-nav {
+    grid-template-columns: repeat(6, minmax(76px, 1fr));
+    gap: 4px;
+    padding: 4px;
+    border-radius: 14px;
+  }
+
+  .main-section-button {
+    min-height: 42px;
+    padding: 7px 10px;
+    border-radius: 10px;
+  }
+
+  .main-section-button span {
+    font-size: 0.86rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .panel-utility-actions {
+    gap: 5px;
+    padding: 4px;
+    border-radius: 14px;
+  }
+
+  .panel-utility-actions > .ghost-button,
+  .panel-utility-actions > .system-menu,
+  .panel-utility-actions .system-menu summary {
+    min-height: 42px;
+  }
+
+  .panel-utility-actions > .ghost-button,
+  .panel-utility-actions .system-menu summary {
+    padding: 7px 11px;
+    border-radius: 10px;
+  }
+
+  .global-student-search input {
+    width: clamp(160px, 15vw, 225px);
+    min-height: 42px;
+    padding: 8px 11px;
+    border-radius: 10px;
+  }
+
+  .admin-sync-status {
+    min-height: 36px;
+    gap: 8px;
+    padding: 4px 8px 4px 12px;
+    border-radius: 11px;
+    font-size: 0.76rem;
+  }
+
+  .admin-sync-status strong {
+    font-size: 0.8rem;
+  }
+
+  .admin-sync-now {
+    min-height: 29px;
+    padding: 6px 9px;
+    font-size: 0.74rem;
+  }
+
+  .main-section,
+  .finance-panel.active,
+  .settings-section,
+  .staff-section {
+    gap: 12px;
+  }
+
+  .section-head {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .section-head h2 {
+    font-size: 1.16rem;
+  }
+
+  .section-head h3 {
+    font-size: 1rem;
+  }
+
+  .overview-lead.operational-bar {
+    padding: 9px 14px;
+    border-radius: 15px;
+  }
+
+  .overview-lead.operational-bar h2 {
+    font-size: 1.2rem;
+  }
+
+  #openStudentsOverviewButton {
+    min-height: 38px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+
+  .overview-grid,
+  .admin-daily-grid {
+    gap: 8px;
+  }
+
+  .metric-card {
+    min-height: 138px;
+    padding: 14px;
+    gap: 5px;
+  }
+
+  .metric-card-top {
+    min-height: 34px;
+  }
+
+  .metric-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .metric-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .metric-card > strong {
+    font-size: clamp(1.65rem, 2.4vw, 2.05rem);
+  }
+
+  .admin-daily-card {
+    padding: 11px 14px;
+  }
+
+  .admin-daily-card strong {
+    font-size: 1.34rem;
+  }
+
+  .insight-grid {
+    gap: 12px;
+  }
+
+  .insight-card {
+    min-height: 276px;
+    padding: 17px;
+  }
+
+  .attendance-chart {
+    min-height: 184px;
+    padding-top: 10px;
+  }
+
+  .weekly-overview-card {
+    padding: 17px;
+  }
+
+  .weekly-overview-layout {
+    gap: 12px;
+  }
+
+  .weekly-calendar-panel {
+    padding: 10px;
+  }
+
+  .operation-command-bar {
+    grid-template-columns: minmax(300px, 1fr) auto;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+
+  .operation-search-field {
+    gap: 0;
+  }
+
+  .operation-search-field input,
+  .operation-command-actions .primary-button {
+    min-height: 42px;
+  }
+
+  .workspace-grid,
+  .operation-section .workspace-grid {
+    grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .list-card,
+  .detail-card {
+    min-height: 560px;
+    padding: 16px;
+  }
+
+  .roster-list {
+    gap: 6px;
+  }
+
+  .roster-item {
+    min-height: 76px;
+    padding: 10px 12px;
+    gap: 6px;
+  }
+
+  .student-fixed-header {
+    margin-bottom: 11px;
+    padding: 12px;
+    gap: 9px;
+    border-radius: 14px;
+  }
+
+  .student-identity-block {
+    gap: 6px;
+  }
+
+  .student-presence-summary article {
+    padding: 7px 10px;
+  }
+
+  .student-tabs {
+    min-height: 40px;
+    margin-bottom: 12px;
+    padding: 4px;
+    border-radius: 13px;
+  }
+
+  .student-tab {
+    min-height: 36px;
+    padding: 7px 10px;
+  }
+
+  .student-tab-panel,
+  .module-grid,
+  .double-grid {
+    gap: 12px;
+  }
+
+  .summary-card {
+    min-height: 122px;
+    padding: 13px;
+    gap: 6px;
+  }
+
+  .sub-card {
+    padding: 14px;
+  }
+
+  .weekly-management-layout {
+    grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .weekly-editor-card,
+  .weekly-admin-list-card {
+    padding: 17px;
+  }
+
+  .weekly-admin-filters {
+    margin-bottom: 10px;
+    padding: 9px;
+  }
+
+  .weekly-admin-item {
+    padding: 10px;
+  }
+
+  .staff-report-hero {
+    padding: 15px 18px;
+    gap: 14px;
+  }
+
+  .staff-report-hero p {
+    margin-top: 4px;
+    font-size: 0.8rem;
+  }
+
+  .staff-report-filters {
+    padding: 12px;
+    gap: 9px;
+  }
+
+  .staff-report-filters input,
+  .staff-report-filters select {
+    min-height: 42px;
+  }
+
+  .staff-time-metrics {
+    gap: 8px;
+  }
+
+  .staff-time-metric {
+    min-height: 102px;
+    padding: 14px;
+  }
+
+  .staff-time-report {
+    padding: 17px;
+  }
+
+  .staff-time-report-head {
+    margin-bottom: 12px;
+  }
+
+  .finance-command-bar {
+    padding: 10px 13px;
+  }
+
+  .finance-command-controls {
+    grid-template-columns: 170px minmax(260px, 1fr) auto auto auto;
+    gap: 7px;
+  }
+
+  .finance-command-field {
+    gap: 5px;
+    font-size: 0.78rem;
+  }
+
+  .finance-command-field input,
+  .finance-command-controls > .primary-button,
+  .finance-command-controls > .ghost-button {
+    min-height: 42px;
+    padding: 8px 11px;
+    font-size: 0.82rem;
+  }
+
+  .finance-subnav {
+    margin: 7px 0 10px;
+    padding: 4px;
+    border-radius: 13px;
+  }
+
+  .finance-tab {
+    min-height: 36px;
+    padding: 7px 14px;
+  }
+
+  .finance-module-head {
+    padding: 14px 18px;
+  }
+
+  .settings-head,
+  .settings-card,
+  .admin-quality-card,
+  .data-tools-card {
+    padding: 17px;
+  }
+
+  .settings-grid {
+    gap: 12px;
+  }
+
+  .settings-inline-form {
+    gap: 8px;
+    margin-bottom: 11px;
+  }
+
+  .settings-inline-form input,
+  .settings-inline-form select {
+    min-height: 42px;
+  }
+
+  .data-tools-card {
+    gap: 12px;
+  }
+}
+
+@media screen and (min-width: 1181px) {
+  .panel-navigation-shell {
+    grid-template-columns: minmax(520px, 1fr) auto;
+  }
+}
+
 
 /* Gestao administrativa de sessoes e tentativas de login */
 .security-settings-card {

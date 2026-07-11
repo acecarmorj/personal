@@ -546,12 +546,12 @@ function setActiveMainSection(sectionName) {
   });
 
   const headings = {
-    overview: "Visao geral",
-    operation: "Alunos e estatísticas",
-    weekly: "Grade semanal",
-    staff: "Equipe e presenca",
+    overview: "Painel",
+    operation: "Alunos",
+    weekly: "Grade",
+    staff: "Equipe",
     finance: "Financeiro",
-    settings: "Configuracoes"
+    settings: "Config"
   };
 
   const sectionTitle = document.getElementById("sectionTitle");
