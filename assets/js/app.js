@@ -368,6 +368,19 @@
     persistState(nextState, { message: "Matricula concluida com sucesso." });
   }
 
+  function openDemoStudentApp() {
+    const demoStudent = state.students.find((student) => String(student.id || "").startsWith("ALU-DEMO-") && student.status === "ativo");
+    if (!demoStudent) {
+      showToast("A demonstracao ainda esta carregando ou nao esta ativa nesta base.");
+      return;
+    }
+    Store.saveStudentSession(demoStudent.id, { method: "demo-preview" });
+    studentSession = Store.loadStudentSession();
+    activeScreen = "home";
+    render();
+    showToast("Demonstracao aberta com dados ficticios.");
+  }
+
   function renderEnrollment() {
     enrollmentWelcome.hidden = enrollmentStarted;
     enrollmentStartActions.hidden = !enrollmentStarted || Boolean(pendingEnrollmentId);
@@ -995,7 +1008,7 @@
   function attachEvents() {
     document.getElementById("openEnrollmentButton").addEventListener("click", () => { enrollmentStarted = true; renderEnrollment(); });
     document.getElementById("backEnrollmentButton").addEventListener("click", () => { enrollmentStarted = false; renderEnrollment(); });
-    document.getElementById("futureLoginButton").addEventListener("click", () => showToast("Usuario e senha serao ativados em uma proxima etapa."));
+    document.getElementById("futureLoginButton").addEventListener("click", openDemoStudentApp);
     document.getElementById("startScanButton").addEventListener("click", startScanner);
     document.getElementById("stopScanButton").addEventListener("click", stopScanner);
     document.getElementById("closeScannerButton").addEventListener("click", stopScanner);

@@ -1214,11 +1214,12 @@
     return raw ? JSON.parse(raw) : null;
   }
 
-  function saveStudentSession(studentId) {
+  function saveStudentSession(studentId, options) {
+    const settings = options || {};
     localStorage.setItem(SESSION_KEY, JSON.stringify({
       studentId: studentId,
       authVersion: 1,
-      method: "enrollment-device",
+      method: settings.method || "enrollment-device",
       authenticatedAt: new Date().toISOString()
     }));
   }

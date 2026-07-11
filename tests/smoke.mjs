@@ -219,6 +219,7 @@ for (const screen of ["home", "workouts", "agenda", "evolution", "payments"]) {
 }
 assert.match(studentHtml, /id="workoutSessionDialog"/, "App deve possuir execucao de treino em tela dedicada");
 assert.doesNotMatch(studentHtml, /id="restoreDemoButton"/, "App publicado nao deve expor restauracao de demonstracao");
+assert.match(studentJs, /demo-preview/, "Base ficticia deve permitir visualizar o app antes do login definitivo");
 assert.match(professorJs, /exerciseId/, "Professor deve preservar vinculo com catalogo de exercicios");
 
 if (packageMode) {

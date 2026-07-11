@@ -1412,3 +1412,5 @@ ATUALIZACAO - 2026-07-11 - NOVO APLICATIVO MOBILE DO ALUNO
 - Workflow `Publish PersonalPro` numero `29159008017` concluido com sucesso no GitHub Pages.
 - Verificacao publica confirmou HTTP 200 no novo `index.html`, painel e professor, com fila do aluno, sessoes, regras financeiras e IDs de exercicio presentes.
 - Verificacao final confirmou API publica em `schemaVersion: 3`, 16 recursos e frontend atualizado em `https://acecarmorj.github.io/personal/`.
+- Auditoria de encerramento identificou que alunos ficticios ja ativos nao conseguiam passar pela matricula e ainda nao havia login; criado acesso demonstrativo restrito a IDs `ALU-DEMO-*`.
+- O acesso demonstrativo grava sessao `demo-preview`, usa somente dados ficticios existentes e nao e habilitado automaticamente em uma base real sem esses IDs.
