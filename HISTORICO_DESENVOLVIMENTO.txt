@@ -1650,3 +1650,60 @@ ATUALIZACAO - 2026-07-11 - AUTENTICACAO E DEMONSTRACAO - ETAPA 16
 - Paginas publicas confirmaram os formularios `studentLoginForm`, `adminLoginForm` e `profLoginForm`.
 - Pacote limpo validado e compactado em `D:\PersonalPro-entrega-20260711-152407.zip`.
 - API oficial permanece na mesma URL como implantacao imutavel 12 e planilha vinculada no esquema 6.
+
+
+======================================================================
+ATUALIZACAO - 11/07/2026 - ACESSO A DEMONSTRACAO CORRIGIDO
+======================================================================
+- Corrigido o botao "Acessar demonstracao" no aplicativo do aluno, painel do professor e painel administrativo.
+- Os botoes demonstrativos nao dependem mais da API publicada nem da inicializacao previa das contas no Google Apps Script.
+- Adicionado `assets/js/demo-data.js` com a base ficticia oficial incorporada para permitir abertura local, via arquivo, servidor web e PWA.
+- Criadas sessoes locais exclusivas do ambiente demo para aluno 000001, professor prof.rafael e administrador admin.demo.
+- A sessao local demonstrativa nao envia alteracoes para a planilha real e nao acumula filas de sincronizacao.
+- Bootstrap individual do aluno e bootstrap do professor passaram a funcionar em modo demonstrativo local.
+- QR demonstrativo e recebimento individual do professor possuem comportamento local para a apresentacao.
+- O service worker foi atualizado para armazenar o arquivo da base demonstrativa.
+- Removida do Logger do Apps Script a escrita da senha demonstrativa.
+- `api.txt` permanece identico a `apps-script/api.gs`.
+
+REGRA PERMANENTE
+- Toda nova alteracao deve ser registrada neste arquivo antes da entrega.
+- Antes de afirmar que um botao funciona, testar o fluxo no codigo ativo e na interface.
+
+
+======================================================================
+ATUALIZACAO - 11/07/2026 - SESSOES, LOGIN, QR E HEALTH
+======================================================================
+BASE UTILIZADA
+- Ultima versao demonstrativa corrigida entregue anteriormente.
+
+ALTERACOES NAS TELAS DE LOGIN
+- Removidos os botoes de acesso automatico a demonstracao do aluno, professor e administrador.
+- As credenciais ficticias continuam funcionando quando digitadas normalmente no ambiente demo.
+- Formularios de login agora exibem "Entrando...", bloqueiam duplo clique e informam que a autenticacao segura pode levar alguns segundos.
+- Formularios de troca de senha e desbloqueio tambem impedem envios repetidos.
+
+GESTAO DE SESSOES E TENTATIVAS
+- Criada a aba privada `TentativasLogin` e elevado o schema da API para 7.
+- Toda tentativa de login aceita, recusada, bloqueada, inativa ou com senha temporaria expirada passa a ser auditada sem armazenar senhas ou tokens.
+- O painel administrativo recebeu as areas `Sessoes ativas` e `Tentativas de login`.
+- Administrador pode encerrar uma sessao individual ou todas as sessoes de uma conta.
+- Contas temporariamente bloqueadas exibem a data de liberacao no painel.
+
+PROTECAO LOCAL DAS SESSOES
+- Sessoes expiradas localmente sao descartadas antes de exibir dados.
+- Aluno, professor e administrador validam periodicamente a sessao com o servidor e novamente ao voltar para a tela ou recuperar a internet.
+- Quando a API informa revogacao, expiracao ou conta inativa, os dados locais da interface sao removidos e o login volta a ser exigido.
+- O desbloqueio do tablet verifica a senha da sessao existente e nao cria outra sessao.
+
+API E QR
+- `health` passou a ser estritamente somente leitura e nao executa setup nem migracao.
+- Falha ao identificar o ambiente retorna `unknown`, impedindo assumir demonstracao por erro.
+- A validacao do QR passou a usar `LockService`, tornando o consumo do token atomico e impedindo duas validacoes simultaneas.
+- Confirmado que nenhuma senha demonstrativa e escrita no Logger do Apps Script.
+- `api.txt` foi sincronizado com `apps-script/api.gs`.
+
+CACHE E DOCUMENTACAO
+- Cache do PWA e versoes dos arquivos elevados de auth7 para auth8.
+- Documentacao atualizada para schemaVersion 7, TentativasLogin e novas regras de sessao.
+- Testes automatizados ampliados para cobrir os itens acima.

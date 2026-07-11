@@ -4,6 +4,9 @@ const Finance = window.ProFitnessFinance;
 let panelState = Store.loadData();
 let authSession = Store.loadAuthSession();
 let managedAccounts = [];
+let managedSessions = [];
+let loginAttempts = [];
+let adminAuthTimer = null;
 let gateSimulatorStream = null;
 let selectedStudentId = panelState.students[0] ? panelState.students[0].id : "";
 let activeFilter = "todos";
@@ -262,7 +265,7 @@ function renderAdminSyncStatus(mode, customText) {
   pendingButton.title = loadAdminPendingSnapshot()?.lastError || loadAdminSyncQueue()[0]?.lastError || "Clique para tentar novamente";
   lastSync.textContent = formatAdminLastSync();
 
-  const resolved = mode || (pending ? "pending" : navigator.onLine === false ? "offline" : Store.isRemoteConfigured() ? "online" : "local");
+  const resolved = mode || (Store.isLocalDemoSession(authSession) ? "local" : pending ? "pending" : navigator.onLine === false ? "offline" : Store.isRemoteConfigured() ? "online" : "local");
   dot.className = `admin-sync-dot ${resolved}`;
   document.body.classList.toggle("admin-syncing", resolved === "syncing");
   const labels = {
@@ -287,6 +290,12 @@ async function flushAdminSyncQueue(options) {
   const settings = options || {};
   if (adminSyncPromise) return adminSyncPromise;
   adminSyncPromise = (async () => {
+    if (Store.isLocalDemoSession(authSession)) {
+      saveAdminSyncQueue([]);
+      saveAdminPendingSnapshot(null);
+      renderAdminSyncStatus("local", "Demonstracao local");
+      return true;
+    }
     if (!Store.isRemoteConfigured()) {
       renderAdminSyncStatus("local");
       return false;
@@ -406,7 +415,7 @@ function savePanelState(nextState) {
   const previousState = panelState;
   panelState = Store.migrateData(nextState);
   Store.saveData(panelState);
-  enqueueAdminSyncOperations(buildAdminSyncOperations(previousState, panelState));
+  if (!Store.isLocalDemoSession(authSession)) enqueueAdminSyncOperations(buildAdminSyncOperations(previousState, panelState));
   renderPanel();
   renderAdminSyncStatus(getAdminPendingCount() ? "pending" : undefined);
   flushAdminSyncQueue({ notify: false });
@@ -4582,9 +4591,34 @@ function showAdminAccess(loggedIn) {
   if (loggedIn) document.getElementById("adminCurrentUser").textContent = authSession?.account?.login || "Administracao";
 }
 
+function handleAdminAuthInvalid(message) {
+  authSession = null;
+  managedAccounts = [];
+  managedSessions = [];
+  loginAttempts = [];
+  panelState = Store.migrateData(Store.createEmptySnapshot());
+  Store.saveData(panelState);
+  showAdminAccess(false);
+  document.getElementById("adminLoginCard").hidden = false;
+  document.getElementById("adminPasswordChangeCard").hidden = true;
+  const feedback = document.getElementById("adminLoginFeedback");
+  if (feedback) feedback.textContent = message || "Sua sessao terminou. Entre novamente.";
+}
+
+async function validateAdministratorSession() {
+  if (!authSession || Store.isLocalDemoSession(authSession)) return authSession;
+  try {
+    authSession = await Store.validateAuthSessionRemote({ allowOffline: true });
+    return authSession;
+  } catch (error) {
+    handleAdminAuthInvalid(error.message);
+    return null;
+  }
+}
+
 async function loginAdministrator(login, password) {
   const feedback = document.getElementById("adminLoginFeedback");
-  feedback.textContent = "Verificando acesso...";
+  feedback.textContent = "Entrando com seguranca. Isso pode levar alguns segundos...";
   try {
     const session = await Store.loginRemote(login, password);
     if (session.account?.role !== "admin") {
@@ -4599,11 +4633,12 @@ async function loginAdministrator(login, password) {
       return;
     }
     showAdminAccess(true);
-    await refreshAdminFromRemote({ notify: false });
+    if (!Store.isLocalDemoSession(session)) await refreshAdminFromRemote({ notify: false });
     panelState = Store.loadData();
     renderPanel();
     renderAdminSyncStatus();
     feedback.textContent = "";
+    loadSecurityManagement();
   } catch (error) {
     feedback.textContent = error.message || "Nao foi possivel entrar.";
   }
@@ -4613,6 +4648,8 @@ async function logoutAdministrator() {
   await Store.logoutRemote();
   authSession = null;
   managedAccounts = [];
+  managedSessions = [];
+  loginAttempts = [];
   panelState = Store.migrateData(Store.createEmptySnapshot());
   Store.saveData(panelState);
   showAdminAccess(false);
@@ -4620,9 +4657,39 @@ async function logoutAdministrator() {
   document.getElementById("adminPasswordChangeCard").hidden = true;
 }
 
+function getAccountLogin(accountId) {
+  return managedAccounts.find((item) => String(item.id) === String(accountId))?.login || "Conta removida";
+}
+
 function renderManagedAccounts() {
   const target = document.getElementById("accountList");
-  target.innerHTML = managedAccounts.length ? managedAccounts.map((account) => `<article><div><strong>${escapeHtml(account.login)}</strong><span>${escapeHtml(account.role)} · ${account.active === false ? "bloqueada" : "ativa"}</span></div><button class="ghost-button" data-reset-account="${escapeHtml(account.id)}" type="button">Nova senha</button><button class="ghost-button" data-toggle-account="${escapeHtml(account.id)}" type="button">${account.active === false ? "Ativar" : "Bloquear"}</button></article>`).join("") : '<p>Nenhuma conta cadastrada.</p>';
+  target.innerHTML = managedAccounts.length ? managedAccounts.map((account) => {
+    const locked = account.lockedUntil && new Date(account.lockedUntil).getTime() > Date.now();
+    const detail = `${account.role} · ${account.active === false ? "bloqueada" : locked ? `temporariamente bloqueada ate ${Store.formatDateTime(account.lockedUntil)}` : "ativa"}`;
+    return `<article><div><strong>${escapeHtml(account.login)}</strong><span>${escapeHtml(detail)}</span></div><button class="ghost-button" data-reset-account="${escapeHtml(account.id)}" type="button">Nova senha</button><button class="ghost-button" data-revoke-account-sessions="${escapeHtml(account.id)}" type="button">Encerrar sessoes</button><button class="ghost-button" data-toggle-account="${escapeHtml(account.id)}" type="button">${account.active === false ? "Ativar" : "Bloquear"}</button></article>`;
+  }).join("") : '<p>Nenhuma conta cadastrada.</p>';
+}
+
+function renderManagedSessions() {
+  const target = document.getElementById("sessionList");
+  const currentId = String(authSession?.session?.id || "");
+  target.innerHTML = managedSessions.length ? managedSessions.map((session) => {
+    const state = session.state || (session.revokedAt ? "revoked" : "active");
+    const stateLabel = state === "active" ? "Ativa" : state === "expired" ? "Expirada" : state === "revoked" ? "Revogada" : state;
+    const tone = state === "active" ? "success" : state === "revoked" ? "danger" : "neutral";
+    const isCurrent = String(session.id || "") === currentId;
+    return `<article><div><strong>${escapeHtml(session.accountLogin || getAccountLogin(session.accountId))}</strong><span>${escapeHtml(session.accountRole || "")} · ${escapeHtml(session.deviceName || "Dispositivo nao identificado")}</span><small>Ultimo uso: ${escapeHtml(Store.formatDateTime(session.lastUsedAt || session.createdAt))} · Expira: ${escapeHtml(Store.formatDateTime(session.expiresAt))}</small></div><span class="security-state ${tone}">${escapeHtml(isCurrent ? "Esta sessao" : stateLabel)}</span>${state === "active" && !isCurrent ? `<button class="ghost-button danger-button" data-revoke-session="${escapeHtml(session.id)}" type="button">Encerrar</button>` : "<span></span>"}</article>`;
+  }).join("") : '<p>Nenhuma sessao encontrada.</p>';
+}
+
+function renderLoginAttempts() {
+  const target = document.getElementById("loginAttemptList");
+  target.innerHTML = loginAttempts.length ? loginAttempts.map((attempt) => {
+    const success = ["success", "unlock_success"].includes(String(attempt.result || ""));
+    const tone = success ? "success" : ["locked", "inactive", "unlock_failed"].includes(String(attempt.result || "")) ? "danger" : "neutral";
+    const label = success ? "Aceita" : attempt.result === "locked" ? "Bloqueada" : "Recusada";
+    return `<article><div><strong>${escapeHtml(attempt.login || "Login nao informado")}</strong><span>${escapeHtml(attempt.reason || "Sem detalhe")}</span><small>${escapeHtml(Store.formatDateTime(attempt.timestamp))} · ${escapeHtml(attempt.deviceName || attempt.deviceId || "Dispositivo nao identificado")}</small></div><span class="security-state ${tone}">${escapeHtml(label)}</span><span></span></article>`;
+  }).join("") : '<p>Nenhuma tentativa de login registrada.</p>';
 }
 
 async function loadManagedAccounts() {
@@ -4632,6 +4699,28 @@ async function loadManagedAccounts() {
   } catch (error) {
     document.getElementById("accountList").innerHTML = `<p>${escapeHtml(error.message || "Nao foi possivel carregar as contas.")}</p>`;
   }
+}
+
+async function loadManagedSessions() {
+  try {
+    managedSessions = await Store.listSessionsRemote();
+    renderManagedSessions();
+  } catch (error) {
+    document.getElementById("sessionList").innerHTML = `<p>${escapeHtml(error.message || "Nao foi possivel carregar as sessoes.")}</p>`;
+  }
+}
+
+async function loadLoginAttempts() {
+  try {
+    loginAttempts = await Store.listLoginAttemptsRemote();
+    renderLoginAttempts();
+  } catch (error) {
+    document.getElementById("loginAttemptList").innerHTML = `<p>${escapeHtml(error.message || "Nao foi possivel carregar as tentativas.")}</p>`;
+  }
+}
+
+async function loadSecurityManagement() {
+  await Promise.all([loadManagedAccounts(), loadManagedSessions(), loadLoginAttempts()]);
 }
 
 async function createManagedAccountFromForm(event) {
@@ -4650,20 +4739,44 @@ async function createManagedAccountFromForm(event) {
 async function handleAccountListAction(event) {
   const resetButton = event.target.closest("[data-reset-account]");
   const toggleButton = event.target.closest("[data-toggle-account]");
+  const revokeSessionsButton = event.target.closest("[data-revoke-account-sessions]");
   try {
     if (resetButton) {
       const result = await Store.resetPasswordRemote(resetButton.dataset.resetAccount);
       window.alert(`Nova senha temporaria de ${result.account.login}:\n\n${result.temporaryPassword}\n\nEla sera exibida somente agora.`);
       return;
     }
+    if (revokeSessionsButton) {
+      const accountId = revokeSessionsButton.dataset.revokeAccountSessions;
+      const account = managedAccounts.find((item) => String(item.id) === String(accountId));
+      if (!account || !window.confirm(`Encerrar todas as sessoes de ${account.login}?`)) return;
+      await Store.revokeAccountSessionsRemote(accountId);
+      if (String(accountId) === String(authSession?.account?.id || "")) {
+        handleAdminAuthInvalid("Suas sessoes foram encerradas.");
+        return;
+      }
+      await loadManagedSessions();
+      return;
+    }
     if (toggleButton) {
       const account = managedAccounts.find((item) => item.id === toggleButton.dataset.toggleAccount);
       if (!account) return;
       await Store.updateAccountRemote({ id: account.id, active: account.active === false, permissions: account.permissions || [] });
-      await loadManagedAccounts();
+      await loadSecurityManagement();
     }
   } catch (error) {
     window.alert(error.message || "Nao foi possivel alterar a conta.");
+  }
+}
+
+async function handleSessionListAction(event) {
+  const button = event.target.closest("[data-revoke-session]");
+  if (!button || !window.confirm("Encerrar esta sessao e exigir novo login no aparelho?")) return;
+  try {
+    await Store.revokeSessionRemote(button.dataset.revokeSession);
+    await loadManagedSessions();
+  } catch (error) {
+    window.alert(error.message || "Nao foi possivel encerrar a sessao.");
   }
 }
 
@@ -4730,10 +4843,18 @@ function attachPanelEvents() {
   modalityCatalogForm.addEventListener("submit", handleModalityCatalogSave);
   paymentRulesForm.addEventListener("submit", handlePaymentRulesSave);
   staffCatalogForm.addEventListener("submit", handleStaffCatalogSave);
-  document.getElementById("adminLoginForm").addEventListener("submit", async (event) => { event.preventDefault(); const form = new FormData(event.currentTarget); await loginAdministrator(form.get("login"), form.get("password")); });
-  document.getElementById("adminDemoLoginButton").addEventListener("click", () => loginAdministrator("admin.demo", "Demo1234"));
+  document.getElementById("adminLoginForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (event.currentTarget.dataset.busy === "true") return;
+    const form = new FormData(event.currentTarget);
+    Store.setFormBusy(event.currentTarget, true, "Entrando...");
+    try { await loginAdministrator(form.get("login"), form.get("password")); }
+    finally { Store.setFormBusy(event.currentTarget, false); }
+  });
   document.getElementById("adminPasswordChangeForm").addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (event.currentTarget.dataset.busy === "true") return;
+    Store.setFormBusy(event.currentTarget, true, "Salvando...");
     const form = new FormData(event.currentTarget);
     const newPassword = String(form.get("newPassword") || "");
     const feedback = document.getElementById("adminPasswordChangeFeedback");
@@ -4744,12 +4865,16 @@ function attachPanelEvents() {
       document.getElementById("adminPasswordChangeCard").hidden = true;
       showAdminAccess(true); await refreshAdminFromRemote({ notify: false }); panelState = Store.loadData(); renderPanel();
     } catch (error) { feedback.textContent = error.message || "Nao foi possivel alterar a senha."; }
+    finally { Store.setFormBusy(event.currentTarget, false); }
   });
   document.getElementById("cancelAdminPasswordChange").addEventListener("click", logoutAdministrator);
   document.getElementById("adminLogoutButton").addEventListener("click", logoutAdministrator);
   document.getElementById("accountForm").addEventListener("submit", createManagedAccountFromForm);
   document.getElementById("refreshAccountsButton").addEventListener("click", loadManagedAccounts);
+  document.getElementById("refreshSessionsButton").addEventListener("click", loadManagedSessions);
+  document.getElementById("refreshLoginAttemptsButton").addEventListener("click", loadLoginAttempts);
   document.getElementById("accountList").addEventListener("click", handleAccountListAction);
+  document.getElementById("sessionList").addEventListener("click", handleSessionListAction);
   document.getElementById("openGateSimulatorButton").addEventListener("click", () => document.getElementById("gateSimulatorDialog").showModal());
   document.getElementById("closeGateSimulatorButton").addEventListener("click", async () => { await stopGateSimulatorCamera(); document.getElementById("gateSimulatorDialog").close(); });
   document.getElementById("startGateSimulatorCamera").addEventListener("click", startGateSimulatorCamera);
@@ -5050,17 +5175,21 @@ function attachPanelEvents() {
     }
   });
 
-  window.addEventListener("online", () => {
+  window.addEventListener("online", async () => {
     renderAdminSyncStatus(getAdminPendingCount() ? "pending" : "online", "Internet restabelecida");
+    if (!(await validateAdministratorSession())) return;
     flushAdminSyncQueue({ notify: false });
   });
   window.addEventListener("offline", () => renderAdminSyncStatus("offline"));
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") flushAdminSyncQueue({ notify: false });
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "visible" && await validateAdministratorSession()) flushAdminSyncQueue({ notify: false });
   });
+  window.addEventListener("profitness:auth-invalid", (event) => handleAdminAuthInvalid(event.detail?.message));
   adminAutoSyncTimer = window.setInterval(() => flushAdminSyncQueue({ notify: false }), ADMIN_SYNC_INTERVAL_MS);
+  adminAuthTimer = window.setInterval(() => validateAdministratorSession(), 60000);
   window.addEventListener("beforeunload", () => {
     if (adminAutoSyncTimer) window.clearInterval(adminAutoSyncTimer);
+    if (adminAuthTimer) window.clearInterval(adminAuthTimer);
   });
 }
 
@@ -5080,10 +5209,15 @@ renderAdminSyncStatus();
     showAdminAccess(false);
     return;
   }
+  if (!Store.isLocalDemoSession(authSession) && navigator.onLine !== false) {
+    showAdminAccess(false);
+    document.getElementById("adminLoginFeedback").textContent = "Validando sessao...";
+  }
+  if (!(await validateAdministratorSession())) return;
   showAdminAccess(true);
   await flushAdminSyncQueue({ notify: false });
   panelState = Store.loadData();
-  if (!getAdminPendingCount() && Store.isRemoteConfigured() && navigator.onLine !== false) {
+  if (!Store.isLocalDemoSession(authSession) && !getAdminPendingCount() && Store.isRemoteConfigured() && navigator.onLine !== false) {
     await refreshAdminFromRemote({ notify: false });
     panelState = Store.loadData();
   }
@@ -5091,4 +5225,5 @@ renderAdminSyncStatus();
   autoGenerateCurrentMonthFinance();
   renderPanel();
   renderAdminSyncStatus(getAdminPendingCount() ? "pending" : undefined);
+  loadSecurityManagement();
 })();

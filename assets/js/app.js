@@ -20,6 +20,7 @@
   let gateCredential = null;
   let studentSyncPromise = null;
   let studentSyncTimer = null;
+  let studentAuthTimer = null;
 
   const STUDENT_SYNC_QUEUE_PREFIX = Store.storageKey("student-sync-queue-v2");
   const STUDENT_LAST_SYNC_PREFIX = Store.storageKey("student-last-sync-v2");
@@ -119,7 +120,7 @@
     const previousState = state;
     state = Store.migrateData(nextState);
     Store.saveData(state);
-    enqueueStudentSyncOperations(buildStudentSyncOperations(previousState, state));
+    if (!Store.isLocalDemoSession(authSession)) enqueueStudentSyncOperations(buildStudentSyncOperations(previousState, state));
     renderStudentSyncStatus();
     if (settings.render !== false) render();
     if (settings.message) showToast(settings.message);
@@ -189,13 +190,14 @@
 
   function renderStudentSyncStatus(mode, customText) {
     const pending = loadStudentSyncQueue().length;
-    const resolved = mode || (pending ? "pending" : navigator.onLine === false ? "offline" : Store.isRemoteConfigured() ? "online" : "");
+    const resolved = mode || (Store.isLocalDemoSession(authSession) ? "local" : pending ? "pending" : navigator.onLine === false ? "offline" : Store.isRemoteConfigured() ? "online" : "");
     const labels = {
       online: formatLastStudentSync(),
       pending: pending === 1 ? "1 envio pendente" : `${pending} envios pendentes`,
       offline: pending ? `${pending} salvo${pending === 1 ? "" : "s"} no celular` : "Sem internet",
       syncing: "Enviando dados",
-      error: "Envio pendente"
+      error: "Envio pendente",
+      local: "Demonstracao local"
     };
     setStudentSyncStatus(resolved, customText || labels[resolved] || "Dados locais");
   }
@@ -211,6 +213,11 @@
     const settings = options || {};
     if (studentSyncPromise) return studentSyncPromise;
     studentSyncPromise = (async () => {
+      if (Store.isLocalDemoSession(authSession)) {
+        saveStudentSyncQueue([]);
+        renderStudentSyncStatus("local");
+        return true;
+      }
       if (!Store.isRemoteConfigured()) {
         renderStudentSyncStatus("", "Dados deste celular");
         return false;
@@ -256,7 +263,7 @@
   }
 
   async function refreshStudentFromRemote() {
-    if (!Store.isRemoteConfigured() || navigator.onLine === false || loadStudentSyncQueue().length) return false;
+    if (Store.isLocalDemoSession(authSession) || !Store.isRemoteConfigured() || navigator.onLine === false || loadStudentSyncQueue().length) return false;
     const baseline = JSON.stringify(Store.loadData());
     try {
       renderStudentSyncStatus("syncing", "Atualizando dados");
@@ -410,7 +417,7 @@
 
   async function loginStudent(login, password) {
     const feedback = document.getElementById("studentLoginFeedback");
-    feedback.textContent = "Verificando acesso...";
+    feedback.textContent = "Entrando com seguranca. Isso pode levar alguns segundos...";
     try {
       const session = await Store.loginRemote(login, password);
       if (session.account?.role !== "student") {
@@ -424,9 +431,6 @@
     }
   }
 
-  async function openDemoStudentApp() {
-    await loginStudent("000001", "Demo1234");
-  }
 
   function renderEnrollment() {
     const mustChange = Boolean(authSession?.account?.mustChangePassword);
@@ -1080,16 +1084,45 @@
     }
   }
 
+  function handleStudentAuthInvalid(message) {
+    authSession = null;
+    studentSession = null;
+    state = Store.migrateData(Store.createEmptySnapshot());
+    onboardingView.hidden = false;
+    studentView.hidden = true;
+    const feedback = document.getElementById("studentLoginFeedback");
+    if (feedback) feedback.textContent = message || "Sua sessao terminou. Entre novamente.";
+    render();
+  }
+
+  async function validateStudentSession() {
+    if (!authSession || Store.isLocalDemoSession(authSession)) return authSession;
+    try {
+      authSession = await Store.validateAuthSessionRemote({ allowOffline: true });
+      return authSession;
+    } catch (error) {
+      handleStudentAuthInvalid(error.message);
+      return null;
+    }
+  }
+
   function attachEvents() {
-    document.getElementById("futureLoginButton").addEventListener("click", openDemoStudentApp);
     document.getElementById("closeScannerButton").addEventListener("click", stopScanner);
     studentLoginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (event.currentTarget.dataset.busy === "true") return;
       const form = new FormData(event.currentTarget);
-      await loginStudent(form.get("login"), form.get("password"));
+      Store.setFormBusy(event.currentTarget, true, "Entrando...");
+      try {
+        await loginStudent(form.get("login"), form.get("password"));
+      } finally {
+        Store.setFormBusy(event.currentTarget, false);
+      }
     });
     studentPasswordChangeForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (event.currentTarget.dataset.busy === "true") return;
+      Store.setFormBusy(event.currentTarget, true, "Salvando...");
       const form = new FormData(event.currentTarget);
       const currentPassword = String(form.get("currentPassword") || "");
       const newPassword = String(form.get("newPassword") || "");
@@ -1106,6 +1139,8 @@
         showToast("Senha alterada com sucesso.");
       } catch (error) {
         feedback.textContent = error.message || "Nao foi possivel alterar a senha.";
+      } finally {
+        Store.setFormBusy(event.currentTarget, false);
       }
     });
     document.getElementById("cancelPasswordChange").addEventListener("click", async () => {
@@ -1156,25 +1191,37 @@
     window.addEventListener("storage", () => { syncState(); render(); renderStudentSyncStatus(); });
     window.addEventListener("online", async () => {
       renderStudentSyncStatus("pending", "Internet restabelecida");
+      if (!(await validateStudentSession())) return;
       const flushed = await flushStudentSyncQueue({ notify: false });
       if (flushed && !loadStudentSyncQueue().length) await refreshStudentFromRemote();
     });
     window.addEventListener("offline", () => renderStudentSyncStatus("offline"));
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") flushStudentSyncQueue({ notify: false });
+    document.addEventListener("visibilitychange", async () => {
+      if (document.visibilityState === "visible" && await validateStudentSession()) flushStudentSyncQueue({ notify: false });
     });
+    window.addEventListener("profitness:auth-invalid", (event) => handleStudentAuthInvalid(event.detail?.message));
     studentSyncTimer = window.setInterval(() => flushStudentSyncQueue({ notify: false }), STUDENT_SYNC_INTERVAL_MS);
+    studentAuthTimer = window.setInterval(() => validateStudentSession(), 60000);
     window.addEventListener("beforeunload", () => {
       if (studentSyncTimer) window.clearInterval(studentSyncTimer);
+      if (studentAuthTimer) window.clearInterval(studentAuthTimer);
       if (workoutTimer) window.clearInterval(workoutTimer);
     });
   }
 
   attachEvents();
-  render();
   renderStudentSyncStatus();
   (async function initializeStudentApp() {
     Store.applyRuntimeEnvironment();
+    if (authSession && !Store.isLocalDemoSession(authSession) && navigator.onLine !== false) {
+      onboardingView.hidden = false;
+      studentView.hidden = true;
+      document.getElementById("studentLoginFeedback").textContent = "Validando sessao...";
+    } else {
+      render();
+    }
+    if (!(await validateStudentSession()) && authSession) return;
+    syncState();
     const flushed = await flushStudentSyncQueue({ notify: false });
     state = Store.loadData();
     if (flushed && !loadStudentSyncQueue().length) await refreshStudentFromRemote();

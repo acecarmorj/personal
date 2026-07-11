@@ -37,6 +37,7 @@
   let professorAutoSyncTimer = null;
   let staffClockTimer = null;
   let professorIdleTimer = null;
+  let professorAuthTimer = null;
   let professorLastActivity = Date.now();
 
   function professorAccountKey(prefix) {
@@ -199,7 +200,7 @@
     pendingText.title = loadProfessorSyncQueue()[0]?.lastError || "Toque para tentar enviar novamente";
     lastSyncText.textContent = formatProfessorLastSync();
 
-    const resolvedMode = mode || (pending ? "pending" : navigator.onLine === false ? "offline" : "online");
+    const resolvedMode = mode || (Store.isLocalDemoSession(authSession) ? "local" : pending ? "pending" : navigator.onLine === false ? "offline" : "online");
     connectionDot.className = `connection-dot ${resolvedMode}`;
     document.body.classList.toggle("prof-syncing", resolvedMode === "syncing");
 
@@ -245,6 +246,11 @@
     }
 
     professorSyncPromise = (async () => {
+      if (Store.isLocalDemoSession(authSession)) {
+        saveProfessorSyncQueue([]);
+        renderProfessorSyncStatus("local", "Demonstracao local");
+        return true;
+      }
       if (!Store.isRemoteConfigured()) {
         renderProfessorSyncStatus("local");
         return false;
@@ -1706,7 +1712,7 @@ function startNewProfessorStudent() {
       source: "painel-professor-tablet"
     });
     Store.saveData(state);
-    enqueueProfessorSyncOperations(buildProfessorSyncOperations(previousState, state));
+    if (!Store.isLocalDemoSession(authSession)) enqueueProfessorSyncOperations(buildProfessorSyncOperations(previousState, state));
     renderAll();
     if (selectedStudentId) {
       renderStudentWorkspace(selectedStudentId);
@@ -2011,7 +2017,10 @@ function startNewProfessorStudent() {
     renderProfessorSyncStatus("syncing", "Atualizando dados");
 
     try {
-      if (!Store.isRemoteConfigured()) {
+      if (Store.isLocalDemoSession(authSession)) {
+        state = Store.loadData();
+        renderProfessorSyncStatus("local", "Demonstracao local");
+      } else if (!Store.isRemoteConfigured()) {
         state = Store.loadData();
         renderProfessorSyncStatus("local");
       } else if (!isProfessorOnline()) {
@@ -2066,9 +2075,31 @@ function startNewProfessorStudent() {
     }
   }
 
+  function handleProfessorAuthInvalid(message) {
+    authSession = null;
+    state = Store.migrateData(Store.createEmptySnapshot());
+    Store.saveData(state);
+    showProfessorAccess("login");
+    document.getElementById("profLoginCard").hidden = false;
+    document.getElementById("profPasswordChangeCard").hidden = true;
+    const feedback = document.getElementById("profLoginFeedback");
+    if (feedback) feedback.textContent = message || "Sua sessao terminou. Entre novamente.";
+  }
+
+  async function validateProfessorSession() {
+    if (!authSession || Store.isLocalDemoSession(authSession)) return authSession;
+    try {
+      authSession = await Store.validateAuthSessionRemote({ allowOffline: true });
+      return authSession;
+    } catch (error) {
+      handleProfessorAuthInvalid(error.message);
+      return null;
+    }
+  }
+
   async function loginProfessor(login, password, feedbackId) {
     const feedback = document.getElementById(feedbackId);
-    feedback.textContent = "Verificando acesso...";
+    feedback.textContent = "Entrando com seguranca. Isso pode levar alguns segundos...";
     try {
       const session = await Store.loginRemote(login, password);
       if (session.account?.role !== "professor") {
@@ -2107,7 +2138,6 @@ function startNewProfessorStudent() {
   function lockProfessorTablet() {
     if (!authSession) return;
     document.getElementById("profLockName").textContent = document.getElementById("profCurrentUser").textContent;
-    document.getElementById("profUnlockForm").dataset.login = authSession.account.login;
     showProfessorAccess("lock");
   }
 
@@ -2235,12 +2265,19 @@ function startNewProfessorStudent() {
   document.getElementById("toggleStaffClockButton").addEventListener("click", toggleStaffClock);
   document.getElementById("profLoginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (event.currentTarget.dataset.busy === "true") return;
     const form = new FormData(event.currentTarget);
-    await loginProfessor(form.get("login"), form.get("password"), "profLoginFeedback");
+    Store.setFormBusy(event.currentTarget, true, "Entrando...");
+    try {
+      await loginProfessor(form.get("login"), form.get("password"), "profLoginFeedback");
+    } finally {
+      Store.setFormBusy(event.currentTarget, false);
+    }
   });
-  document.getElementById("profDemoLoginButton").addEventListener("click", () => loginProfessor("prof.rafael", "Demo1234", "profLoginFeedback"));
   document.getElementById("profPasswordChangeForm").addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (event.currentTarget.dataset.busy === "true") return;
+    Store.setFormBusy(event.currentTarget, true, "Salvando...");
     const form = new FormData(event.currentTarget);
     const newPassword = String(form.get("newPassword") || "");
     const feedback = document.getElementById("profPasswordChangeFeedback");
@@ -2253,6 +2290,7 @@ function startNewProfessorStudent() {
       document.getElementById("profPasswordChangeCard").hidden = true;
       showProfessorAccess("app"); renderAll();
     } catch (error) { feedback.textContent = error.message || "Nao foi possivel alterar a senha."; }
+    finally { Store.setFormBusy(event.currentTarget, false); }
   });
   document.getElementById("cancelProfPasswordChange").addEventListener("click", leaveProfessorSession);
   document.getElementById("profLogoutButton").addEventListener("click", leaveProfessorSession);
@@ -2260,8 +2298,22 @@ function startNewProfessorStudent() {
   document.getElementById("profSwitchUserButton").addEventListener("click", leaveProfessorSession);
   document.getElementById("profUnlockForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    await loginProfessor(event.currentTarget.dataset.login, new FormData(event.currentTarget).get("password"), "profUnlockFeedback");
-    event.currentTarget.reset();
+    if (event.currentTarget.dataset.busy === "true") return;
+    const feedback = document.getElementById("profUnlockFeedback");
+    feedback.textContent = "Desbloqueando...";
+    Store.setFormBusy(event.currentTarget, true, "Desbloqueando...");
+    try {
+      authSession = await Store.unlockSessionRemote(new FormData(event.currentTarget).get("password"));
+      feedback.textContent = "";
+      event.currentTarget.reset();
+      showProfessorAccess("app");
+      renderAll();
+      await refreshData({ manual: false });
+    } catch (error) {
+      feedback.textContent = error.message || "Nao foi possivel desbloquear.";
+    } finally {
+      Store.setFormBusy(event.currentTarget, false);
+    }
   });
   ["pointerdown", "keydown", "touchstart"].forEach((eventName) => document.addEventListener(eventName, registerProfessorActivity, { passive: true }));
   document.getElementById("newProfessorStudent").addEventListener("click", startNewProfessorStudent);
@@ -2365,8 +2417,9 @@ function startNewProfessorStudent() {
     }
   });
 
-  window.addEventListener("online", () => {
+  window.addEventListener("online", async () => {
     renderProfessorSyncStatus(getProfessorPendingCount() ? "pending" : "online", "Internet restabelecida");
+    if (!(await validateProfessorSession())) return;
     showToast("Internet restabelecida. Sincronizando dados.", "success");
     refreshData({ manual: false });
   });
@@ -2376,11 +2429,12 @@ function startNewProfessorStudent() {
     showToast("Sem internet. As alterações continuarão salvas neste tablet.", "warning");
   });
 
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && !hasProfessorUnsavedEditor()) {
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "visible" && !hasProfessorUnsavedEditor() && await validateProfessorSession()) {
       refreshData({ manual: false });
     }
   });
+  window.addEventListener("profitness:auth-invalid", (event) => handleProfessorAuthInvalid(event.detail?.message));
 
   professorAutoSyncTimer = window.setInterval(() => {
     if (authSession && !hasProfessorUnsavedEditor()) {
@@ -2392,6 +2446,7 @@ function startNewProfessorStudent() {
   professorIdleTimer = window.setInterval(() => {
     if (authSession && Date.now() - professorLastActivity >= 5 * 60 * 1000) lockProfessorTablet();
   }, 30000);
+  professorAuthTimer = window.setInterval(() => validateProfessorSession(), 60000);
 
   window.addEventListener("beforeunload", () => {
     if (professorAutoSyncTimer) {
@@ -2401,16 +2456,24 @@ function startNewProfessorStudent() {
       window.clearInterval(staffClockTimer);
     }
     if (professorIdleTimer) window.clearInterval(professorIdleTimer);
+    if (professorAuthTimer) window.clearInterval(professorAuthTimer);
   });
 
   Store.applyRuntimeEnvironment();
   setView(activeView);
-  if (authSession?.account?.role === "professor") {
+  (async function initializeProfessorPanel() {
+    if (authSession?.account?.role !== "professor") {
+      authSession = null;
+      showProfessorAccess("login");
+      return;
+    }
+    if (!Store.isLocalDemoSession(authSession) && navigator.onLine !== false) {
+      showProfessorAccess("login");
+      document.getElementById("profLoginFeedback").textContent = "Validando sessao...";
+    }
+    if (!(await validateProfessorSession())) return;
     showProfessorAccess("app");
     renderProfessorSyncStatus(getProfessorPendingCount() ? "pending" : isProfessorOnline() ? "online" : "offline");
     refreshData({ manual: false });
-  } else {
-    authSession = null;
-    showProfessorAccess("login");
-  }
+  })();
 })();

@@ -16,8 +16,8 @@
 const SPREADSHEET_ID_PROPERTY = "PROFITNESS_SPREADSHEET_ID";
 const SCHEMA_VERSION_PROPERTY = "PROFITNESS_SCHEMA_VERSION";
 const AUTH_PEPPER_PROPERTY = "PROFITNESS_AUTH_PEPPER";
-const CURRENT_SCHEMA_VERSION = 6;
-const AUTH_RESOURCE_NAMES = ["accounts", "sessions", "gateTokens", "accessAttempts"];
+const CURRENT_SCHEMA_VERSION = 7;
+const AUTH_RESOURCE_NAMES = ["accounts", "sessions", "gateTokens", "accessAttempts", "loginAttempts"];
 const PASSWORD_ALGORITHM = "PBKDF2-HMAC-SHA256";
 const PASSWORD_VERSION = 1;
 const PASSWORD_ITERATIONS = 120000;
@@ -172,6 +172,10 @@ const SHEETS = {
   accessAttempts: {
     sheetName: "TentativasAcesso",
     headers: ["id", "timestamp", "studentId", "tokenId", "result", "reason", "validatedBy", "deviceId"]
+  },
+  loginAttempts: {
+    sheetName: "TentativasLogin",
+    headers: ["id", "timestamp", "login", "accountId", "result", "reason", "deviceId", "deviceName", "userAgentReference"]
   },
   staffTimeEntries: {
     sheetName: "PresencaProfessores",
@@ -404,6 +408,64 @@ function sanitizeSession(session) {
   return safe;
 }
 
+function getSessionState(session) {
+  if (!session) return "unknown";
+  if (session.revokedAt) return "revoked";
+  const now = Date.now();
+  if (new Date(session.expiresAt).getTime() <= now || new Date(session.idleExpiresAt).getTime() <= now) return "expired";
+  return "active";
+}
+
+function listManagedSessions() {
+  const accounts = readSheet("accounts");
+  const accountMap = Object.fromEntries(accounts.map((account) => [String(account.id), account]));
+  return readSheet("sessions")
+    .map((session) => {
+      const account = accountMap[String(session.accountId)] || {};
+      return Object.assign({}, sanitizeSession(session), {
+        accountLogin: account.login || "Conta removida",
+        accountRole: account.role || "",
+        state: getSessionState(session)
+      });
+    })
+    .sort((left, right) => String(right.lastUsedAt || right.createdAt || "").localeCompare(String(left.lastUsedAt || left.createdAt || "")))
+    .slice(0, 200);
+}
+
+function appendLoginAttempt(details) {
+  try {
+    const sheet = getSheet("loginAttempts");
+    const headers = getHeaders(sheet);
+    const entry = Object.assign({
+      id: Utilities.getUuid(),
+      timestamp: new Date().toISOString(),
+      login: "",
+      accountId: "",
+      result: "unknown",
+      reason: "",
+      deviceId: "",
+      deviceName: "",
+      userAgentReference: ""
+    }, details || {});
+    sheet.appendRow(headers.map((header) => serializeValue(entry[header])));
+  } catch (error) {
+    // Uma falha de auditoria nao deve impedir o login nem revelar credenciais.
+  }
+}
+
+function listRecentLoginAttempts() {
+  return readSheet("loginAttempts")
+    .sort((left, right) => String(right.timestamp || "").localeCompare(String(left.timestamp || "")))
+    .slice(0, 200);
+}
+
+function sanitizeManagedAccount(account) {
+  const safe = sanitizeAccount(account);
+  safe.failedAttempts = Number(account && account.failedAttempts || 0);
+  safe.lockedUntil = account && account.lockedUntil || "";
+  return safe;
+}
+
 function getAccountById(accountId) {
   return readSheet("accounts").find((account) => String(account.id) === String(accountId)) || null;
 }
@@ -453,14 +515,16 @@ function authenticateSessionToken(token, options) {
     error.code = "ACCOUNT_INACTIVE";
     throw error;
   }
+  let activeSession = session;
   if (settings.touch !== false) {
     const policy = getSessionPolicy(account.role);
-    upsertRow("sessions", Object.assign({}, session, {
+    activeSession = Object.assign({}, session, {
       lastUsedAt: now.toISOString(),
       idleExpiresAt: addMinutes(now, policy.idleMinutes).toISOString()
-    }));
+    });
+    upsertRow("sessions", activeSession);
   }
-  return { account: account, session: sanitizeSession(session), token: token };
+  return { account: account, session: sanitizeSession(activeSession), token: token };
 }
 
 function doGet(e) {
@@ -468,8 +532,13 @@ function doGet(e) {
   const action = (params.action || "").toLowerCase();
   try {
     if (action === "health") {
-      ensureApiReady();
-      return jsonResponse({ ok: true, environment: getConfiguredEnvironment(), version: "2026.07" });
+      return jsonResponse({
+        ok: true,
+        environment: getConfiguredEnvironmentReadOnly(),
+        version: "2026.07",
+        schemaVersion: Number(PropertiesService.getScriptProperties().getProperty(SCHEMA_VERSION_PROPERTY) || 0),
+        configured: Boolean(getResolvedSpreadsheetId())
+      });
     }
     const error = new Error("Use POST para operacoes da API.");
     error.code = "METHOD_NOT_ALLOWED";
@@ -501,6 +570,10 @@ function doPost(e) {
 
     if (action === "session") {
       return jsonResponse({ ok: true, data: { account: sanitizeAccount(auth.account), session: auth.session } });
+    }
+
+    if (action === "unlocksession") {
+      return jsonResponse({ ok: true, data: unlockCurrentSession(auth, body) });
     }
 
     if (action === "changepassword") {
@@ -539,7 +612,7 @@ function doPost(e) {
 
     if (action === "listaccounts") {
       requirePermission(auth.account, "users.manage");
-      return jsonResponse({ ok: true, data: readSheet("accounts").map(sanitizeAccount) });
+      return jsonResponse({ ok: true, data: readSheet("accounts").map(sanitizeManagedAccount) });
     }
 
     if (action === "createaccount") {
@@ -559,12 +632,22 @@ function doPost(e) {
 
     if (action === "listsessions") {
       requirePermission(auth.account, "users.manage");
-      return jsonResponse({ ok: true, data: readSheet("sessions").map(sanitizeSession) });
+      return jsonResponse({ ok: true, data: listManagedSessions() });
+    }
+
+    if (action === "listloginattempts") {
+      requirePermission(auth.account, "users.manage");
+      return jsonResponse({ ok: true, data: listRecentLoginAttempts() });
     }
 
     if (action === "revokesession") {
       requirePermission(auth.account, "users.manage");
       return jsonResponse({ ok: true, data: { revoked: revokeSession(body.sessionId, "revogada_pela_administracao") } });
+    }
+
+    if (action === "revokeaccountsessions") {
+      requirePermission(auth.account, "users.manage");
+      return jsonResponse({ ok: true, data: { revoked: revokeAccountSessions(body.accountId, "revogadas_pela_administracao") } });
     }
 
     if (action === "restoredemo") {
@@ -698,7 +781,14 @@ function findAccountByLogin(login) {
 function handleLogin(body) {
   const login = normalizeLogin(body.login);
   const password = String(body.password || "");
+  const attemptBase = {
+    login: login,
+    deviceId: String(body.deviceId || ""),
+    deviceName: String(body.deviceName || "").slice(0, 120),
+    userAgentReference: createReferenceHash(body.userAgent || "")
+  };
   if (!login || !password) {
+    appendLoginAttempt(Object.assign({}, attemptBase, { result: "rejected", reason: "Usuario ou senha nao informados." }));
     const error = new Error("Informe usuario e senha.");
     error.code = "INVALID_CREDENTIALS";
     throw error;
@@ -707,21 +797,26 @@ function handleLogin(body) {
   const now = new Date();
   if (!account) {
     derivePasswordCredential(password, getAuthPepper(), { salt: createPasswordSalt(), iterations: PASSWORD_ITERATIONS });
+    appendLoginAttempt(Object.assign({}, attemptBase, { result: "rejected", reason: "Login inexistente ou senha invalida." }));
     const error = new Error("Usuario ou senha invalidos.");
     error.code = "INVALID_CREDENTIALS";
     throw error;
   }
+  attemptBase.accountId = account.id;
   if (account.active === false || String(account.active).toLowerCase() === "false") {
+    appendLoginAttempt(Object.assign({}, attemptBase, { result: "inactive", reason: "Conta inativa." }));
     const error = new Error("Conta indisponivel. Procure a administracao.");
     error.code = "ACCOUNT_INACTIVE";
     throw error;
   }
   if (account.lockedUntil && new Date(account.lockedUntil).getTime() > now.getTime()) {
+    appendLoginAttempt(Object.assign({}, attemptBase, { result: "locked", reason: "Conta temporariamente bloqueada." }));
     const error = new Error("Conta temporariamente bloqueada. Tente novamente mais tarde.");
     error.code = "ACCOUNT_LOCKED";
     throw error;
   }
   if (account.temporaryPasswordExpiresAt && account.mustChangePassword && new Date(account.temporaryPasswordExpiresAt).getTime() <= now.getTime()) {
+    appendLoginAttempt(Object.assign({}, attemptBase, { result: "expired_password", reason: "Senha temporaria expirada." }));
     const error = new Error("A senha temporaria expirou. Solicite uma nova a administracao.");
     error.code = "TEMPORARY_PASSWORD_EXPIRED";
     throw error;
@@ -733,6 +828,10 @@ function handleLogin(body) {
       failedAttempts: failedAttempts >= 5 ? 0 : failedAttempts,
       lockedUntil: lockedUntil,
       updatedAt: now.toISOString()
+    }));
+    appendLoginAttempt(Object.assign({}, attemptBase, {
+      result: lockedUntil ? "locked" : "rejected",
+      reason: lockedUntil ? "Conta bloqueada apos cinco tentativas incorretas." : "Senha incorreta."
     }));
     const error = new Error(lockedUntil ? "Conta bloqueada por 15 minutos apos tentativas incorretas." : "Usuario ou senha invalidos.");
     error.code = lockedUntil ? "ACCOUNT_LOCKED" : "INVALID_CREDENTIALS";
@@ -752,6 +851,7 @@ function handleLogin(body) {
     userAgent: body.userAgent,
     ipReference: body.ipReference
   });
+  appendLoginAttempt(Object.assign({}, attemptBase, { result: "success", reason: "Login realizado." }));
   return { token: issued.token, session: issued.session, account: sanitizeAccount(updatedAccount) };
 }
 
@@ -1148,7 +1248,7 @@ function issueGateToken(account, deviceId) {
   return { allowed: true, expiresAt: expiresAt, payload: JSON.stringify({ type: "profitness-gate", version: 1, token: token, expiresAt: expiresAt, signature: signature }) };
 }
 
-function validateGateToken(account, rawPayload, deviceId) {
+function validateGateTokenUnlocked(account, rawPayload, deviceId) {
   let payload;
   try {
     payload = typeof rawPayload === "string" ? JSON.parse(rawPayload) : rawPayload;
@@ -1182,6 +1282,16 @@ function validateGateToken(account, rawPayload, deviceId) {
   return result;
 }
 
+function validateGateToken(account, rawPayload, deviceId) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    return validateGateTokenUnlocked(account, rawPayload, deviceId);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function registerGateAttempt(account, tokenRecord, result, reason, deviceId) {
   upsertRow("accessAttempts", {
     id: Utilities.getUuid(), timestamp: new Date().toISOString(), studentId: tokenRecord && tokenRecord.studentId || "", tokenId: tokenRecord && tokenRecord.id || "",
@@ -1190,12 +1300,30 @@ function registerGateAttempt(account, tokenRecord, result, reason, deviceId) {
   return { allowed: result === "allowed", result: result, reason: reason };
 }
 
+function getConfiguredEnvironmentReadOnly() {
+  try {
+    const spreadsheetId = getResolvedSpreadsheetId();
+    if (!spreadsheetId) return "unknown";
+    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const sheet = spreadsheet.getSheetByName(SHEETS.config.sheetName);
+    if (!sheet || sheet.getLastRow() < 2) return "unknown";
+    const headers = getHeaders(sheet);
+    const environmentIndex = headers.indexOf("environment");
+    if (environmentIndex < 0) return "unknown";
+    const value = String(sheet.getRange(2, environmentIndex + 1).getValue() || "").trim().toLowerCase();
+    return value === "production" ? "production" : value === "demo" ? "demo" : "unknown";
+  } catch (error) {
+    return "unknown";
+  }
+}
+
 function getConfiguredEnvironment() {
   try {
     const config = readSheet("config")[0] || {};
-    return String(config.environment || "demo").toLowerCase() === "production" ? "production" : "demo";
+    const value = String(config.environment || "").toLowerCase();
+    return value === "production" ? "production" : value === "demo" ? "demo" : "unknown";
   } catch (error) {
-    return "demo";
+    return "unknown";
   }
 }
 
@@ -1314,7 +1442,7 @@ function initializeDemoAuthentication() {
     expiresAt: addMinutes(now, -120).toISOString(), idleExpiresAt: addMinutes(now, -120).toISOString(), revokedAt: "", revokedReason: "", ipReference: "", userAgentReference: "", sessionVersion: 1
   };
   upsertRow("sessions", expiredSession);
-  Logger.log("Acessos demo: admin.demo, prof.rafael, 000001. Senha: Demo1234");
+  Logger.log("Acessos demonstrativos atualizados com sucesso.");
   return { ok: true, accounts: accounts.map((account) => ({ login: account.login, role: account.role })) };
 }
 

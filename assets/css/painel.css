@@ -7518,3 +7518,87 @@ body.admin-syncing .admin-sync-now { pointer-events: none; opacity: 0.58; }
   .admin-sync-status { flex-wrap: wrap; }
   .admin-sync-status #adminLastSyncText { margin-left: 0; }
 }
+
+
+/* Login seguro: feedback visual e bloqueio de envio repetido */
+form[aria-busy="true"] button[type="submit"] {
+  cursor: wait;
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+form[aria-busy="true"] button[type="submit"]::after {
+  content: "";
+  width: 15px;
+  height: 15px;
+  margin-left: 9px;
+  display: inline-block;
+  vertical-align: -2px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: pf-login-spin 0.75s linear infinite;
+}
+
+@keyframes pf-login-spin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* Gestao administrativa de sessoes e tentativas de login */
+.security-settings-card {
+  min-width: 0;
+}
+
+.security-list article {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.2fr) minmax(180px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.security-list article:last-child {
+  border-bottom: 0;
+}
+
+.security-list article > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.security-list strong,
+.security-list span,
+.security-list small {
+  overflow-wrap: anywhere;
+}
+
+.security-list span,
+.security-list small {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.security-list .security-state {
+  justify-self: start;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: rgba(244, 201, 40, 0.18);
+}
+
+.security-list .security-state.success { background: rgba(55, 138, 76, 0.14); color: #256236; }
+.security-list .security-state.danger { background: rgba(183, 55, 55, 0.13); color: #8f2727; }
+.security-list .security-state.neutral { background: rgba(68, 68, 68, 0.09); color: #555; }
+
+@media (max-width: 1000px) {
+  .security-list article {
+    grid-template-columns: 1fr;
+  }
+}

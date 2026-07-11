@@ -14,6 +14,7 @@ const hash = (relativePath) => crypto.createHash("sha256").update(fs.readFileSyn
 
 const javascriptFiles = [
   "assets/js/finance-core.js",
+  "assets/js/demo-data.js",
   "assets/js/shared-data.js",
   "assets/js/app.js",
   "assets/js/painel.js",
@@ -48,7 +49,7 @@ const apiContext = {
 };
 vm.runInNewContext(`${apiSource}\nthis.__apiTest = { SHEETS, CURRENT_SCHEMA_VERSION, getSnapshotResourceNames, buildConfigSnapshotMetadata, validateCompleteSnapshot, normalizePartialSnapshot, hasDeleteConflict, resolveResourceName, derivePasswordCredential, constantTimeEqual, getSessionPolicy, sanitizeSession, getAccountPermissions, hasPermission, authorizeGenericOperation, normalizeLogin };`, apiContext);
 const api = apiContext.__apiTest;
-assert.equal(api.CURRENT_SCHEMA_VERSION, 6, "schemaVersion da API deve ser 6");
+assert.equal(api.CURRENT_SCHEMA_VERSION, 7, "schemaVersion da API deve ser 7");
 
 for (const [resource, definition] of Object.entries(api.SHEETS)) {
   const headers = [...definition.headers];
@@ -63,6 +64,7 @@ assert.ok(api.SHEETS.accounts, "API deve possuir Contas");
 assert.ok(api.SHEETS.sessions, "API deve possuir Sessoes");
 assert.ok(api.SHEETS.gateTokens, "API deve possuir tokens temporarios de acesso");
 assert.ok(api.SHEETS.accessAttempts, "API deve auditar tentativas de acesso");
+assert.ok(api.SHEETS.loginAttempts, "API deve auditar tentativas de login");
 assert.ok(api.SHEETS.students.headers.includes("enrollmentNumber"), "Aluno deve possuir numero de matricula");
 assert.ok(api.SHEETS.students.headers.includes("accountId"), "Aluno deve vincular uma conta");
 assert.ok(!api.getSnapshotResourceNames().includes("accounts"), "Snapshot nao deve exportar contas");
@@ -117,7 +119,7 @@ const metadataConfig = JSON.parse(JSON.stringify(api.buildConfigSnapshotMetadata
 assert.deepEqual(metadataConfig.plans, originalConfig.plans, "Atualizacao de metadados deve preservar planos");
 assert.deepEqual(metadataConfig.modalities, originalConfig.modalities, "Atualizacao de metadados deve preservar modalidades");
 assert.deepEqual(metadataConfig.costCenters, originalConfig.costCenters, "Atualizacao de metadados deve preservar centros de custo");
-assert.equal(metadataConfig.schemaVersion, 6);
+assert.equal(metadataConfig.schemaVersion, 7);
 
 const completeApiSnapshot = Object.fromEntries(api.getSnapshotResourceNames().map((resource) => [resource, []]));
 assert.equal(api.validateCompleteSnapshot(completeApiSnapshot), undefined);
@@ -132,12 +134,18 @@ const partial = JSON.parse(JSON.stringify(api.normalizePartialSnapshot({ student
 assert.deepEqual(Object.keys(partial), ["students"], "Importacao parcial deve manter somente colecoes enviadas");
 assert.match(apiSource, /action === "importpartial"/, "API deve implementar importPartial");
 assert.match(apiSource, /METHOD_NOT_ALLOWED/, "API deve bloquear leituras publicas fora do health");
+const healthBlock = apiSource.slice(apiSource.indexOf("function doGet"), apiSource.indexOf("function doPost"));
+assert.doesNotMatch(healthBlock, /ensureApiReady/, "Health publico nao deve executar migracao");
 assert.match(apiSource, /SETUP_NOT_PUBLIC/, "Setup nao deve ser exposto pelo Web App");
 assert.match(apiSource, /RESTAURAR DEMONSTRACAO/, "Restauracao demo deve exigir frase reforcada");
 assert.match(apiSource, /DriveApp\.getFileById/, "Restauracao demo deve criar copia da planilha antes de importar");
 assert.match(apiSource, /getConfiguredEnvironment\(\) !== "demo"/, "Restauracao demo deve ser recusada em producao");
 assert.match(apiSource, /action === "requestgatetoken"/, "QR deve ser emitido somente para aluno autenticado");
 assert.match(apiSource, /action === "validategate"/, "Leitor deve validar QR no servidor");
+assert.match(apiSource, /LockService\.getScriptLock\(\)/, "Validacao do QR deve usar trava atomica");
+assert.match(apiSource, /action === "listloginattempts"/, "Administrador deve consultar tentativas de login");
+assert.match(apiSource, /action === "revokeaccountsessions"/, "Administrador deve encerrar todas as sessoes de uma conta");
+assert.match(apiSource, /action === "unlocksession"/, "Tablet deve desbloquear a sessao atual sem novo login");
 assert.match(apiSource, /Codigo ja utilizado/, "QR deve detectar reutilizacao");
 assert.match(apiSource, /action === "studentbootstrap"/, "API deve fornecer pacote individual autenticado");
 assert.match(apiSource, /\["workoutSessions", "exerciseSets"\]/, "Aluno deve alterar somente sessoes e series proprias");
@@ -146,6 +154,7 @@ assert.match(apiSource, /action === "receivepayment"/, "Recebimento do professor
 assert.match(apiSource, /action === "staffpresenceupsert"/, "Presenca do professor deve validar a conta autenticada");
 assert.match(apiSource, /ensureApiReady/, "API deve usar verificacao leve nas requisicoes comuns");
 assert.match(apiSource, /buildAuditLogEntry/, "API deve gerar log tecnico reduzido");
+assert.doesNotMatch(apiSource, /Logger\.log\([^\n]*Demo1234/, "Senha demonstrativa nao deve aparecer no Logger");
 assert.equal(api.hasDeleteConflict({ updatedAt: "2026-07-11T10:00:00.000Z" }, "2026-07-11T10:00:00.000Z"), false);
 assert.equal(api.hasDeleteConflict({ updatedAt: "2026-07-11T10:05:00.000Z" }, "2026-07-11T10:00:00.000Z"), true, "Exclusao deve detectar edicao remota posterior");
 
@@ -265,7 +274,12 @@ assert.doesNotMatch(professorHtml, /Caixa diario|Despesas da academia|Relatorios
 assert.match(panelHtml, /id="adminSyncStatus"/, "Painel deve mostrar status de sincronizacao");
 assert.match(panelHtml, /id="adminLoginForm"/, "Painel administrativo deve exigir login");
 assert.match(panelHtml, /id="accountForm"/, "Painel deve gerenciar contas sem editar a planilha manualmente");
+assert.match(panelHtml, /id="sessionList"/, "Painel deve listar sessoes ativas");
+assert.match(panelHtml, /id="loginAttemptList"/, "Painel deve listar tentativas de login");
 assert.match(panelJs, /listAccountsRemote/, "Painel deve listar contas pela API protegida");
+assert.match(panelJs, /listSessionsRemote/, "Painel deve consultar sessoes pela API protegida");
+assert.match(panelJs, /listLoginAttemptsRemote/, "Painel deve consultar tentativas de login");
+assert.match(panelJs, /revokeSessionRemote/, "Painel deve revogar sessoes individuais");
 assert.match(panelHtml, /id="adminPendingSyncButton"/, "Painel deve permitir reenviar pendencias");
 assert.match(panelHtml, /id="paymentRulesForm"/, "Painel deve configurar alertas e bloqueio do aluno");
 assert.match(panelJs, /ADMIN_SYNC_QUEUE_PREFIX/, "Painel deve possuir fila persistente por conta");
@@ -294,7 +308,7 @@ assert.match(studentHtml, /id="workoutSessionDialog"/, "App deve possuir execuca
 assert.match(studentHtml, /id="studentLoginForm"/, "App do aluno deve pedir matricula e senha");
 assert.match(studentHtml, /id="studentPasswordChangeForm"/, "App deve exigir troca da senha temporaria");
 assert.doesNotMatch(studentHtml, /id="restoreDemoButton"/, "App publicado nao deve expor restauracao de demonstracao");
-assert.match(studentJs, /loginStudent\("000001", "Demo1234"\)/, "Demonstracao deve usar uma conta ficticia autenticada");
+assert.doesNotMatch(studentHtml, /futureLoginButton|Acessar demonstracao/, "Login do aluno nao deve exibir botao de demonstracao");
 assert.match(professorJs, /exerciseId/, "Professor deve preservar vinculo com catalogo de exercicios");
 assert.match(professorHtml, /data-student-module="resultados"/, "Professor deve analisar treinos realizados");
 assert.match(professorJs, /renderProfessorTrainingResults/, "Professor deve ver sessoes, series, carga, dor e dificuldade");
@@ -306,6 +320,19 @@ assert.ok(exists("manifest.webmanifest"), "PWA deve possuir manifesto");
 assert.ok(exists("sw.js"), "PWA deve possuir service worker");
 assert.doesNotMatch(read("sw.js"), /apiBaseUrl|script\.google\.com/, "Service worker nao deve armazenar respostas autenticadas da API");
 assert.doesNotMatch(read("assets/css/style.css"), /font-size:\s*0\.49rem/, "Interface mobile nao deve usar fonte de 0.49rem");
+
+assert.match(read("assets/js/shared-data.js"), /function loginDemoLocal/, "Store deve oferecer login demonstrativo local");
+assert.match(read("assets/js/shared-data.js"), /clearAuthenticatedLocalData/, "Sessao invalida deve limpar dados locais");
+assert.match(read("assets/js/shared-data.js"), /validateAuthSessionRemote/, "Interfaces devem validar revogacao e expiracao no servidor");
+assert.match(professorJs, /unlockSessionRemote/, "Desbloqueio do tablet nao deve criar uma nova sessao");
+assert.match(studentJs + professorJs + panelJs, /setFormBusy/, "Logins devem bloquear duplo clique e mostrar processamento");
+assert.match(read("assets/js/shared-data.js"), /LOCAL_DEMO_ACCOUNTS/, "Credenciais demo devem ser limitadas ao ambiente demo");
+assert.doesNotMatch(professorHtml, /profDemoLoginButton|Acessar como professor demonstrativo/, "Login do professor nao deve exibir botao de demonstracao");
+assert.doesNotMatch(panelHtml, /adminDemoLoginButton|Acessar demonstracao administrativa/, "Login administrativo nao deve exibir botao de demonstracao");
+assert.match(read("assets/js/shared-data.js"), /LOCAL_DEMO_ACCOUNTS\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
+assert.match(studentHtml, /assets\/js\/demo-data\.js/, "Aluno deve carregar a base demo incorporada");
+assert.match(professorHtml, /assets\/js\/demo-data\.js/, "Professor deve carregar a base demo incorporada");
+assert.match(panelHtml, /assets\/js\/demo-data\.js/, "Administrador deve carregar a base demo incorporada");
 
 if (packageMode) {
   const allowedRootFiles = new Set(["index.html", "painel.html", "prof.html", "api.txt", "HISTORICO_DESENVOLVIMENTO.txt", "manifest.webmanifest", "sw.js"]);
@@ -319,7 +346,7 @@ if (packageMode) {
 }
 assert.match(read("HISTORICO_DESENVOLVIMENTO.txt"), /ULTIMA ATUALIZACAO: 11\/07\/2026/);
 assert.match(read("docs/estrutura-planilha.md"), /presenceSource/);
-assert.match(read("docs/sheets-api-setup.md"), /schemaVersion: 6/);
+assert.match(read("docs/sheets-api-setup.md"), /schemaVersion: 7/);
 const demoTool = read("tools/generate-demo-data.mjs");
 assert.match(demoTool, /PersonalPro-backups/, "Gerador deve salvar backups fora do projeto por padrao");
 assert.doesNotMatch(demoTool, /payload:\s*JSON\.stringify/, "Gerador nao deve recriar payload integral no log");

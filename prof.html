@@ -9,14 +9,14 @@
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="assets/css/prof.css?v=20260711-auth6" rel="stylesheet"/>
+<link href="assets/css/prof.css?v=20260711-auth8" rel="stylesheet"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 </head>
 <body>
 <div class="environment-badge" data-environment-badge hidden></div>
 <section class="prof-auth-view" id="profAuthView">
 <div class="prof-auth-visual"><img alt="Pro Fitness Academia" src="assets/images/pro-fitness-fachada.png"/><div><strong>PRO FITNESS</strong><span>PAINEL DO PROFESSOR</span></div></div>
-<div class="prof-auth-card" id="profLoginCard"><p class="prof-view-kicker">TABLET DA EQUIPE</p><h1>Identifique-se para continuar</h1><p>Cada registro ficara vinculado ao professor autenticado.</p><form id="profLoginForm" class="prof-auth-form"><label>Usuario<input name="login" autocomplete="username" required/></label><label>Senha<input type="password" name="password" autocomplete="current-password" required/></label><button class="primary-action" type="submit">Entrar</button></form><button class="text-button" id="profDemoLoginButton" type="button">Acessar como professor demonstrativo</button><p id="profLoginFeedback" class="prof-auth-feedback" aria-live="polite"></p></div>
+<div class="prof-auth-card" id="profLoginCard"><p class="prof-view-kicker">TABLET DA EQUIPE</p><h1>Identifique-se para continuar</h1><p>Cada registro ficara vinculado ao professor autenticado.</p><form id="profLoginForm" class="prof-auth-form"><label>Usuario<input name="login" autocomplete="username" required/></label><label>Senha<input type="password" name="password" autocomplete="current-password" required/></label><button class="primary-action" type="submit">Entrar</button></form><p id="profLoginFeedback" class="prof-auth-feedback" aria-live="polite"></p></div>
 <div class="prof-auth-card" id="profPasswordChangeCard" hidden><p class="prof-view-kicker">PRIMEIRO ACESSO</p><h1>Crie uma nova senha</h1><p>A senha temporaria precisa ser substituida antes de abrir o tablet.</p><form id="profPasswordChangeForm" class="prof-auth-form"><label>Senha temporaria<input type="password" name="currentPassword" required/></label><label>Nova senha<input type="password" name="newPassword" minlength="8" required/></label><label>Confirmar senha<input type="password" name="confirmPassword" minlength="8" required/></label><button class="primary-action" type="submit">Salvar nova senha</button></form><button class="text-button" id="cancelProfPasswordChange" type="button">Cancelar</button><p id="profPasswordChangeFeedback" class="prof-auth-feedback" aria-live="polite"></p></div>
 </section>
 <section class="prof-auth-view prof-lock-view" id="profLockView" hidden><div class="prof-auth-card"><p class="prof-view-kicker">TABLET BLOQUEADO</p><h1 id="profLockName">Professor</h1><p>Informe sua senha para retomar ou troque de professor.</p><form id="profUnlockForm" class="prof-auth-form"><label>Senha<input type="password" name="password" autocomplete="current-password" required/></label><button class="primary-action" type="submit">Desbloquear</button></form><button class="text-button" id="profSwitchUserButton" type="button">Trocar professor</button><p id="profUnlockFeedback" class="prof-auth-feedback" aria-live="polite"></p></div></section>
@@ -538,9 +538,10 @@
 </dialog>
 <div aria-live="polite" class="prof-toast" hidden="" id="profToast" role="status"></div>
 <script src="assets/js/app-config.js"></script>
-<script src="assets/js/shared-data.js?v=20260711-auth6"></script>
-<script src="assets/js/finance-core.js?v=20260711-auth6"></script>
-<script src="assets/js/prof.js?v=20260711-auth6"></script>
+<script src="assets/js/demo-data.js?v=20260711-auth8"></script>
+<script src="assets/js/shared-data.js?v=20260711-auth8"></script>
+<script src="assets/js/finance-core.js?v=20260711-auth8"></script>
+<script src="assets/js/prof.js?v=20260711-auth8"></script>
 <script src="assets/js/pwa.js"></script>
 </body>
 </html>

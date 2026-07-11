@@ -4,7 +4,7 @@ A fonte oficial da API e `apps-script/api.gs`. Depois de substituir a API, execu
 
 ## Versao da estrutura
 
-- `schemaVersion`: **6**
+- `schemaVersion`: **7**
 - A versao fica registrada nas propriedades do Apps Script e na aba `Config`.
 - Requisicoes comuns nao reformatam todas as abas. A preparacao completa ocorre no `setup` ou quando a versao da estrutura precisa ser migrada.
 - O esquema 3 adicionou sessoes de treino e series realizadas; o esquema 4 adicionou autenticacao; o esquema 5 adicionou QR temporario; o esquema 6 preserva logins e matriculas com zeros a esquerda.
@@ -77,6 +77,11 @@ Cada linha representa uma serie prevista ou concluida e permite calcular volume,
 
 ### `TokensAcesso` e `TentativasAcesso` (privadas)
 Guardam somente hash do QR temporario, validade, uso e auditoria da validacao. O token original permanece no celular durante no maximo 60 segundos.
+
+
+### `TentativasLogin` (privada)
+
+Registra somente metadados de autenticacao: `id`, `timestamp`, `login`, `accountId`, `result`, `reason`, `deviceId`, `deviceName` e `userAgentReference`. Nunca armazena senha, token ou hash de senha.
 
 ### `PresencaProfessores`
 `id`, `staffId`, `staffName`, `date`, `clockIn`, `clockOut`, `durationMinutes`, `status`, `source`, `deviceId`, `notes`, `createdAt`, `updatedAt`, `updatedBy`

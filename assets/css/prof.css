@@ -2972,3 +2972,28 @@ body.prof-syncing .status-refresh span {
 
 /* Garante que qualquer elemento marcado como hidden permaneça oculto. */
 [hidden] { display: none !important; }
+
+
+/* Login seguro: feedback visual e bloqueio de envio repetido */
+form[aria-busy="true"] button[type="submit"] {
+  cursor: wait;
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+form[aria-busy="true"] button[type="submit"]::after {
+  content: "";
+  width: 15px;
+  height: 15px;
+  margin-left: 9px;
+  display: inline-block;
+  vertical-align: -2px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: pf-login-spin 0.75s linear infinite;
+}
+
+@keyframes pf-login-spin {
+  to { transform: rotate(360deg); }
+}

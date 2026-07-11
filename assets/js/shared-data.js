@@ -9,8 +9,14 @@
   const LEGACY_STORAGE_KEY = "profitness-data-v0";
   const SESSION_KEY = `${STORAGE_NAMESPACE}-student-session-v1`;
   const AUTH_SESSION_KEY = `${STORAGE_NAMESPACE}-auth-session-v1`;
+  const LOCAL_DEMO_MASTER_KEY = `${STORAGE_NAMESPACE}-demo-master-v1`;
   const API_PLACEHOLDER = "COLE_A_URL_DO_WEB_APP_AQUI";
   const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
+  const LOCAL_DEMO_ACCOUNTS = {
+    "000001": { id: "ACC-DEMO-STUDENT", personType: "student", personId: "ALU-DEMO-001", login: "000001", email: "aluno001@exemplo.com", role: "student", active: true, mustChangePassword: false },
+    "prof.rafael": { id: "ACC-DEMO-PROF", personType: "staff", personId: "USR-PROF-006", login: "prof.rafael", email: "rafael.costa@exemplo.com", role: "professor", active: true, mustChangePassword: false },
+    "admin.demo": { id: "ACC-DEMO-ADMIN", personType: "staff", personId: "USR-ADMIN-001", login: "admin.demo", email: "administracao@exemplo.com", role: "admin", active: true, mustChangePassword: false }
+  };
   const SYNC_DEVICE_KEY = `${STORAGE_NAMESPACE}-sync-device-v1`;
   const SNAPSHOT_RESOURCES = ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "workoutSessions", "exerciseSets", "exercises", "users", "staffTimeEntries", "config", "log"];
   const LEGACY_OPTIONAL_RESOURCES = ["workoutSessions", "exerciseSets"];
@@ -1003,6 +1009,12 @@
       const error = new Error(data.message || "Falha ao comunicar com a API do Sheets.");
       error.code = data.errorCode || "REMOTE_ERROR";
       error.remoteStatus = data.status || 0;
+      if (["INVALID_SESSION", "SESSION_EXPIRED", "ACCOUNT_INACTIVE", "AUTH_REQUIRED"].includes(String(error.code || ""))) {
+        clearAuthenticatedLocalData();
+        if (typeof window?.dispatchEvent === "function" && typeof window?.CustomEvent === "function") {
+          window.dispatchEvent(new window.CustomEvent("profitness:auth-invalid", { detail: { code: error.code, message: error.message } }));
+        }
+      }
       throw error;
     }
 
@@ -1017,9 +1029,154 @@
     };
   }
 
+  function getEmbeddedDemoSnapshot() {
+    const embedded = window.PROFITNESS_DEMO_DATA && (window.PROFITNESS_DEMO_DATA.snapshot || window.PROFITNESS_DEMO_DATA);
+    return migrateData(embedded && typeof embedded === "object" ? clone(embedded) : buildDemoData());
+  }
+
+  function isLocalDemoSession(session) {
+    const current = session || loadAuthSession();
+    return Boolean(current && current.localDemo === true);
+  }
+
+  function createLocalDemoSession(account) {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString();
+    const session = {
+      token: `LOCAL-DEMO-${account.role}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      localDemo: true,
+      account: clone(account),
+      session: {
+        id: `SES-LOCAL-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        accountId: account.id,
+        deviceId: getSyncDeviceId(),
+        deviceName: `${navigator?.platform || "Web"} - demonstracao local`,
+        createdAt: now.toISOString(),
+        lastUsedAt: now.toISOString(),
+        expiresAt,
+        idleExpiresAt: expiresAt,
+        sessionVersion: 1
+      }
+    };
+    const demoSnapshot = getEmbeddedDemoSnapshot();
+    localStorage.setItem(LOCAL_DEMO_MASTER_KEY, JSON.stringify(demoSnapshot));
+    saveData(demoSnapshot);
+    return saveAuthSession(session);
+  }
+
+  async function loginDemoLocal(login, password) {
+    if (!isDemoEnvironment()) throw new Error("A demonstracao local nao esta disponivel neste ambiente.");
+    const normalizedLogin = String(login || "").trim().toLowerCase();
+    if (String(password || "") !== "Demo1234" || !LOCAL_DEMO_ACCOUNTS[normalizedLogin]) {
+      throw new Error("Credencial demonstrativa invalida.");
+    }
+    return createLocalDemoSession(LOCAL_DEMO_ACCOUNTS[normalizedLogin]);
+  }
+
+  function getLocalDemoStudentBootstrap(account) {
+    const snapshot = StoreSafeDemoSnapshot();
+    const studentId = String(account?.personId || "");
+    const student = snapshot.students.find((item) => String(item.id) === studentId);
+    if (!student) throw new Error("Aluno demonstrativo nao encontrado.");
+    const own = (resource) => (snapshot[resource] || []).filter((item) => String(item.studentId) === studentId);
+    const workouts = own("workouts");
+    const exerciseIds = new Set();
+    workouts.forEach((workout) => (Array.isArray(workout.exerciseItems) ? workout.exerciseItems : []).forEach((item) => {
+      if (item.exerciseId) exerciseIds.add(String(item.exerciseId));
+    }));
+    return {
+      student: clone(student),
+      workouts: clone(workouts),
+      exercises: clone((snapshot.exercises || []).filter((item) => exerciseIds.has(String(item.id)))),
+      workoutSessions: clone(own("workoutSessions")),
+      exerciseSets: clone(own("exerciseSets")),
+      schedule: clone((snapshot.schedule || []).filter((item) => !item.studentId || String(item.studentId) === studentId)),
+      checkins: clone(own("checkins")),
+      assessments: clone(own("assessments")),
+      payments: clone(own("payments")),
+      config: clone((snapshot.config || []).slice(0, 1))
+    };
+  }
+
+  function getLocalDemoProfessorBootstrap(account) {
+    const snapshot = StoreSafeDemoSnapshot();
+    const profile = (snapshot.users || []).find((item) => String(item.id) === String(account?.personId));
+    return {
+      students: clone(snapshot.students || []),
+      assessments: clone(snapshot.assessments || []),
+      workouts: clone(snapshot.workouts || []),
+      schedule: clone(snapshot.schedule || []),
+      checkins: clone(snapshot.checkins || []),
+      workoutSessions: clone(snapshot.workoutSessions || []),
+      exerciseSets: clone(snapshot.exerciseSets || []),
+      exercises: clone(snapshot.exercises || []),
+      users: profile ? [clone(profile)] : [],
+      staffTimeEntries: clone((snapshot.staffTimeEntries || []).filter((item) => String(item.staffId) === String(account?.personId))),
+      config: clone((snapshot.config || []).slice(0, 1))
+    };
+  }
+
+  function StoreSafeDemoSnapshot() {
+    if (isLocalDemoSession()) {
+      try {
+        const master = JSON.parse(localStorage.getItem(LOCAL_DEMO_MASTER_KEY) || "null");
+        if (master && snapshotHasMeaningfulData(master)) return migrateData(master);
+      } catch (error) {
+        // Recria a base oficial abaixo quando o cache local estiver invalido.
+      }
+    }
+    const current = loadData();
+    if (snapshotHasMeaningfulData(current)) return current;
+    const demo = getEmbeddedDemoSnapshot();
+    localStorage.setItem(LOCAL_DEMO_MASTER_KEY, JSON.stringify(demo));
+    saveData(demo);
+    return demo;
+  }
+
   async function loginRemote(login, password) {
+    const normalizedLogin = String(login || "").trim().toLowerCase();
+    if (isDemoEnvironment() && LOCAL_DEMO_ACCOUNTS[normalizedLogin] && String(password || "") === "Demo1234") {
+      return loginDemoLocal(normalizedLogin, password);
+    }
     const data = await requestRemote("POST", { action: "login", login: String(login || ""), password: String(password || ""), ...getDeviceDescriptor() });
     return saveAuthSession(data.data);
+  }
+
+  async function unlockSessionRemote(password) {
+    const current = loadAuthSession();
+    if (!current) throw new Error("Sessao nao encontrada.");
+    if (isLocalDemoSession(current)) {
+      if (String(password || "") !== "Demo1234") throw new Error("Senha incorreta.");
+      const now = new Date();
+      const refreshed = {
+        ...current,
+        session: {
+          ...(current.session || {}),
+          lastUsedAt: now.toISOString(),
+          idleExpiresAt: new Date(now.getTime() + 15 * 60 * 1000).toISOString()
+        }
+      };
+      return saveAuthSession(refreshed);
+    }
+    const data = await requestRemote("POST", { action: "unlockSession", password: String(password || "") });
+    return saveAuthSession({ ...data.data, token: current.token });
+  }
+
+  async function validateAuthSessionRemote(options) {
+    const settings = options || {};
+    const current = loadAuthSession();
+    if (!current) return null;
+    if (isLocalDemoSession(current)) return current;
+    if (navigator?.onLine === false && settings.allowOffline !== false) return current;
+    try {
+      const data = await requestRemote("POST", { action: "session" });
+      return saveAuthSession({ ...data.data, token: current.token });
+    } catch (error) {
+      if (settings.allowOffline !== false && !["INVALID_SESSION", "SESSION_EXPIRED", "ACCOUNT_INACTIVE", "AUTH_REQUIRED"].includes(String(error.code || ""))) {
+        return current;
+      }
+      throw error;
+    }
   }
 
   async function changePasswordRemote(currentPassword, newPassword) {
@@ -1028,17 +1185,49 @@
   }
 
   async function logoutRemote() {
+    const session = loadAuthSession();
     try {
-      if (loadAuthSession()) await requestRemote("POST", { action: "logout" });
+      if (session && !isLocalDemoSession(session)) await requestRemote("POST", { action: "logout" });
     } catch (error) {
       // A sessao local sempre deve ser removida, mesmo se ja expirou no servidor.
     } finally {
-      clearAuthSession();
+      clearAuthenticatedLocalData();
     }
   }
 
   async function listAccountsRemote() {
+    const current = loadAuthSession();
+    if (isLocalDemoSession(current)) return Object.values(LOCAL_DEMO_ACCOUNTS).map((account) => ({ ...clone(account), permissions: [] }));
     return (await requestRemote("POST", { action: "listAccounts" })).data || [];
+  }
+
+  async function listSessionsRemote() {
+    const current = loadAuthSession();
+    if (isLocalDemoSession(current)) return current?.session ? [{ ...current.session, accountId: current.account?.id || "", accountLogin: current.account?.login || "", accountRole: current.account?.role || "", state: "active" }] : [];
+    const data = await requestRemote("POST", { action: "listSessions" });
+    return Array.isArray(data.data) ? data.data : [];
+  }
+
+  async function revokeSessionRemote(sessionId) {
+    const current = loadAuthSession();
+    if (isLocalDemoSession(current)) {
+      if (String(current?.session?.id || "") === String(sessionId || "")) clearAuthenticatedLocalData();
+      return { revoked: true };
+    }
+    return (await requestRemote("POST", { action: "revokeSession", sessionId })).data;
+  }
+
+  async function revokeAccountSessionsRemote(accountId) {
+    const current = loadAuthSession();
+    if (isLocalDemoSession(current)) return { revoked: 0 };
+    return (await requestRemote("POST", { action: "revokeAccountSessions", accountId })).data;
+  }
+
+  async function listLoginAttemptsRemote() {
+    const current = loadAuthSession();
+    if (isLocalDemoSession(current)) return [];
+    const data = await requestRemote("POST", { action: "listLoginAttempts" });
+    return Array.isArray(data.data) ? data.data : [];
   }
 
   async function createAccountRemote(account) {
@@ -1058,34 +1247,75 @@
   }
 
   async function requestGateTokenRemote() {
+    const session = loadAuthSession();
+    if (isLocalDemoSession(session)) {
+      const student = StoreSafeDemoSnapshot().students.find((item) => String(item.id) === String(session.account.personId));
+      const expiresAt = new Date(Date.now() + 60000).toISOString();
+      return { allowed: true, payload: `PROFITNESS|DEMO|${student?.id || session.account.personId}|${Date.now()}`, expiresAt, student: student ? { id: student.id, name: student.name } : null };
+    }
     return (await requestRemote("POST", { action: "requestGateToken", deviceId: getSyncDeviceId() })).data;
   }
 
   async function validateGateRemote(payload) {
+    const session = loadAuthSession();
+    if (isLocalDemoSession(session)) {
+      const match = String(payload || "").match(/^PROFITNESS\|DEMO\|([^|]+)\|/);
+      const student = match ? StoreSafeDemoSnapshot().students.find((item) => String(item.id) === String(match[1])) : null;
+      return student ? { allowed: true, result: "liberado", reason: "Acesso demonstrativo liberado.", student: { id: student.id, name: student.name } } : { allowed: false, result: "recusado", reason: "Codigo demonstrativo invalido." };
+    }
     return (await requestRemote("POST", { action: "validateGate", payload, deviceId: getSyncDeviceId() })).data;
   }
 
   async function fetchRemoteSnapshot() {
+    if (isLocalDemoSession()) return clone(StoreSafeDemoSnapshot());
     const data = await requestRemote("POST", { action: "exportAll" });
     return data.data && data.data.snapshot ? data.data.snapshot : data.data || {};
   }
 
   async function fetchStudentBootstrap() {
+    const session = loadAuthSession();
+    if (isLocalDemoSession(session)) return getLocalDemoStudentBootstrap(session.account);
     const data = await requestRemote("POST", { action: "studentBootstrap" });
     return data.data || {};
   }
 
   async function fetchProfessorBootstrap() {
+    const session = loadAuthSession();
+    if (isLocalDemoSession(session)) return getLocalDemoProfessorBootstrap(session.account);
     const data = await requestRemote("POST", { action: "professorBootstrap" });
     return data.data || {};
   }
 
   async function fetchProfessorPaymentContext(studentId, reference) {
+    if (isLocalDemoSession()) {
+      const snapshot = StoreSafeDemoSnapshot();
+      const student = snapshot.students.find((item) => String(item.id) === String(studentId));
+      if (!student) throw new Error("Aluno nao encontrado.");
+      const payment = (snapshot.payments || []).find((item) => String(item.studentId) === String(studentId) && String(item.reference) === String(reference)) || null;
+      return { student: { id: student.id, name: student.name, plan: student.plan }, reference, payment: payment ? clone(payment) : null, suggestedAmount: Number(payment?.amount || student.monthlyFee || 0) };
+    }
     const data = await requestRemote("POST", { action: "paymentContext", studentId, reference });
     return data.data || {};
   }
 
   async function receivePaymentRemote(payment) {
+    if (isLocalDemoSession()) {
+      const snapshot = StoreSafeDemoSnapshot();
+      const normalized = createPaymentRecord({ ...payment, id: payment.id || uid("PG"), updatedAt: new Date().toISOString(), source: "demonstracao-local" });
+      const index = snapshot.payments.findIndex((item) => String(item.id) === String(normalized.id));
+      if (index >= 0) snapshot.payments[index] = normalized; else snapshot.payments.unshift(normalized);
+      const student = snapshot.students.find((item) => String(item.id) === String(normalized.studentId));
+      const movement = createMovementRecord({
+        id: uid("MOV"), date: normalized.paidAt || todayISO(), time: formatTime(new Date().toISOString()), type: "entrada", category: "mensalidade",
+        description: `Mensalidade ${normalized.reference} - ${student?.name || "Aluno"}`, amount: normalized.paidAmount || normalized.netAmount || normalized.amount,
+        method: normalized.method || "pix", account: "caixa-principal", studentId: normalized.studentId, paymentId: normalized.id, status: "confirmado",
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), source: "demonstracao-local"
+      });
+      snapshot.movements.unshift(movement);
+      localStorage.setItem(LOCAL_DEMO_MASTER_KEY, JSON.stringify(snapshot));
+      saveData(snapshot);
+      return { payment: clone(normalized), movement: clone(movement), student: student ? { id: student.id, name: student.name, plan: student.plan } : null };
+    }
     const data = await requestRemote("POST", { action: "receivePayment", data: payment });
     return data.data || {};
   }
@@ -1302,11 +1532,42 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(migrateData(data)));
   }
 
+  function getAuthSessionExpiry(session) {
+    const absolute = new Date(session?.session?.expiresAt || "").getTime();
+    const idle = new Date(session?.session?.idleExpiresAt || "").getTime();
+    const candidates = [absolute, idle].filter(Number.isFinite);
+    return candidates.length ? Math.min(...candidates) : 0;
+  }
+
+  function isAuthSessionLocallyValid(session) {
+    if (!session?.token || !session?.account) return false;
+    const expiry = getAuthSessionExpiry(session);
+    return !expiry || expiry > Date.now();
+  }
+
+  function clearAuthenticatedLocalData() {
+    [AUTH_SESSION_KEY, SESSION_KEY, STORAGE_KEY, LOCAL_DEMO_MASTER_KEY].forEach((key) => localStorage.removeItem(key));
+    if (typeof localStorage?.length === "number" && typeof localStorage?.key === "function") {
+      const keys = [];
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (key && key.startsWith(STORAGE_NAMESPACE) && key !== SYNC_DEVICE_KEY) keys.push(key);
+      }
+      keys.forEach((key) => localStorage.removeItem(key));
+    }
+  }
+
   function loadAuthSession() {
     try {
       const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || "null");
-      return session && session.token && session.account ? session : null;
+      if (!session || !session.token || !session.account) return null;
+      if (!isAuthSessionLocallyValid(session)) {
+        clearAuthenticatedLocalData();
+        return null;
+      }
+      return session;
     } catch (error) {
+      clearAuthenticatedLocalData();
       return null;
     }
   }
@@ -1319,6 +1580,28 @@
 
   function clearAuthSession() {
     localStorage.removeItem(AUTH_SESSION_KEY);
+  }
+
+  function setFormBusy(form, busy, label) {
+    if (!form) return;
+    const submit = form.querySelector('button[type="submit"], input[type="submit"]');
+    form.dataset.busy = busy ? "true" : "false";
+    form.setAttribute("aria-busy", busy ? "true" : "false");
+    if (!submit) return;
+    if (busy) {
+      if (!submit.dataset.originalLabel) submit.dataset.originalLabel = submit.textContent || submit.value || "Entrar";
+      submit.disabled = true;
+      if (submit.tagName === "INPUT") submit.value = label || "Entrando...";
+      else submit.textContent = label || "Entrando...";
+    } else {
+      submit.disabled = false;
+      const original = submit.dataset.originalLabel;
+      if (original) {
+        if (submit.tagName === "INPUT") submit.value = original;
+        else submit.textContent = original;
+      }
+      delete submit.dataset.originalLabel;
+    }
   }
 
   function resetData() {
@@ -1628,6 +1911,7 @@
     appendLog: appendLog,
     clearStudentSession: clearStudentSession,
     clearAuthSession: clearAuthSession,
+    clearAuthenticatedLocalData: clearAuthenticatedLocalData,
     clone: clone,
     changePasswordRemote: changePasswordRemote,
     createCode: createCode,
@@ -1673,8 +1957,14 @@
     loadData: loadData,
     loadAuthSession: loadAuthSession,
     listAccountsRemote: listAccountsRemote,
+    listSessionsRemote: listSessionsRemote,
+    listLoginAttemptsRemote: listLoginAttemptsRemote,
     loadStudentSession: loadStudentSession,
     loginRemote: loginRemote,
+    unlockSessionRemote: unlockSessionRemote,
+    validateAuthSessionRemote: validateAuthSessionRemote,
+    loginDemoLocal: loginDemoLocal,
+    isLocalDemoSession: isLocalDemoSession,
     migrateData: migrateData,
     normalizeSnapshot: normalizeSnapshot,
     logoutRemote: logoutRemote,
@@ -1685,10 +1975,14 @@
     receivePaymentRemote: receivePaymentRemote,
     resetData: resetData,
     resetPasswordRemote: resetPasswordRemote,
+    revokeSessionRemote: revokeSessionRemote,
+    revokeAccountSessionsRemote: revokeAccountSessionsRemote,
     requestGateTokenRemote: requestGateTokenRemote,
     restoreDemoRemote: restoreDemoRemote,
     saveData: saveData,
     saveAuthSession: saveAuthSession,
+    setFormBusy: setFormBusy,
+    isAuthSessionLocallyValid: isAuthSessionLocallyValid,
     saveStudentSession: saveStudentSession,
     setupRemoteSpreadsheet: setupRemoteSpreadsheet,
     snapshotHasMeaningfulData: snapshotHasMeaningfulData,
