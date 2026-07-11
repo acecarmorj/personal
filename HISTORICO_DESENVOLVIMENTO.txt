@@ -1414,3 +1414,4 @@ ATUALIZACAO - 2026-07-11 - NOVO APLICATIVO MOBILE DO ALUNO
 - Verificacao final confirmou API publica em `schemaVersion: 3`, 16 recursos e frontend atualizado em `https://acecarmorj.github.io/personal/`.
 - Auditoria de encerramento identificou que alunos ficticios ja ativos nao conseguiam passar pela matricula e ainda nao havia login; criado acesso demonstrativo restrito a IDs `ALU-DEMO-*`.
 - O acesso demonstrativo grava sessao `demo-preview`, usa somente dados ficticios existentes e nao e habilitado automaticamente em uma base real sem esses IDs.
+- Correcao publicada pelo commit `b4000ff`; workflow `29159144358` concluido com sucesso e verificacao publica confirmou botao, restricao aos IDs ficticios e cache `20260711-aluno-v2`.
