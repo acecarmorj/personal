@@ -20,6 +20,12 @@
  */
 
 const SPREADSHEET_ID_PROPERTY = "PROFITNESS_SPREADSHEET_ID";
+const TEXT_HEADERS = [
+  "id", "studentId", "workoutId", "teacherId", "paymentId", "expenseId", "staffId", "recordId", "deviceId",
+  "phone", "birthDate", "date", "time", "startTime", "endTime", "reference", "dueDate", "paidAt", "closedAt",
+  "checkedInAt", "checkedOutAt", "clockIn", "clockOut", "createdAt", "updatedAt", "lastLogin", "lastSnapshotAt",
+  "enrollmentToken", "enrollmentCompletedAt", "gateCode", "lastGateSyncAt", "reversedAt", "voidedAt", "timestamp"
+];
 
 const SHEETS = {
   students: {
@@ -37,6 +43,7 @@ const SHEETS = {
       "monthlyFee",
       "notes",
       "createdAt",
+      "updatedAt",
       "enrollmentToken",
       "enrollmentStatus",
       "enrollmentCompletedAt",
@@ -44,20 +51,23 @@ const SHEETS = {
       "accessBlockReason",
       "gateCode",
       "lastGateSyncAt",
-      "avatarUrl"
+      "avatarUrl",
+      "updatedBy",
+      "source",
+      "deviceId"
     ]
   },
   assessments: {
     sheetName: "Avaliacoes",
-    headers: ["id", "studentId", "date", "weight", "height", "imc", "bodyFat", "chest", "waist", "hip", "arm", "thigh", "photos", "notes"]
+    headers: ["id", "studentId", "date", "weight", "height", "imc", "bodyFat", "chest", "waist", "hip", "arm", "thigh", "photos", "notes", "updatedAt", "updatedBy", "source", "deviceId"]
   },
   workouts: {
     sheetName: "Treinos",
-    headers: ["id", "studentId", "title", "division", "muscleGroup", "exercises", "sets", "reps", "load", "rest", "status", "notes", "createdAt"]
+    headers: ["id", "studentId", "title", "division", "muscleGroup", "exercises", "exerciseItems", "sets", "reps", "load", "rest", "status", "notes", "createdAt", "updatedAt", "updatedBy", "source", "deviceId"]
   },
   exercises: {
     sheetName: "Exercicios",
-    headers: ["id", "name", "muscleGroup", "equipment", "videoUrl", "notes"]
+    headers: ["id", "name", "muscleGroup", "equipment", "videoUrl", "notes", "updatedAt", "updatedBy", "source", "deviceId"]
   },
   schedule: {
     sheetName: "Agenda",
@@ -79,24 +89,28 @@ const SHEETS = {
       "location",
       "capacity",
       "recurring",
-      "scheduleKind"
+      "scheduleKind",
+      "updatedAt",
+      "updatedBy",
+      "source",
+      "deviceId"
     ]
   },
   payments: {
     sheetName: "Pagamentos",
-    headers: ["id", "studentId", "reference", "amount", "discount", "fine", "netAmount", "dueDate", "status", "method", "paidAt", "description", "createdAt", "notes"]
+    headers: ["id", "studentId", "reference", "amount", "discount", "fine", "netAmount", "paidAmount", "dueDate", "status", "method", "paidAt", "recordedBy", "reversalReason", "reversedBy", "reversedAt", "description", "createdAt", "updatedAt", "notes", "updatedBy", "source", "deviceId"]
   },
   movements: {
     sheetName: "Movimentacoes",
-    headers: ["id", "date", "time", "type", "category", "description", "amount", "method", "account", "studentId", "paymentId", "expenseId", "status", "createdAt", "notes"]
+    headers: ["id", "date", "time", "type", "category", "description", "amount", "method", "account", "costCenter", "studentId", "paymentId", "expenseId", "status", "voidReason", "voidedBy", "voidedAt", "createdAt", "updatedAt", "notes", "updatedBy", "source", "deviceId"]
   },
   expenses: {
     sheetName: "Despesas",
-    headers: ["id", "description", "supplier", "category", "amount", "dueDate", "status", "paidAt", "method", "account", "recurring", "document", "createdAt", "notes"]
+    headers: ["id", "description", "supplier", "category", "amount", "dueDate", "status", "paidAt", "method", "account", "costCenter", "recurring", "recurrenceId", "document", "createdAt", "updatedAt", "notes", "updatedBy", "source", "deviceId"]
   },
   cashClosings: {
     sheetName: "Fechamentos",
-    headers: ["id", "date", "openingBalance", "cashIncome", "cashExpense", "expectedCash", "countedCash", "difference", "totalIncome", "totalExpense", "closedBy", "closedAt", "notes"]
+    headers: ["id", "date", "openingBalance", "cashIncome", "cashExpense", "expectedCash", "countedCash", "difference", "totalIncome", "totalExpense", "closedBy", "closedAt", "notes", "updatedAt", "updatedBy", "source", "deviceId"]
   },
   checkins: {
     sheetName: "Checkins",
@@ -114,16 +128,24 @@ const SHEETS = {
       "usedLoad",
       "difficulty",
       "pain",
-      "notes"
+      "notes",
+      "updatedAt",
+      "updatedBy",
+      "source",
+      "deviceId"
     ]
   },
   users: {
     sheetName: "Usuarios",
-    headers: ["id", "name", "email", "passwordHash", "role", "status", "lastLogin"]
+    headers: ["id", "name", "email", "passwordHash", "role", "status", "lastLogin", "updatedAt", "updatedBy", "source", "deviceId"]
+  },
+  staffTimeEntries: {
+    sheetName: "PontoProfessores",
+    headers: ["id", "staffId", "staffName", "date", "clockIn", "clockOut", "durationMinutes", "status", "source", "deviceId", "notes", "createdAt", "updatedAt", "updatedBy"]
   },
   config: {
     sheetName: "Config",
-    headers: ["id", "appName", "timezone", "currency", "logoUrl", "supportPhone", "apiBaseUrl", "lastSnapshotAt"]
+    headers: ["id", "appName", "timezone", "currency", "logoUrl", "supportPhone", "apiBaseUrl", "lastSnapshotAt", "plans", "modalities", "costCenters", "updatedAt", "updatedBy", "source", "deviceId"]
   },
   log: {
     sheetName: "Log",
@@ -191,7 +213,7 @@ function doPost(e) {
     }
 
     if (action === "importall") {
-      ensureSpreadsheetStructure();
+      const setup = ensureSpreadsheetStructure();
       const snapshot = normalizeSnapshot(body.snapshot || {});
       importAllData(snapshot);
       appendLog({
@@ -201,7 +223,18 @@ function doPost(e) {
         recordId: "",
         payload: JSON.stringify({ keys: Object.keys(snapshot) })
       });
-      return jsonResponse({ ok: true, data: exportAllData() });
+      const imported = {};
+      Object.keys(snapshot).forEach((key) => {
+        imported[key] = snapshot[key].length;
+      });
+      return jsonResponse({
+        ok: true,
+        data: {
+          spreadsheetId: setup.spreadsheetId,
+          spreadsheetUrl: setup.spreadsheetUrl,
+          imported: imported
+        }
+      });
     }
 
     const resource = (body.resource || "").toLowerCase();
@@ -306,6 +339,7 @@ function ensureSheetStructure(spreadsheet, resource, definition) {
   }
 
   formatSheet(sheet, Math.max(getHeaders(sheet).length, definition.headers.length));
+  formatTextColumns(sheet, getHeaders(sheet));
 
   return {
     resource: resource,
@@ -430,6 +464,7 @@ function rewriteSheet(resource, rows) {
 
   sheet.clearContents();
   writeHeaders(sheet, headers);
+  formatTextColumns(sheet, headers);
 
   if (values.length) {
     sheet.getRange(2, 1, values.length, headers.length).setValues(values);
@@ -472,8 +507,12 @@ function upsertRow(resource, payload) {
     throw new Error("A aba precisa ter a coluna id.");
   }
 
-  const normalized = normalizePayload(headers, payload);
   const records = readSheet(resource);
+  const incoming = Object.assign({}, payload);
+  const serverTimestamp = new Date().toISOString();
+  if (headers.includes("updatedAt") && !incoming.updatedAt) incoming.updatedAt = serverTimestamp;
+  if (headers.includes("source") && !incoming.source) incoming.source = "api";
+  const normalized = normalizePayload(headers, incoming);
   const existingIndex = records.findIndex((row) => String(row.id) === String(normalized.id));
 
   if (!normalized.id) {
@@ -483,12 +522,27 @@ function upsertRow(resource, payload) {
   const rowValues = headers.map((header) => serializeValue(normalized[header]));
 
   if (existingIndex >= 0) {
+    const existing = records[existingIndex];
+    if (isIncomingRecordOlder(existing, normalized)) {
+      return Object.assign({}, existing, {
+        _conflict: true,
+        _conflictMessage: "Existe uma versao mais recente deste registro na planilha."
+      });
+    }
     sheet.getRange(existingIndex + 2, 1, 1, headers.length).setValues([rowValues]);
   } else {
     sheet.appendRow(rowValues);
   }
 
   return normalized;
+}
+
+function isIncomingRecordOlder(existing, incoming) {
+  if (!existing || !incoming || !existing.updatedAt || !incoming.updatedAt) return false;
+  const existingTime = new Date(existing.updatedAt).getTime();
+  const incomingTime = new Date(incoming.updatedAt).getTime();
+  if (isNaN(existingTime) || isNaN(incomingTime)) return false;
+  return incomingTime < existingTime;
 }
 
 function deleteRow(resource, id) {
@@ -566,6 +620,15 @@ function formatSheet(sheet, columnsCount) {
   sheet.setFrozenRows(1);
   sheet.getRange(1, 1, 1, columnsCount).setFontWeight("bold").setBackground("#17323d").setFontColor("#ffffff");
   sheet.autoResizeColumns(1, columnsCount);
+}
+
+function formatTextColumns(sheet, headers) {
+  const dataRows = Math.max(1, sheet.getMaxRows() - 1);
+  headers.forEach((header, index) => {
+    if (TEXT_HEADERS.includes(header)) {
+      sheet.getRange(2, index + 1, dataRows, 1).setNumberFormat("@");
+    }
+  });
 }
 
 function normalizePayload(headers, payload) {

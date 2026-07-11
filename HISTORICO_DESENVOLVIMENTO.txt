@@ -1,25 +1,46 @@
 PRO FITNESS ACADEMIA - HISTORICO DE DESENVOLVIMENTO
-==========================================
+=====================================================
 
-Ultima atualizacao: 10/07/2026
-Objetivo: manter um registro objetivo das mudancas para continuidade por outra IA ou desenvolvedor.
+ULTIMA ATUALIZACAO: 10/07/2026
 
-REGRA DE CONTINUIDADE
----------------------
-Ao finalizar qualquer nova alteracao, acrescente uma nova entrada com data, arquivos envolvidos,
-comportamento entregue e validacao realizada. Se apps-script/api.gs for alterado, atualize tambem api.txt.
+ATENCAO OBRIGATORIA PARA QUALQUER IA OU DESENVOLVEDOR
+-----------------------------------------------------
+1. LEIA ESTE ARQUIVO INTEIRO ANTES DE ALTERAR O PROGRAMA.
+2. ESTE ARQUIVO DEVE SER ATUALIZADO EM TODA NOVA ALTERACAO, SEM EXCECAO.
+3. REGISTRE A DATA, OS ARQUIVOS ALTERADOS, O QUE FOI MUDADO E AS VALIDACOES REALIZADAS.
+4. NAO ENTREGUE UMA NOVA VERSAO SEM ACRESCENTAR A RESPECTIVA ENTRADA NESTE HISTORICO.
+5. MANTENHA SOMENTE UMA VERSAO ATIVA DE CADA ARQUIVO. NAO CRIE COPIAS, BACKUPS OU ARQUIVOS ANTIGOS DENTRO DO PROJETO.
+   EXCECAO OBRIGATORIA: api.txt, NA RAIZ, DEVE SER UMA COPIA TEXTUAL IDENTICA DE apps-script/api.gs.
+6. QUANDO UM ARQUIVO FOR ATUALIZADO, SOBRESCREVA A VERSAO ANTERIOR E REGISTRE A ALTERACAO NESTE HISTORICO.
+
+REGRAS FIXAS DO PROJETO
+-----------------------
+- O foco atual e o painel administrativo completo em painel.html, para computador/notebook de 15 polegadas.
+- O painel desktop deve priorizar leitura facil, fontes confortaveis, operacao rapida e ausencia de textos explicativos.
+- Nao adaptar painel.html como painel principal de celular. O painel movel sera criado depois, separado e resumido.
+- Ao receber pedido exclusivo sobre o painel administrativo, nao alterar o app do aluno sem necessidade direta.
+- A raiz do projeto deve conter somente os HTML ativos, api.txt e o HISTORICO_DESENVOLVIMENTO.txt. CSS, JavaScript, documentacao e configuracoes devem permanecer em pastas.
+- Nao recolocar copias soltas de CSS, JavaScript, GS ou Markdown na raiz. A unica excecao permitida e api.txt.
+- api.txt deve ser atualizado sempre que apps-script/api.gs for alterado e deve permanecer com conteudo identico.
+- Nao manter pasta de arquivos antigos, rascunhos, backups ou copias duplicadas dentro do projeto.
+- Todo arquivo atualizado deve substituir diretamente sua versao anterior.
+- Referencias a arquivos antigos em entradas historicas registram o que existia naquela data; a ESTRUTURA ATUAL acima e a unica estrutura valida.
 
 ESTRUTURA ATUAL
 ---------------
 D:\PersonalPro\
-  index.html                         App do aluno, pensado para celular.
-  painel.html                        Painel administrativo, pensado para computador.
-  api.txt                            Copia textual da API do Google Apps Script.
-  HISTORICO_DESENVOLVIMENTO.txt      Este arquivo de continuidade.
-  assets\css\                       Estilos do app e do painel.
-  assets\js\                        Configuracao, dados compartilhados e logica das telas.
-  apps-script\api.gs                Fonte principal da API para Google Apps Script.
-  docs\                             Guia de planilha e guia de integracao.
+  index.html                         App do aluno.
+  painel.html                        Painel administrativo desktop.
+  api.txt                           Copia textual obrigatoria e identica de apps-script\api.gs.
+  HISTORICO_DESENVOLVIMENTO.txt      Registro obrigatorio de todas as alteracoes.
+  assets\css\                       Estilos ativos do app e do painel.
+  assets\js\                        Configuracao, dados compartilhados e logica ativa.
+  assets\images\                    Imagens utilizadas pelas telas.
+  apps-script\api.gs                Fonte principal editavel da API do Google Apps Script.
+  apps-script\appsscript.json        Manifesto do Apps Script.
+  apps-script\.clasp.json            Vinculo local do clasp; executar o clasp dentro desta pasta.
+  docs\                             Guias atuais da planilha e da integracao.
+  .github\workflows\               Publicacao automatica no GitHub Pages.
 
 HISTORICO
 ---------
@@ -238,3 +259,1029 @@ PROXIMOS PONTOS RECOMENDADOS
 - Instalado e autorizado o clasp 3.3.0 com a conta acecarmorj@gmail.com.
 - Projeto Apps Script vinculado localmente pelo Script ID 1PN1oVX1AvRHPJpZfm3pWiJ38BBz2X2eYeW5IIfcrytyORYt48rX55oc_.
 - A configuracao local do clasp usa apps-script como raiz e preserva o manifesto V8 da implantacao atual.
+
+[10/07/2026] Diretriz desktop e cabecalho mais compacto
+- Confirmado que painel.html sera o painel administrativo completo para uso em computador/notebook.
+- O painel administrativo atual nao sera adaptado como painel principal de celular; futuramente sera criado um painel movel separado e resumido.
+- Definido como referencia de uso um notebook de 15 polegadas e operador com dificuldade visual.
+- A altura do cabecalho do painel foi reduzida, incluindo espacos internos e area da foto, para liberar mais espaco vertical sem diminuir a legibilidade do texto.
+- Adicionado ajuste especifico para notebooks com tela de menor altura, mantendo o cabecalho ainda mais compacto.
+- Removido do aplicativo do aluno o link "Painel desktop".
+- Registrada como prioridade de design a busca rapida do aluno para recebimento de mensalidade, com fluxo simples e poucos cliques.
+
+2026-07-11 - Ajuste de legibilidade do painel desktop
+- Mantido o cabecalho compacto.
+- Aumentados e uniformizados textos pequenos para uso em notebook de 15 polegadas.
+- Rotulos de formularios passaram a ter tamanho e peso mais legiveis.
+- Campos de texto, datas, meses, buscas e seletores receberam fonte maior e altura minima de 48 px.
+- Botoes e abas, inclusive Competencia, Lancar no caixa, Nova despesa e Nova mensalidade, foram ampliados e padronizados.
+- Tabelas financeiras, mensalidades, caixa, despesas, grade semanal e textos auxiliares receberam tamanho minimo mais confortavel.
+- Ajustes aplicados somente ao painel desktop; o painel mobile separado sera criado posteriormente.
+
+[10/07/2026] Limpeza operacional de todas as abas e organizacao definitiva da raiz
+- Arquivos alterados: painel.html, assets/css/painel.css, assets/js/painel.js, HISTORICO_DESENVOLVIMENTO.txt e apps-script/.clasp.json.
+- Arquivos reorganizados: copias antigas de JS, CSS, GS e Markdown foram retiradas da raiz e preservadas em arquivo-antigo/raiz-anterior.
+- O rascunho painel-static.html foi retirado da raiz e movido para arquivo-antigo/rascunhos.
+- A raiz passou a conter somente index.html, painel.html, api.txt e HISTORICO_DESENVOLVIMENTO.txt, alem das pastas do projeto.
+- Criado arquivo-antigo/LEIA_ANTES.txt para avisar que os arquivos arquivados nao sao carregados e nao devem ser editados.
+- .clasp.json foi movido para apps-script/.clasp.json e rootDir foi ajustado para ".". Para usar o clasp, entrar na pasta apps-script antes dos comandos.
+- Inserido no inicio deste historico um aviso obrigatorio para toda IA ou desenvolvedor atualizar o arquivo em cada nova alteracao, sem excecao.
+- Registrada como regra permanente a organizacao da raiz somente com HTML e TXT.
+- Removidos do painel os textos institucionais, explicativos e decorativos que ocupavam espaco sem ajudar na operacao.
+- Removidos os subtitulos pequenos da navegacao principal.
+- O cabecalho ficou somente com identificacao da secao e acoes uteis; a imagem e as descricoes do cabecalho foram retiradas.
+- A Visao geral ficou somente com data, botao Gerenciar alunos, indicadores, graficos e agenda.
+- Alunos e treinos ficou somente com filtros, lista, ficha e acoes do aluno.
+- Grade semanal ficou somente com formulario, filtros, lista e acoes da programacao.
+- Financeiro ficou somente com competencia, botoes de acao, abas, filtros, dados e formularios.
+- A lista de mensalidades passou a usar o titulo "Localizar aluno" para deixar clara a acao principal.
+- A busca por aluno nas mensalidades foi ampliada visualmente e recebe foco automatico ao abrir a aba Mensalidades.
+- O botao Novo aluno foi reposicionado como primeira acao do cabecalho.
+- Mantido o cabecalho compacto e aumentado o tamanho minimo de textos, rotulos, resultados, tabelas, badges e dados auxiliares.
+- Campos e seletores permaneceram com fonte de 16 px ou maior e a busca de mensalidades ficou com 54 px de altura.
+- Nenhuma regra de seguranca, login, API ou permissao foi alterada nesta etapa.
+- Nenhuma funcao operacional existente foi removida; a mudanca foi de organizacao, hierarquia visual e praticidade.
+
+[10/07/2026] Remocao definitiva de arquivos duplicados
+- Arquivos removidos: api.txt e toda a pasta arquivo-antigo.
+- A API passou a possuir somente uma fonte ativa: apps-script/api.gs.
+- As copias antigas da raiz, o rascunho painel-static.html e os arquivos de backup foram excluidos definitivamente.
+- A raiz passou a conter somente index.html, painel.html e HISTORICO_DESENVOLVIMENTO.txt.
+- Mantidos nas pastas apenas os arquivos atuais utilizados pelo sistema.
+- Atualizado o aviso obrigatorio deste historico: futuras alteracoes devem sobrescrever o arquivo anterior, sem criar copias, backups ou versoes antigas dentro do projeto.
+- Atualizada a descricao da estrutura atual para refletir a organizacao sem duplicatas.
+- Validado que nao existem dois arquivos com conteudo identico fora dos metadados internos do Git.
+- Validada a sintaxe dos JavaScripts ativos e de apps-script/api.gs.
+- Validados IDs unicos e caminhos locais de CSS, JavaScript e imagens em index.html e painel.html.
+- Confirmada a ausencia dos textos explicativos removidos do painel.
+
+[10/07/2026] Restauracao obrigatoria de api.txt na raiz
+- Arquivos alterados: api.txt e HISTORICO_DESENVOLVIMENTO.txt.
+- Recriado api.txt na raiz como copia textual identica de apps-script/api.gs.
+- Definido que api.txt e a unica duplicacao permitida no projeto, por solicitacao expressa do responsavel.
+- apps-script/api.gs continua sendo a fonte principal editavel da API.
+- Sempre que apps-script/api.gs for alterado, api.txt deve ser sobrescrito na mesma entrega para permanecer identico.
+- A raiz valida passa a conter index.html, painel.html, api.txt e HISTORICO_DESENVOLVIMENTO.txt.
+- Validado que api.txt e apps-script/api.gs possuem conteudo byte a byte identico.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - CABECALHO COM FOTO + AJUSTE DE HORARIOS
+======================================================================
+ALTERACOES REALIZADAS NESTA ETAPA
+- Recolocada a foto da fachada no cabecalho do painel administrativo.
+- Cabecalho redesenhado para ficar mais bonito e compacto, sem perder a foto.
+- Criado wordmark "PRO FITNESS" em preto e amarelo no topo do painel para combinar com a fachada.
+- Corrigida a exibicao de horarios no painel e no app do aluno para nao mostrar textos longos no formato ISO, como 1899-12-30T09:06:28.000Z.
+- Horarios agora devem aparecer no formato curto HH:MM.
+- Mantida a regra de registrar cada alteracao relevante neste arquivo.
+
+LEMBRETE PERMANENTE PARA QUALQUER IA OU PESSOA QUE ALTERAR O PROJETO
+- Este arquivo HISTORICO_DESENVOLVIMENTO.txt deve ser atualizado em TODA nova alteracao do programa.
+- Sempre sobrescrever os arquivos antigos, sem manter duplicatas desnecessarias.
+- Manter api.txt na raiz sincronizado com apps-script/api.gs.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - PACOTE LIMPO E REGRA DE EXTRACAO
+======================================================================
+- Confirmado que a raiz oficial do projeto deve conter somente:
+  * index.html
+  * painel.html
+  * api.txt
+  * HISTORICO_DESENVOLVIMENTO.txt
+- Os demais arquivos ficam exclusivamente em suas pastas (.github, apps-script, assets e docs).
+- Arquivos antigos soltos na raiz, como app.js, painel.js, shared-data.js, app-config.js, style.css, painel.css, api.gs, .clasp.json e documentos .md, NAO fazem parte da versao atual.
+- O ZIP deve ser extraido em uma pasta vazia. Extrair por cima de uma pasta antiga nao remove arquivos que deixaram de existir e pode manter copias obsoletas.
+- Antes de instalar uma nova versao, apagar ou renomear a pasta PersonalPro anterior e depois extrair o ZIP limpo.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - CABECALHO SOMENTE COM FOTO E NOVO FLUXO DE ALUNOS
+======================================================================
+ALTERACOES REALIZADAS
+- Retirados do cabecalho os textos PF, PRO FITNESS, ACADEMIA e o titulo da secao.
+- Retirados do cabecalho os botoes Novo aluno, App do aluno e Ferramentas.
+- O cabecalho passou a exibir somente a foto da fachada, ocupando toda a largura superior do painel.
+- App do aluno e Ferramentas foram movidos para uma area utilitaria ao lado da navegacao principal.
+- O botao Novo aluno foi movido para a aba Alunos e treinos.
+- Criada uma barra operacional na aba Alunos e treinos com busca por nome, telefone, e-mail, plano ou objetivo.
+- Adicionado contador de alunos de acordo com a busca e os filtros selecionados.
+- Ao criar novo aluno, a busca e o filtro sao limpos para garantir que o cadastro novo fique visivel.
+- Mantidos os filtros Todos, Liberados, Bloqueados e Matricula pendente.
+- Atualizada a versao do CSS no painel.html para evitar carregamento de estilos antigos pelo cache.
+
+DIRECAO DE DESIGN DEFINIDA PARA A PROXIMA ETAPA
+- A aba Alunos e treinos deve ser redesenhada profundamente para uso rapido em notebook de 15 polegadas.
+- A interface deve priorizar busca, selecao do aluno e acoes principais, evitando textos explicativos.
+- O cadastro, os treinos, as avaliacoes, a agenda e os acessos devem ficar mais claros e menos apertados.
+- Todas as novas alteracoes devem continuar sendo registradas neste arquivo.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - CARTOES COMPACTOS DA GRADE SEMANAL
+======================================================================
+ALTERACOES REALIZADAS
+- Reduzida a altura dos cartoes da lista administrativa da Grade semanal.
+- Dia e horario ficaram em um bloco amarelo menor.
+- Modalidade, dia, titulo e status foram reorganizados horizontalmente.
+- Horario, professor, local e limite de alunos passaram para uma linha compacta.
+- Observacoes longas agora ocupam somente uma linha, com reticencias quando necessario.
+- Botoes Editar, Desativar/Ativar e Excluir foram alinhados a direita no desktop.
+- Mantida adaptacao para larguras menores sem perder os botoes.
+- Atualizada a versao do CSS no painel.html para evitar carregamento do estilo antigo pelo cache.
+
+REGRA PERMANENTE
+- Toda alteracao do programa deve ser registrada neste HISTORICO_DESENVOLVIMENTO.txt.
+- Manter api.txt sincronizado com apps-script/api.gs quando a API for alterada.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - ALUNOS E TREINOS - FASES 1 E 2
+======================================================================
+FASE 1 - LISTA DE ALUNOS SIMPLIFICADA
+- Removido o botao "Abrir" dos cartoes de alunos.
+- O cartao inteiro passou a ser clicavel e tambem acionavel por teclado.
+- Cada cartao mostra somente nome, plano, situacao da mensalidade e situacao do acesso.
+- Nome do aluno recebeu fonte maior e o aluno selecionado permanece destacado.
+
+FASE 2 - CABECALHO FIXO DO ALUNO SELECIONADO
+- Criado cabecalho fixo na area direita, sem foto do aluno.
+- O cabecalho mostra nome, plano, telefone, status administrativo, mensalidade e acesso.
+- Incluidos os indicadores solicitados: ultima presenca, total de presencas e primeira presenca.
+- Incluidas acoes rapidas: receber mensalidade, editar cadastro, novo treino, nova avaliacao e registrar presenca.
+- O botao de presenca registra entrada manual; quando o aluno esta dentro, passa a registrar a saida.
+- O cabecalho permanece visivel durante a navegacao na ficha em telas de computador.
+- Atualizados os parametros de versao de CSS e JavaScript para evitar cache antigo.
+
+LEMBRETE PERMANENTE
+- Continuar trabalhando somente sobre esta versao atualizada.
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em toda nova alteracao.
+- Nao entregar ZIP intermediario: o ZIP sera entregue somente apos concluir as cinco fases.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - REORGANIZACAO ALUNOS E TREINOS - PASSO 3
+======================================================================
+ALTERACOES REALIZADAS
+- Removida a aba separada "Resumo" da area do aluno.
+- As informacoes principais permanecem no cabecalho fixo criado no Passo 2.
+- A navegacao do aluno foi reduzida para cinco abas: Ficha, Treinos, Avaliacoes, Agenda e Acesso.
+- A antiga aba "Cadastro" passou a se chamar "Ficha".
+- A antiga aba "Acessos" passou a se chamar "Acesso".
+- A aba Ficha agora e a aba inicial ao selecionar ou criar um aluno.
+- O historico do aluno foi preservado e transferido para o final da aba Ficha.
+- Os atalhos "Editar cadastro" e "Novo aluno" agora abrem diretamente a aba Ficha.
+- A barra de abas foi uniformizada em cinco colunas no desktop.
+- Atualizada a versao do CSS para evitar carregamento do estilo antigo pelo cache.
+
+STATUS DAS CINCO FASES
+- Passo 1: concluido - lista de alunos simplificada.
+- Passo 2: concluido - cabecalho fixo do aluno e presencas.
+- Passo 3: concluido - cinco abas operacionais.
+- Passo 4: pendente - reorganizar os formularios em blocos praticos.
+- Passo 5: pendente - pagamento direto com dados preenchidos automaticamente.
+
+LEMBRETE PERMANENTE
+- Atualizar este arquivo em toda alteracao do programa.
+- Trabalhar sempre sobre a ultima versao consolidada.
+- Entregar o ZIP somente ao final das cinco fases desta reorganizacao.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - REORGANIZACAO ALUNOS E TREINOS - PASSO 4
+======================================================================
+PASSO 4 DE 5 CONCLUIDO - FICHA DO ALUNO REORGANIZADA
+
+ALTERACOES REALIZADAS
+- A antiga ficha longa foi dividida em quatro blocos operacionais:
+  1. Dados pessoais.
+  2. Plano e mensalidade.
+  3. Saude e restricoes.
+  4. Acesso ao aplicativo.
+- Os quatro blocos foram organizados em duas colunas no desktop para reduzir a altura total da ficha.
+- Em telas menores, os blocos passam automaticamente para uma coluna.
+- Mantidos todos os campos existentes do cadastro.
+- Incluido o campo Valor mensal, usando o campo monthlyFee que ja existia na estrutura de dados.
+- Corrigido o salvamento do aluno para gravar o valor mensal informado na ficha.
+- O botao Salvar aluno foi colocado em uma barra fixa na parte inferior da ficha.
+- A barra de salvamento permanece visivel durante a rolagem.
+- Campos e rotulos receberam tamanhos mais uniformes e legiveis.
+- O Historico do aluno continua abaixo da ficha.
+- Nenhum ZIP foi gerado nesta etapa, conforme pedido do usuario. O ZIP sera entregue somente depois do Passo 5.
+
+PROXIMO PASSO
+- Passo 5: pagamento diretamente pelo aluno selecionado, abrindo o Financeiro com aluno, valor, competencia, vencimento e forma de pagamento preenchidos.
+
+LEMBRETE PERMANENTE
+- Atualizar este arquivo em TODA alteracao do sistema.
+- Trabalhar somente sobre a ultima versao consolidada.
+- Nao criar copias antigas dentro do projeto.
+- Manter api.txt sincronizado com apps-script/api.gs sempre que a API for alterada.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - REORGANIZACAO ALUNOS E TREINOS - PASSO 5
+======================================================================
+PASSO 5 DE 5 CONCLUIDO - RECEBIMENTO DIRETO DA MENSALIDADE
+
+ALTERACOES REALIZADAS
+- O botao "Receber mensalidade" do cabecalho fixo do aluno agora abre diretamente Financeiro > Mensalidades.
+- O aluno selecionado e preenchido automaticamente no formulario.
+- A competencia atual e selecionada automaticamente.
+- O valor e preenchido pelo Valor mensal salvo na ficha; se estiver vazio, o sistema usa o valor da mensalidade mais recente.
+- O vencimento e preenchido automaticamente usando o mesmo dia da mensalidade anterior; quando nao ha historico, usa o dia 10.
+- A forma de pagamento reutiliza a forma da cobranca atual ou da mensalidade mais recente; sem historico, usa Pix.
+- O fluxo de recebimento deixa o status como Pago e preenche a data de recebimento com a data atual, mas so grava depois da confirmacao no botao.
+- A situacao anterior da cobranca continua visivel no quadro do formulario: paga, pendente, vencida ou ainda nao gerada.
+- O painel filtra a competencia atual e o nome do aluno para facilitar a conferencia.
+- O formulario recebeu o titulo "Receber mensalidade" e o botao "Confirmar recebimento".
+- A edicao normal de mensalidades e a criacao de novas cobrancas continuam funcionando com titulos e botoes proprios.
+- O visual do editor foi destacado sem aumentar excessivamente o tamanho da tela.
+
+VALIDACAO DAS CINCO FASES
+- Passo 1: concluido - lista de alunos simplificada e cartao inteiro clicavel.
+- Passo 2: concluido - cabecalho fixo sem foto, com dados, presencas e acoes rapidas.
+- Passo 3: concluido - cinco abas: Ficha, Treinos, Avaliacoes, Agenda e Acesso.
+- Passo 4: concluido - ficha dividida em Dados pessoais, Plano e mensalidade, Saude e restricoes e Acesso ao aplicativo.
+- Passo 5: concluido - recebimento direto com dados preenchidos automaticamente.
+
+REGRAS PERMANENTES DO PROJETO
+- Trabalhar sempre sobre a ultima versao consolidada.
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em TODA alteracao do programa.
+- Sobrescrever arquivos antigos; nao manter duplicatas desnecessarias.
+- A raiz deve conter apenas os HTML, os TXT e as pastas organizadas do projeto.
+- api.txt deve permanecer na raiz e sincronizado com apps-script/api.gs sempre que a API for alterada.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - FINANCEIRO FASE 1 DE 5
+======================================================================
+OBJETIVO DESTA FASE
+- Reorganizar o topo do modulo Financeiro para atendimento rapido.
+- Reduzir os indicadores principais para quatro informacoes essenciais.
+
+ALTERACOES REALIZADAS
+- Criada barra operacional unica no topo do Financeiro.
+- A barra agora possui somente: Competencia, busca de aluno, Receber mensalidade, Nova despesa e Novo lancamento.
+- A busca rapida aceita nome, telefone, e-mail, ID, codigo de matricula, codigo de acesso e plano.
+- Pressionar Enter na busca executa o fluxo de recebimento.
+- O botao Receber mensalidade abre o fluxo do aluno localizado com a competencia atual.
+- Removidos botoes duplicados de nova mensalidade, novo lancamento e nova despesa dos cabecalhos internos.
+- O resumo financeiro passou a mostrar quatro indicadores compactos: Recebido, Pendente, Vencido e Saldo do caixa.
+- O indicador Recebido considera mensalidades pagas da competencia selecionada.
+- O indicador Saldo do caixa considera entradas menos saidas do mesmo mes.
+- Controles e indicadores foram compactados e padronizados para notebook de 15 polegadas.
+- Atualizada a versao do CSS no painel.html para impedir carregamento do estilo antigo pelo cache.
+
+NAO ALTERADO NESTA FASE
+- Estrutura detalhada da lista de mensalidades.
+- Janela/formulario de recebimento rapido.
+- Historico completo de pagamentos do aluno.
+- Caixa, despesas e relatorios alem da remocao dos botoes duplicados.
+
+PROXIMA FASE
+- Fase 2: reformular a lista de mensalidades e melhorar a localizacao do aluno.
+
+LEMBRETE PERMANENTE
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em toda alteracao do programa.
+- Trabalhar sempre sobre a ultima versao consolidada.
+- Manter api.txt sincronizado com apps-script/api.gs.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - FINANCEIRO FASE 2
+LISTA DE MENSALIDADES E BUSCA COMPLETA DO ALUNO
+======================================================================
+ALTERACOES REALIZADAS
+- A lista de mensalidades passou a ser organizada por aluno na competencia selecionada.
+- Cada linha agora mostra separadamente: aluno, plano, competencia, vencimento, valor, status e acao.
+- A competencia passou a aparecer por extenso, por exemplo: Julho de 2026.
+- A busca passou a localizar por nome, telefone, e-mail, codigo interno, codigo de matricula, codigo de acesso e plano.
+- Alunos que ainda nao possuem cobranca na competencia agora aparecem com o status "Sem cobranca".
+- Para alunos sem cobranca, o painel calcula uma data prevista usando o historico de vencimento ou o dia 10.
+- O valor mostrado usa a mensalidade cadastrada na ficha ou o ultimo valor conhecido.
+- O filtro ganhou a opcao "Sem cobranca".
+- A lista foi ordenada por prioridade: vencidos, pendentes, sem cobranca e pagos.
+- O botao Receber de uma cobranca existente deixou de gravar o pagamento imediatamente; agora abre o formulario preenchido para confirmacao.
+- O botao Receber de um aluno sem cobranca cria uma preparacao de recebimento para a competencia selecionada.
+- Pagamentos ja realizados mostram o botao "Ver pagamento".
+- As linhas ficaram mais compactas e receberam uma faixa lateral por situacao.
+- Nenhum registro financeiro antigo foi apagado ou substituido.
+
+PROXIMA ETAPA PLANEJADA
+- Financeiro Fase 3: historico completo de pagamentos por aluno e recebimento rapido em uma janela compacta.
+
+LEMBRETE PERMANENTE
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em toda alteracao do programa.
+- Trabalhar sempre sobre a ultima versao consolidada.
+- Entregar o ZIP somente ao final das cinco fases do Financeiro.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - FINANCEIRO FASE 3 DE 5
+HISTORICO DE PAGAMENTOS E RECEBIMENTO RAPIDO
+======================================================================
+FASE 3 CONCLUIDA
+
+ALTERACOES REALIZADAS
+- Criado Historico de pagamentos dentro da aba Ficha de cada aluno.
+- Criado painel individual de historico dentro de Financeiro > Mensalidades.
+- Adicionado resumo financeiro individual com total pago, quantidade de mensalidades pagas, cobrancas em aberto, cobrancas vencidas e ultimo pagamento.
+- Cada registro do historico mostra competencia, vencimento, data do pagamento, valor previsto, desconto, multa/acrescimo, valor final, valor efetivamente pago, forma de pagamento, status, observacao e responsavel pelo lancamento.
+- Adicionado botao Historico em cada linha da lista de mensalidades.
+- Adicionado botao Abrir no Financeiro na Ficha do aluno e botao Abrir ficha no historico financeiro.
+- O formulario longo de mensalidade foi substituido por uma janela compacta de recebimento e edicao.
+- Desconto, multa e observacao ficaram agrupados em Mais opcoes para manter o recebimento rapido.
+- Incluidos os campos paidAmount, recordedBy e updatedAt na estrutura de Pagamentos.
+- A API do Google Sheets e o arquivo api.txt foram atualizados e permanecem identicos.
+- O status Cancelado foi incluido e continua visivel no historico; nenhum botao de exclusao de pagamento foi criado.
+- Pagamentos cancelados nao entram no total previsto, recebido ou no caixa.
+- O movimento de caixa usa o valor efetivamente pago, e nao apenas o valor calculado da mensalidade.
+- Ao alterar uma mensalidade paga para pendente, vencida ou cancelada, o movimento vinculado deixa de compor o caixa, mas o registro da mensalidade permanece no historico.
+- Corrigida a preservacao de valor final igual a zero, inclusive em mensalidades totalmente descontadas.
+- Adicionadas validacoes da data e do valor efetivamente pago.
+- Mantidos todos os pagamentos antigos por competencia; novos recebimentos nao apagam mensalidades anteriores.
+
+VALIDACOES REALIZADAS
+- Sintaxe dos arquivos JavaScript validada.
+- Conferidos IDs do HTML, nomes dos campos do formulario e referencias do JavaScript.
+- Confirmada ausencia de IDs HTML duplicados.
+- Confirmado que api.txt esta sincronizado com apps-script/api.gs.
+- Confirmada a inclusao das novas colunas na estrutura da planilha sem remover colunas existentes.
+
+NAO ALTERADO NESTA FASE
+- Estrutura do Caixa diario e das Despesas, reservada para a Fase 4.
+- Relatorios e comprovantes, reservados para a Fase 5.
+- Login e seguranca, que continuam planejados para etapa posterior do projeto.
+
+PROXIMA FASE
+- Fase 4: compactar Caixa diario e Despesas, melhorar filtros, pagamento de despesas e fechamento do caixa.
+
+LEMBRETE PERMANENTE
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em toda alteracao do programa.
+- Trabalhar sempre sobre a ultima versao consolidada.
+- Nao apagar registros financeiros antigos.
+- Manter api.txt sincronizado com apps-script/api.gs.
+- Entregar o ZIP somente ao final das cinco fases do Financeiro.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - FINANCEIRO FASE 4 DE 5
+CAIXA DIARIO E DESPESAS
+======================================================================
+OBJETIVO DESTA FASE
+- Tornar o Caixa diario e as Despesas mais compactos, claros e rapidos para uso em notebook de 15 polegadas.
+- Manter todos os registros financeiros e vinculos existentes.
+
+ALTERACOES REALIZADAS NO CAIXA DIARIO
+- O topo do Caixa diario passou a mostrar a data selecionada e o estado Caixa aberto ou Caixa fechado.
+- Os quatro indicadores foram reorganizados para mostrar: Saldo inicial, Entradas, Saidas e Saldo atual.
+- O saldo inicial de um novo dia usa como sugestao o dinheiro contado no fechamento anterior, quando existir.
+- A lista de movimentacoes foi transformada em linhas compactas com colunas para horario, descricao, forma/conta, tipo, valor e acao.
+- Entradas receberam identificacao verde e saidas identificacao vermelha.
+- As movimentacoes passaram a ser ordenadas da mais recente para a mais antiga.
+- A busca passou a considerar descricao, categoria e forma de pagamento.
+- O formulario de novo lancamento deixou de ocupar espaco permanentemente e agora aparece somente ao criar ou editar um movimento.
+- O botao Cancelar fecha o editor sem criar registro.
+- A acao Estornar ou Reativar agora solicita confirmacao antes de alterar o movimento.
+- O fechamento foi compactado em uma unica area com Saldo inicial, Dinheiro contado, Responsavel, valores esperados e diferenca.
+- Observacoes do fechamento ficaram recolhidas em uma opcao propria para nao aumentar a altura da tela.
+- O botao muda entre Fechar caixa e Atualizar fechamento conforme o estado do dia.
+- O historico de fechamentos passou a mostrar em linhas compactas: data, responsavel, valor esperado, valor contado e diferenca.
+
+ALTERACOES REALIZADAS EM DESPESAS
+- Criados quatro indicadores compactos: A pagar, Vencidas, Proximos 7 dias e Pagas.
+- Criados filtros rapidos por situacao: Todas, Pendentes, Proximas, Vencidas e Pagas.
+- O filtro Proximas considera despesas pendentes com vencimento nos proximos 7 dias.
+- A lista de despesas foi transformada em linhas compactas com vencimento, descricao, categoria, fornecedor, valor, status e acoes.
+- As despesas sao priorizadas na ordem: vencidas, pendentes e pagas.
+- A busca considera descricao, fornecedor e categoria.
+- O formulario de despesa deixou de ocupar espaco permanentemente e aparece somente ao criar ou editar.
+- O botao Cancelar fecha o editor sem salvar.
+- O pagamento rapido de uma despesa agora solicita confirmacao com descricao e valor antes de registrar.
+- Ao confirmar o pagamento, a despesa continua no historico e o movimento de saida permanece vinculado ao registro.
+
+REGRAS PRESERVADAS
+- Nenhuma mensalidade, movimentacao, despesa ou fechamento antigo foi apagado.
+- Movimentos vinculados a mensalidades e despesas continuam identificados e nao podem ser editados diretamente como movimentos independentes.
+- A API nao precisou de novas colunas nesta fase.
+- api.txt permanece identico a apps-script/api.gs.
+- O ZIP continua reservado para a conclusao da Fase 5.
+
+VALIDACOES REALIZADAS
+- Sintaxe dos arquivos JavaScript validada.
+- Conferidos os IDs do painel e confirmada a ausencia de IDs duplicados.
+- Conferidos os campos dos formularios de movimentos, despesas e fechamento.
+- Confirmado que api.txt esta sincronizado com apps-script/api.gs.
+- Atualizada a versao do CSS no painel.html para evitar cache de estilos anteriores.
+
+PROXIMA FASE
+- Fase 5: reformular Relatorios, criar comprovante de pagamento, integrar o historico financeiro na validacao final e testar as cinco fases.
+
+LEMBRETE PERMANENTE
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em toda alteracao do programa.
+- Trabalhar sempre sobre a ultima versao consolidada.
+- Nao apagar registros financeiros antigos.
+- Manter api.txt sincronizado com apps-script/api.gs.
+- Entregar o ZIP somente ao final das cinco fases do Financeiro.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - FINANCEIRO FASE 5 DE 5 - FINAL
+RELATORIOS, COMPROVANTES E VALIDACAO DAS CINCO FASES
+======================================================================
+INFORMACAO SOBRE A BASE ATUAL
+- Todos os alunos, mensalidades, movimentacoes, despesas, presencas e demais registros atualmente existentes no sistema sao ficticios.
+- Esses dados devem ser tratados somente como demonstracao e testes ate a entrada da base real da academia.
+
+RELATORIOS FINANCEIROS
+- Adicionado filtro por aluno em Financeiro > Relatorios.
+- O filtro permite alternar entre relatorio financeiro geral e relatorio financeiro individual.
+- O relatorio geral continua permitindo filtrar por periodo, tipo de movimento e forma de pagamento.
+- Quando um aluno e selecionado, os movimentos e o historico de mensalidades passam a ser apresentados somente para esse aluno.
+- Criado relatorio individual com nome, plano, telefone, total pago, valores em aberto, valores vencidos e quantidade de registros.
+- O relatorio individual mostra competencia, vencimento, data do pagamento, valor, forma, status e acesso ao comprovante.
+- A exportacao CSV agora respeita o aluno selecionado.
+- Para todos os alunos, o CSV continua exportando movimentacoes.
+- Para um aluno especifico, o CSV exporta o historico completo das mensalidades, incluindo valores, desconto, multa, forma, status, responsavel e observacao.
+
+CONFERENCIA DOS CALCULOS
+- Criado quadro de Conferencia financeira nos relatorios.
+- O quadro compara o total das mensalidades pagas com as entradas de caixa vinculadas aos respectivos pagamentos.
+- A conferencia identifica mensalidade paga sem movimento, valor diferente e movimento duplicado.
+- A diferenca entre pagamentos e entradas vinculadas fica visivel para revisao.
+- A conferencia nao apaga nem altera dados automaticamente; apenas informa possiveis inconsistencias.
+- Pagamentos cancelados e movimentos estornados continuam fora dos totais.
+
+COMPROVANTE DE PAGAMENTO
+- Criado comprovante individual para mensalidades pagas.
+- O comprovante apresenta numero do registro, aluno, plano, telefone, competencia, vencimento, data de pagamento, forma, valor previsto, desconto, multa, valor calculado, valor recebido, responsavel e observacao.
+- Adicionado botao Comprovante no historico financeiro da Ficha do aluno.
+- Adicionado botao Comprovante no historico de Financeiro > Mensalidades.
+- Adicionado botao Comprovante no relatorio individual do aluno.
+- Adicionado botao Comprovante na janela de edicao quando a mensalidade ja esta paga.
+- O comprovante pode ser impresso ou salvo em PDF pelo navegador.
+
+IMPRESSAO E PDF
+- O relatorio geral possui layout proprio de impressao com periodo, totais e movimentacoes.
+- O relatorio individual possui layout proprio de impressao com identificacao, resumo e historico de mensalidades.
+- O sistema escolhe automaticamente qual relatorio imprimir de acordo com o filtro de aluno.
+- Botoes de acao nao aparecem no documento impresso.
+- O comprovante possui layout separado para impressao e PDF.
+
+VALIDACAO FINAL REALIZADA
+- Validada a sintaxe de assets/js/painel.js, assets/js/shared-data.js e assets/js/app.js.
+- Conferidos os IDs do painel e confirmada a ausencia de IDs duplicados.
+- Conferidos os campos dos formularios utilizados pelo JavaScript.
+- Confirmado que api.txt permanece identico a apps-script/api.gs.
+- Confirmada a preservacao dos historicos de pagamentos, despesas, movimentos e fechamentos.
+- Confirmada a estrutura limpa da raiz do projeto.
+
+STATUS FINAL DAS CINCO FASES DO FINANCEIRO
+- Fase 1: concluida - barra operacional e quatro indicadores principais.
+- Fase 2: concluida - lista de mensalidades por aluno e busca completa.
+- Fase 3: concluida - historico individual e recebimento rapido.
+- Fase 4: concluida - caixa diario e despesas compactos.
+- Fase 5: concluida - relatorios, comprovantes, impressao, conferencia e validacao final.
+
+REGRAS PERMANENTES DO PROJETO
+- Trabalhar sempre sobre a ultima versao consolidada.
+- Registrar TODA nova alteracao neste HISTORICO_DESENVOLVIMENTO.txt.
+- Nao apagar historicos financeiros antigos.
+- Sobrescrever arquivos antigos e nao manter duplicatas desnecessarias.
+- A raiz deve conter somente index.html, painel.html, api.txt, HISTORICO_DESENVOLVIMENTO.txt e as pastas organizadas do projeto.
+- Manter api.txt sincronizado com apps-script/api.gs sempre que a API for alterada.
+
+======================================================================
+PAINEL DO PROFESSOR - FASE 1 - 2026-07-11
+======================================================================
+ESCOPO DESTA FASE
+- Criado o arquivo prof.html, exclusivo para o painel do professor em tablet.
+- Criados assets/css/prof.css e assets/js/prof.js.
+- O painel foi desenhado para tablet Samsung de 8,7 polegadas, com suporte a orientacao horizontal e vertical.
+- A foto real da fachada da academia foi usada COMO CABECALHO no topo do aplicativo do professor.
+- Mantida a identidade visual preta e amarela da Pro Fitness.
+- Criada navegacao inferior no modo vertical e lateral no modo horizontal.
+- Criada tela inicial sem textos explicativos, contendo busca rapida, indicadores, alunos presentes e agenda do dia.
+- Criadas telas iniciais de Alunos e Agenda para sustentar as fases seguintes.
+- Criada busca por nome, telefone, plano, e-mail e codigos do aluno.
+- Criada visualizacao operacional compacta do aluno.
+- O professor visualiza somente situacao "Em dia" ou "Inadimplente ha X dias" e acesso liberado/bloqueado.
+- Nao sao exibidos valores, datas de pagamento, formas de pagamento, multas, descontos, historico financeiro, caixa, despesas, relatorios ou botoes de recebimento.
+- Criada leitura de alunos presentes por registros de entrada ainda sem saida.
+- Criada agenda do dia reunindo agendamentos individuais e atividades da grade semanal.
+- Dados continuam compartilhados com painel.html por shared-data.js, app-config.js e a mesma API/planilha.
+
+REGRA PERMANENTE DO PAINEL DO PROFESSOR
+- prof.html e exclusivo do professor e nunca deve receber funcoes administrativas ou detalhes financeiros.
+- Informacao financeira permitida: apenas Em dia/Inadimplente, dias de atraso e acesso liberado/bloqueado.
+- A foto da academia deve permanecer como cabecalho do aplicativo do tablet.
+- Toda alteracao futura deve ser registrada neste HISTORICO_DESENVOLVIMENTO.txt.
+- Trabalhar sempre sobre a ultima versao consolidada e sobrescrever arquivos antigos.
+
+======================================================================
+PAINEL DO PROFESSOR - FASE 2 DE 5 - 2026-07-11
+FICHA DO ALUNO, EDICAO E PRESENCAS NO TABLET
+======================================================================
+OBJETIVO DESTA FASE
+- Criar a ficha operacional completa do aluno dentro de prof.html para uso do professor no tablet.
+- Permitir consulta, edicao e salvamento dos dados necessarios ao acompanhamento do aluno.
+- Manter completamente ocultos valores e detalhes financeiros administrativos.
+
+ALTERACOES REALIZADAS
+- A visualizacao compacta do aluno foi substituida por uma ficha ampla adaptada ao tablet de 8,7 polegadas.
+- Criado cabecalho fixo da ficha com nome e indicadores de status.
+- Mantida a exibicao financeira estritamente operacional: Em dia ou Inadimplente ha X dias.
+- Mantida a exibicao de Acesso liberado ou Acesso bloqueado, sem valores, cobrancas ou datas de pagamento.
+- Criado resumo com plano, telefone, objetivo, ultima presenca, total de presencas, primeira presenca e situacao atual dentro/fora da academia.
+- Restricoes fisicas, dores e cuidados aparecem em um bloco destacado para seguranca do professor e do aluno.
+- Criadas acoes rapidas para Registrar entrada/saida, Novo treino, Nova avaliacao, Abrir agenda e Editar ficha.
+- Registrar entrada e Registrar saida ja funcionam nesta fase e atualizam a mesma base compartilhada com painel.html.
+- Quando o acesso esta bloqueado, o professor recebe um aviso antes de confirmar uma entrada manual.
+- Criado historico compacto das presencas recentes com entrada, saida e origem do registro.
+- Criado modo Somente visualizacao e modo Editando para evitar alteracoes acidentais durante a consulta.
+- A ficha editavel permite alterar nome, telefone, e-mail, data de nascimento, plano, objetivo, restricoes e observacoes do professor.
+- Nenhum campo de valor mensal, pagamento, desconto, multa, caixa, despesa ou historico financeiro foi incluido.
+- O salvamento preserva todos os campos administrativos e financeiros que nao fazem parte da ficha do professor.
+- Criada barra fixa com Cancelar e Salvar ficha durante a edicao.
+- Alteracoes sao salvas localmente, registradas no log e sincronizadas pela mesma API quando configurada.
+- Criadas mensagens de confirmacao de salvamento e aviso de sincronizacao pendente.
+- Os botoes Novo treino, Nova avaliacao e Abrir agenda foram preparados para as fases seguintes sem duplicar logica provisoria.
+
+ARQUIVOS ALTERADOS
+- prof.html
+- assets/css/prof.css
+- assets/js/prof.js
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES REALIZADAS
+- Sintaxe de assets/js/prof.js validada.
+- Sintaxe de assets/js/shared-data.js validada.
+- Conferidos todos os IDs usados por prof.js e confirmada a ausencia de referencias inexistentes.
+- Confirmada a ausencia de IDs duplicados em prof.html.
+- Confirmado que api.txt continua identico a apps-script/api.gs.
+- Confirmado que a foto da academia permanece como cabecalho do painel do professor.
+
+PROXIMA FASE
+- Fase 3: criar o modulo completo de treinos no tablet, incluindo lista, novo treino, edicao, duplicacao, encerramento e exercicios estruturados.
+
+REGRAS PERMANENTES DO PAINEL DO PROFESSOR
+- prof.html e exclusivo do professor e nao deve exibir funcoes administrativas ou detalhes financeiros.
+- Informacao financeira permitida no tablet: somente Em dia/Inadimplente, dias de atraso e acesso liberado/bloqueado.
+- A foto da academia deve permanecer como cabecalho do aplicativo do tablet.
+- Toda alteracao deve ser registrada neste HISTORICO_DESENVOLVIMENTO.txt.
+- Trabalhar sempre sobre a ultima versao consolidada e sobrescrever arquivos antigos.
+- A raiz atual pode conter index.html, painel.html, prof.html, api.txt, HISTORICO_DESENVOLVIMENTO.txt e as pastas organizadas do projeto.
+- O ZIP do painel do professor sera entregue somente ao final da Fase 5.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - RECEBIMENTO NO TABLET ANTES DA FASE 3
+======================================================================
+DECISAO DE ESCOPO
+- Antes da Fase 3 do painel do professor, foi liberada uma unica funcao financeira no tablet: receber mensalidade e dar baixa.
+- O professor continua sem acesso a caixa, despesas, relatorios, historico financeiro completo, descontos globais ou administracao financeira.
+
+ALTERACOES REALIZADAS
+- Incluido o botao "Receber mensalidade" na ficha do aluno no prof.html.
+- Criada janela compacta de recebimento adaptada ao tablet de 8,7 polegadas.
+- A janela permite selecionar competencia, vencimento, valor previsto, forma de pagamento, data, valor pago e responsavel.
+- Desconto, multa/acrescimo e observacao ficam recolhidos em "Mais opcoes".
+- O status e fixado como "Pago"; o professor nao consegue criar cobranca pendente, cancelar ou acessar outros modulos financeiros.
+- Ao confirmar, a mensalidade e criada ou atualizada no historico do aluno.
+- A baixa tambem gera ou atualiza a entrada correspondente no caixa administrativo, vinculada ao pagamento.
+- A situacao Em dia/Inadimplente e o bloqueio do aluno sao recalculados apos o recebimento.
+- O recebimento e sincronizado com a mesma base usada pelo painel do notebook.
+- Mantida a foto da academia como cabecalho do painel do professor.
+
+LEMBRETE PERMANENTE
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em toda nova alteracao.
+- Trabalhar sempre sobre a ultima versao consolidada.
+- Manter api.txt sincronizado com apps-script/api.gs.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - PAINEL DO PROFESSOR - FASE 3: TREINOS
+======================================================================
+STATUS DA FASE
+- Fase 3 do painel do professor concluida sobre a ultima versao consolidada do projeto.
+- O ZIP de entrega continua reservado para o final da Fase 5.
+
+ALTERACOES NO PAINEL DO PROFESSOR (prof.html / prof.js / prof.css)
+- Criada uma area de Treinos dentro da ficha do aluno no tablet.
+- A lista mostra treinos ativos e encerrados, divisao, grupo muscular, nome e observacoes.
+- Cada exercicio aparece separadamente, com series, repeticoes, carga, intervalo e orientacao propria.
+- Criada a janela de Novo treino e Editar treino, otimizada para tablet Samsung de 8,7 polegadas.
+- O professor pode criar, editar, duplicar, encerrar e reativar treinos.
+- O cadastro permite adicionar quantos exercicios forem necessarios.
+- Cada exercicio tem campos independentes para nome, series, repeticoes, carga, intervalo e orientacao.
+- Incluidos controles para mover exercicios para cima ou para baixo e remover exercicios.
+- O catalogo de nomes reaproveita exercicios ja existentes na base para facilitar a digitacao.
+- O botao rapido Novo treino da ficha agora abre o cadastro real; nao e mais uma funcao futura.
+- Todos os salvamentos usam a mesma base do painel administrativo e tentam sincronizar com o Google Sheets.
+- As operacoes realizadas pelo tablet sao registradas no Log com a origem painel-professor-tablet.
+
+COMPATIBILIDADE COM O PAINEL DO NOTEBOOK
+- O painel administrativo passou a reconhecer `exerciseItems`.
+- Treinos criados no tablet aparecem no notebook com os detalhes de cada exercicio.
+- O formulario antigo do notebook continua funcional e preserva os detalhes estruturados quando os nomes dos exercicios nao sao alterados.
+- Mantida a coluna `exercises` com os nomes dos exercicios para compatibilidade com o app do aluno e versoes anteriores.
+
+ALTERACOES NA API E PLANILHA
+- A aba Treinos recebeu as colunas `exerciseItems` e `updatedAt`.
+- `exerciseItems` e salvo em JSON e contem: id, name, sets, reps, load, rest e notes.
+- `apps-script/api.gs` e `api.txt` foram atualizados e permanecem identicos.
+- A documentacao `docs/estrutura-planilha.md` foi atualizada.
+
+ARQUIVOS ALTERADOS
+- prof.html
+- assets/css/prof.css
+- assets/js/prof.js
+- painel.html
+- assets/css/painel.css
+- assets/js/painel.js
+- apps-script/api.gs
+- api.txt
+- docs/estrutura-planilha.md
+- HISTORICO_DESENVOLVIMENTO.txt
+
+LEMBRETES PERMANENTES
+- Trabalhar sempre sobre a ultima versao consolidada do ZIP.
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em TODA alteracao do programa.
+- Manter api.txt na raiz sincronizado com apps-script/api.gs.
+- Nao criar copias antigas ou arquivos duplicados desnecessarios.
+
+
+======================================================================
+PAINEL DO PROFESSOR - FASE 4 - AVALIACOES E AGENDA - 2026-07-11
+======================================================================
+
+ALTERACOES REALIZADAS
+- Criado no painel do professor o modulo de avaliacoes fisicas por aluno.
+- Incluido resumo com peso atual, variacao de peso, IMC e data da ultima avaliacao.
+- Incluida listagem compacta das avaliacoes anteriores com medidas e observacoes.
+- Professor pode criar e editar avaliacao pelo tablet.
+- IMC e calculado automaticamente a partir de peso e altura.
+- Criado no painel do professor o modulo de agenda individual do aluno.
+- Professor pode criar e editar agendamentos com data, horario, modalidade, status e observacoes.
+- Adicionadas acoes para marcar atendimento como realizado, falta, remarcado ou cancelado.
+- O comando Remarcar abre o agendamento para escolha de nova data e horario.
+- A agenda geral de hoje passou a permitir editar, marcar realizada e registrar falta nos atendimentos individuais.
+- Acoes rapidas Nova avaliacao e Abrir agenda foram ativadas na ficha do aluno.
+- Mantida a agenda coletiva sem edicao pela ficha individual.
+- Dados de avaliacoes e agenda usam a mesma base do painel administrativo do notebook.
+- Adicionado updatedAt nas estruturas Avaliacoes e Agenda da API/planilha para preservar a data da ultima alteracao.
+- Atualizados prof.html, assets/js/prof.js, assets/css/prof.css, apps-script/api.gs, api.txt e docs/estrutura-planilha.md.
+- Nenhum dado financeiro adicional foi exposto por esta fase.
+- Todos os dados atuais continuam sendo ficticios e destinados a demonstracao/testes.
+
+VALIDACOES
+- Sintaxe dos JavaScripts conferida.
+- IDs do HTML conferidos para evitar duplicacoes.
+- api.txt mantido identico a apps-script/api.gs.
+- Estrutura preparada para a Fase 5, que tratara presenca, sincronizacao e validacao final no tablet de 8,7 polegadas.
+
+LEMBRETE PERMANENTE
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em toda nova alteracao.
+- Trabalhar sempre sobre a ultima versao consolidada.
+- Entregar o ZIP somente ao final das fases combinadas, salvo nova orientacao do usuario.
+
+
+======================================================================
+PAINEL DO PROFESSOR - FASE 5 FINAL - SINCRONIZACAO E VALIDACAO - 2026-07-11
+======================================================================
+
+STATUS
+- Fase 5 concluida sobre a ultima versao consolidada do projeto.
+- Todos os dados atualmente existentes continuam sendo ficticios e destinados a demonstracao e testes.
+- O ZIP final deve conter esta versao e substituir integralmente versoes anteriores.
+
+SINCRONIZACAO TABLET / NOTEBOOK
+- O painel do professor deixou de enviar o banco inteiro a cada alteracao.
+- Ficha, treinos, avaliacoes, agenda, presencas e recebimentos agora sao enviados registro por registro para a API.
+- Essa mudanca reduz o risco de uma alteracao do tablet apagar dados atualizados no notebook.
+- O painel administrativo e o app do aluno tambem passaram a sincronizar somente os registros modificados nas operacoes comuns.
+- O botao Sincronizar Sheets do painel administrativo agora atualiza o notebook a partir do Google Sheets, em vez de substituir toda a planilha pelo estado local.
+- A restauracao demonstrativa continua sendo uma acao administrativa separada e deliberada.
+
+MODO SEM INTERNET E FILA LOCAL
+- Toda alteracao feita pelo professor e salva primeiro no armazenamento local do tablet.
+- Se a internet ou a API falhar, a alteracao entra em uma fila persistente no aparelho.
+- A tela informa quantas alteracoes aguardam envio.
+- A fila e reenviada automaticamente quando a internet volta, quando o app volta ao primeiro plano e em verificacoes periodicas.
+- O botao Atualizar tambem tenta enviar todas as pendencias antes de buscar os dados mais recentes.
+- Operacoes repetidas sobre o mesmo registro sao consolidadas para enviar somente a versao mais nova.
+- A fila remove uma operacao apenas depois de a API confirmar o recebimento.
+- Formularios abertos ou edicoes nao salvas impedem atualizacao automatica para evitar perda do que o professor esta digitando.
+
+STATUS DE CONEXAO
+- Adicionados estados visuais: sincronizando, sincronizado, envio pendente, sem internet e dados deste aparelho.
+- Adicionada data e hora da ultima sincronizacao concluida.
+- O tablet mostra aviso claro de que os dados continuam salvos localmente quando nao ha internet.
+- A comunicacao com a API recebeu limite de tempo para evitar carregamento preso indefinidamente.
+
+AJUSTES PARA TABLET DE 8,7 POLEGADAS
+- Mantida a foto da fachada como cabecalho do painel do professor.
+- Ajustado o cabecalho para ocupar menos altura em modo horizontal.
+- Ajustados espacamentos, navegacao lateral e janelas para resolucao aproximada de 1340 x 800.
+- Mantidos botoes grandes, fontes legiveis e areas adequadas para toque.
+- Mantida compatibilidade em modo vertical.
+
+REGRAS FINANCEIRAS DO TABLET
+- O professor continua sem acesso a caixa, despesas, relatorios ou historico financeiro completo.
+- Fora da janela de recebimento, o professor ve apenas Em dia/Inadimplente, dias de atraso e acesso liberado/bloqueado.
+- O tempo de inadimplencia considera a cobranca vencida mais antiga ainda nao paga ou cancelada.
+- A unica operacao financeira permitida e receber a mensalidade do aluno selecionado e dar baixa.
+- O recebimento cria ou atualiza o pagamento e a movimentacao vinculada no painel administrativo.
+
+DATAS E REGISTROS
+- A data operacional passou a considerar explicitamente o fuso America/Sao_Paulo.
+- Adicionado updatedAt aos alunos, movimentacoes e check-ins para apoiar sincronizacao e auditoria.
+- Atualizados os cabecalhos correspondentes em apps-script/api.gs, api.txt e docs/estrutura-planilha.md.
+- Depois de publicar a API atualizada, executar setupProFitnessSpreadsheet() uma vez para acrescentar as novas colunas existentes.
+
+ARQUIVOS ALTERADOS
+- prof.html
+- assets/css/prof.css
+- assets/js/prof.js
+- painel.html
+- assets/js/painel.js
+- index.html
+- assets/js/app.js
+- assets/js/shared-data.js
+- apps-script/api.gs
+- api.txt
+- docs/estrutura-planilha.md
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES REALIZADAS
+- Sintaxe de app.js, painel.js, prof.js e shared-data.js verificada.
+- IDs dos HTMLs e referencias JavaScript conferidos.
+- Estrutura de arquivos da raiz conferida.
+- api.txt mantido identico a apps-script/api.gs.
+- Regras de exibicao financeira do tablet conferidas.
+- Integridade do ZIP deve ser testada antes da entrega.
+- O endpoint externo da API nao pode ser validado neste ambiente quando nao houver resolucao de DNS; por isso a publicacao do Apps Script deve ser testada no ambiente real apos a instalacao.
+
+LEMBRETES PERMANENTES
+- Trabalhar sempre sobre a ultima versao consolidada enviada ao usuario.
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em TODA alteracao do programa.
+- Manter api.txt sincronizado com apps-script/api.gs.
+- Nao criar copias antigas ou arquivos duplicados dentro do projeto.
+- A raiz deve conter somente arquivos HTML/TXT e pastas organizadas.
+
+VALIDACAO FINAL DA ENTREGA - FASE 5
+- A linha de conexao e pendencias permanece visivel nas telas Inicio, Alunos e Agenda.
+- Testes automatizados confirmaram a criacao da fila, envio de alteracoes e permanencia das pendencias quando o tablet esta offline.
+- Teste da sincronizacao incremental confirmou envio somente dos registros modificados.
+- Sintaxe dos arquivos JavaScript e da API conferida sem erros.
+- IDs, campos de formularios, caminhos de arquivos e chaves CSS conferidos.
+- Nenhum modulo de caixa, despesa ou relatorio financeiro foi exposto no painel do professor.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - CABECALHO DO PROFESSOR IGUAL AO PAINEL
+======================================================================
+ALTERACOES REALIZADAS
+- O cabecalho de prof.html foi redesenhado para seguir o mesmo padrao visual do painel administrativo.
+- O topo agora exibe somente a foto da fachada da Pro Fitness, sem textos ou botoes sobre a imagem.
+- Foram removidos do cabecalho visual os textos "PRO FITNESS" e "PAINEL DO PROFESSOR".
+- O botao Atualizar foi reposicionado para a barra de status logo abaixo da foto.
+- Mantida a foto com enquadramento, altura, bordas arredondadas e acabamento semelhantes aos de painel.html.
+- O cabecalho foi ajustado para tablet em modo horizontal e vertical.
+- Atualizada a versao de prof.css no HTML para evitar carregamento de cache antigo.
+
+LEMBRETE PERMANENTE
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em toda alteracao do programa.
+- Trabalhar sempre sobre a ultima versao consolidada.
+- Manter api.txt sincronizado com apps-script/api.gs.
+
+
+======================================================================
+CORRECAO - 2026-07-11 - TREINOS E AVALIACOES VISIVEIS NO TABLET
+======================================================================
+PROBLEMA IDENTIFICADO
+- Os modulos de Treinos e Avaliacoes existiam no codigo, mas estavam posicionados no final de uma ficha longa e podiam parecer ausentes no tablet.
+
+ALTERACOES REALIZADAS
+- Criada navegacao interna visivel na ficha do aluno com as abas: Ficha, Treinos, Avaliacoes, Agenda e Presencas.
+- Treinos e Avaliacoes agora abrem em paineis proprios, sem depender de rolar toda a ficha.
+- Cada aba mostra a quantidade de registros cadastrados.
+- Acoes rapidas de Novo treino, Nova avaliacao e Agenda direcionam para o modulo correto.
+- Mantidas todas as funcoes de criar, editar, duplicar e encerrar treino.
+- Mantidas todas as funcoes de criar e editar avaliacao fisica.
+- Mantidos agenda, presencas e recebimento de mensalidade.
+- Cabecalho com a foto da academia foi preservado.
+- Atualizada a versao do CSS para evitar cache antigo no tablet.
+
+REGRA PERMANENTE
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em toda alteracao do programa.
+- Trabalhar sempre sobre a ultima versao consolidada.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - STATUS SIMPLIFICADO NO PAINEL DO PROFESSOR
+======================================================================
+- Removidas do painel do professor as mensagens "Em dia", "Inadimplente" e a quantidade de dias de atraso.
+- O professor agora visualiza somente um status operacional do aluno: "OK" ou "Bloqueado".
+- O status considera a liberacao de acesso definida pelas regras do sistema.
+- Mantidas no tablet as abas Ficha, Treinos, Avaliacoes, Agenda e Presencas.
+- Nenhum detalhe financeiro passou a ser exibido; permanece apenas a funcao autorizada de receber mensalidade do aluno selecionado.
+- Este HISTORICO_DESENVOLVIMENTO.txt deve continuar sendo atualizado em toda alteracao do programa.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - SEPARACAO ADMINISTRACAO E PROFESSOR
+======================================================================
+VERSAO-BASE OFICIAL
+- Esta alteracao foi feita exclusivamente sobre o arquivo PersonalPro(12).zip enviado pelo usuario.
+- Nao foram reaproveitados ZIPs anteriores.
+
+DECISAO DE ARQUITETURA
+- O notebook passou a ser a area administrativa e financeira.
+- O tablet passou a ser a area operacional do professor.
+- Dados profissionais, medicos, treinos, avaliacoes, agenda e presencas sao cadastrados e editados somente pelo professor no tablet.
+- O painel do notebook consulta estatisticas e registros, mas nao permite criar ou editar esses dados.
+
+ALTERACOES NO PAINEL DO NOTEBOOK - painel.html
+- A aba "Alunos e treinos" foi renomeada para "Alunos e estatisticas".
+- Removido o botao "Novo aluno" do notebook.
+- Removidos do notebook os botoes Editar cadastro, Novo treino, Nova avaliacao e Registrar presenca.
+- Mantido apenas o botao Receber mensalidade na ficha consultada.
+- A aba Ficha foi transformada em Resumo administrativo somente para consulta.
+- Dados de saude, restricoes, medidas e formularios profissionais foram ocultados da interface administrativa.
+- Treinos agora mostram somente estatisticas, nome, divisao, status, quantidade de exercicios e data de atualizacao.
+- Avaliacoes agora mostram somente quantidade e datas, sem medidas corporais ou informacoes medicas.
+- Agenda ficou somente para consulta, sem botoes de criar, editar ou concluir.
+- A aba Acesso foi transformada em Presencas, com status, total e historico somente para consulta.
+- QRs e botoes de regeneracao deixaram de aparecer nessa area.
+- O historico operacional nao exibe peso, IMC ou medidas corporais.
+
+ALTERACOES NO PAINEL DO PROFESSOR - prof.html
+- Mantidas e destacadas as cinco areas do aluno: Ficha, Treinos, Avaliacoes, Agenda e Acesso.
+- As abas ficaram fixas e mais visiveis no tablet.
+- A aba Presencas passou a se chamar Acesso e continua contendo o historico de entradas e saidas.
+- Adicionado o botao Novo aluno na lista do professor.
+- O professor agora pode cadastrar um novo aluno diretamente no tablet.
+- O novo aluno e criado como ativo, com matricula do aplicativo pendente e politica de acesso automatica.
+- O professor continua podendo editar ficha, saude, restricoes, treinos, avaliacoes, agenda e presencas.
+- O professor continua podendo receber a mensalidade do aluno selecionado, sem acesso ao restante do financeiro.
+- O status mostrado ao professor permanece somente OK ou Bloqueado.
+
+ORGANIZACAO DOS ARQUIVOS
+- Removida a pasta .git do pacote de entrega.
+- Removidos arquivos antigos e duplicados que estavam soltos na raiz.
+- A raiz deve conter somente index.html, painel.html, prof.html, api.txt e HISTORICO_DESENVOLVIMENTO.txt, alem das pastas organizadas.
+- api.txt permanece como a unica copia permitida e deve ser identico a apps-script/api.gs.
+
+VALIDACOES REALIZADAS
+- Sintaxe dos JavaScripts validada com Node.js.
+- painel.html testado em simulacao de notebook de 1366 x 768.
+- prof.html testado em simulacao de tablet de 1340 x 800.
+- Confirmado que o notebook nao exibe botoes de edicao profissional.
+- Confirmado que Treinos, Avaliacoes, Agenda e Acesso aparecem e abrem no tablet.
+- Confirmado o cadastro de um novo aluno pelo tablet em teste local.
+- Confirmado que o recebimento de mensalidade continua abrindo no notebook.
+
+LEMBRETE PERMANENTE
+- Ler o codigo ativo antes de afirmar que uma funcao existe.
+- Atualizar este HISTORICO_DESENVOLVIMENTO.txt em TODA alteracao.
+- Trabalhar sempre sobre a ultima versao enviada ao usuario.
+- Nao criar copias antigas ou duplicadas dentro do projeto.
+- Manter api.txt sincronizado com apps-script/api.gs.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - MELHORIAS FASE 1 - CONSOLIDACAO TECNICA
+======================================================================
+- Consolidada a arquitetura oficial: notebook administrativo, tablet operacional do professor e app do aluno fora do escopo atual.
+- Criado docs/arquitetura-paineis.md com responsabilidades, limites de dados e regras de publicacao.
+- Removida a configuracao .clasp.json duplicada da raiz; apps-script/.clasp.json passa a ser a configuracao local oficial.
+- Criada a verificacao automatizada tests/smoke.mjs.
+- O teste valida sintaxe de todos os JavaScripts e da API, IDs HTML, referencias literais, chaves CSS, copia da API e fronteiras entre administracao e professor.
+- A primeira execucao do teste encontrou e removeu uma referencia obsoleta ao botao Novo aluno no JavaScript administrativo.
+- Confirmado que o painel administrativo nao cadastra aluno e que o painel do professor mantem essa responsabilidade.
+- Confirmado que o painel do professor nao contem Caixa diario, Despesas ou Relatorios administrativos.
+- Smoke tests e git diff --check concluidos sem erros.
+- Nenhuma publicacao foi realizada nesta fase.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - MELHORIAS FASE 2 - FINANCEIRO
+======================================================================
+- Criado assets/js/finance-core.js para centralizar calculo de valor liquido, valor pago, saldo restante e situacao da mensalidade.
+- Adicionado pagamento parcial com saldo restante, sem apagar ou substituir o historico da competencia.
+- Pagamentos parciais geram entrada de caixa somente pelo valor efetivamente recebido.
+- Quitacao posterior atualiza a mesma mensalidade e o movimento vinculado.
+- Incluida geracao automatica das mensalidades do mes para alunos ativos com valor mensal definido.
+- Incluida geracao de despesas mensais e anuais recorrentes, sem duplicar a mesma conta na competencia.
+- Adicionados centros de custo: Geral, Musculacao, Natacao, Lutas, Aulas coletivas e Administrativo.
+- Movimentacoes e despesas passaram a registrar centro de custo; relatorios receberam filtro correspondente.
+- Estorno de movimento passou a exigir motivo e responsavel, preservando data e auditoria.
+- Cancelamento de mensalidade passou a registrar motivo, responsavel e data da reversao.
+- Adicionado atalho de cobranca por WhatsApp nas mensalidades pendentes, vencidas ou parciais.
+- Relatorios, conciliacao e graficos passaram a considerar corretamente pagamentos parciais.
+- API ampliada de forma aditiva com costCenter, recurrenceId, reversalReason, reversedBy, reversedAt, voidReason, voidedBy e voidedAt.
+- api.txt sincronizado e identico a apps-script/api.gs.
+- Teste no Edge confirmou pagamento parcial, movimento vinculado, saldo restante, WhatsApp, filtro de centro de custo e ausencia de erros JavaScript.
+- Smoke tests concluidos sem erros; nenhuma publicacao realizada nesta fase.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - MELHORIAS FASE 3 - PAINEL ADMINISTRATIVO
+======================================================================
+- Criada busca global de alunos no topo do notebook, com localizacao por nome, telefone, e-mail, plano ou ID.
+- A busca global abre diretamente o resumo administrativo do aluno encontrado.
+- A Visao geral recebeu uma Central do dia com quantidades de aniversarios, matriculas pendentes, cadastros incompletos e despesas vencidas.
+- Mantida a privacidade da abertura: a Central do dia nao mostra nomes ou informacoes individuais.
+- Criada a area Configuracoes no painel administrativo.
+- Adicionado cadastro de planos com nome e valor mensal sugerido.
+- Adicionado cadastro de modalidades para uso futuro nos formularios e relatorios.
+- Criado quadro de qualidade cadastral com telefone, e-mail, plano, valor mensal, matricula e duplicidade de telefone.
+- Catalogos sao salvos na colecao Config e sincronizados de forma incremental.
+- A aba Config da API recebeu plans, modalities, costCenters e updatedAt sem remover campos existentes.
+- Teste no Edge confirmou cadastro de plano, busca global, indicadores de qualidade, privacidade da abertura e largura correta em 1366 px.
+- Smoke tests concluidos sem erros; nenhuma publicacao realizada nesta fase.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - MELHORIAS FASE 4 - PONTO DOS PROFESSORES
+======================================================================
+- Criado o modulo Meu ponto no prof.html, otimizado para o tablet do professor.
+- O professor seleciona seu nome e registra entrada ou saida em um botao grande, com estado atual, horario, tempo acumulado no dia e historico recente.
+- As marcacoes funcionam offline e entram na mesma fila de sincronizacao incremental ja usada pelo tablet.
+- Criado identificador persistente do tablet para auditoria da origem da marcacao.
+- Criado cadastro de professores nas Configuracoes do painel administrativo.
+- Criada a area Equipe e ponto no painel, com filtros por professor e periodo.
+- O relatorio exibe tempo total, jornadas, media por jornada, marcacoes sem saida e linhas detalhadas de entrada e saida.
+- Adicionadas exportacao CSV e impressao/PDF do espelho de ponto, com area para assinaturas.
+- A API recebeu o recurso staffTimeEntries e passa a construir automaticamente a aba PontoProfessores.
+- A aba PontoProfessores possui staffId, staffName, date, clockIn, clockOut, durationMinutes, status, source, deviceId, notes, createdAt e updatedAt.
+- Corrigida uma condicao de concorrencia para preservar alteracoes locais feitas enquanto o tablet consulta o Sheets.
+- Adicionada salvaguarda de largura no painel para impedir que conteudos internos provoquem quebra horizontal.
+- Definido pelo proprietario do projeto que painel.html sera usado exclusivamente em computador ou notebook; celular nao e alvo do painel administrativo.
+- Teste no Edge confirmou entrada, saida, persistencia, historico, 4 metricas do relatorio, cadastro de professor, ausencia de erros JavaScript e largura correta em notebook.
+- Registros artificiais usados na verificacao foram removidos ao final do teste.
+- Smoke tests concluidos sem erros; nenhuma publicacao realizada nesta fase.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - MELHORIAS FASE 5 - INTEGRACAO E CONFLITOS
+======================================================================
+- A API passou a comparar updatedAt antes de atualizar um registro existente.
+- Uma versao antiga nao sobrescreve mais silenciosamente uma versao mais nova salva na planilha.
+- O cliente identifica respostas de conflito e mantem a operacao pendente no tablet.
+- A fila offline passou a registrar a ultima mensagem de erro e a data da tentativa.
+- O indicador de alteracoes pendentes virou um botao para repetir o envio manualmente.
+- Adicionados metadados updatedBy, source e deviceId de forma aditiva nas abas operacionais da API.
+- A sincronizacao identifica automaticamente painel administrativo, tablet do professor ou app do aluno como origem.
+- A hidratacao passou a preservar a versao local quando ela possui o mesmo ID e updatedAt mais recente que a versao remota.
+- O historico administrativo passou a exibir a origem de cada evento.
+- Logs criados pelo tablet agora gravam a descricao tambem no campo message para leitura correta no painel.
+- Teste no Edge confirmou botao de pendencia, repeticao manual, preservacao da fila e exibicao do erro devolvido pela API antiga.
+- A API publicada ainda nao foi alterada nesta fase; por isso staffTimeEntries permaneceu pendente com Recurso invalido durante o teste, sem perda local.
+- Dados e filas artificiais usados no teste foram removidos ao final.
+- Smoke tests e git diff --check concluidos sem erros; nenhuma publicacao realizada nesta fase.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - MELHORIAS FASE 6 - DADOS E VALIDACAO
+======================================================================
+- Criada a area Dados, importacao e backup dentro das Configuracoes administrativas.
+- Adicionado download de backup completo em JSON com versao do esquema, data de exportacao e snapshot.
+- Adicionada restauracao de backup JSON com validacao da estrutura e confirmacao antes da substituicao.
+- A restauracao tambem atualiza o Sheets quando a API esta configurada.
+- Adicionada importacao de alunos por CSV com suporte a ponto e virgula ou virgula e cabecalhos em portugues ou ingles.
+- A importacao reconhece nome, telefone, e-mail, nascimento, objetivo, restricoes, status, plano, valor mensal e observacoes.
+- Telefone ou e-mail existente atualiza o aluno; caso contrario, um novo cadastro e criado.
+- Criada auditoria automatica para duplicidades, alunos sem nome, valores negativos, registros sem aluno e jornadas abertas ha mais de 16 horas.
+- O painel exibe resumo da quantidade de alunos, registros relacionados, pendencias e versao do backup.
+- Corrigido o encerramento assincrono dos seletores de arquivo depois que a tela e renderizada novamente.
+- Documentacao da planilha atualizada com PontoProfessores, metadados de auditoria e regra de conflitos.
+- Teste no Edge em 1366 x 768 confirmou 4 ferramentas, 4 indicadores, importacao CSV, valor mensal, restauracao JSON e ausencia de rolagem horizontal.
+- O backup de teste restaurou a base original e removeu o aluno artificial ao final.
+- Smoke tests e git diff --check concluidos sem erros antes da publicacao final.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - BASE FICTICIA PARA DEMONSTRACAO
+======================================================================
+- Salvo backup anterior em backups/antes-demo-2026-07-11.json; os 3 alunos anteriores tambem eram ficticios.
+- Criado tools/generate-demo-data.mjs para gerar novamente uma demonstracao deterministica.
+- Criado backups/demo-50-alunos-3-meses.json com 50 alunos e periodo de maio a julho de 2026.
+- Criado backups/base-limpa-pro-fitness.json para restaurar todas as colecoes completamente vazias depois da demonstracao.
+- Corrigida a migracao local para respeitar arrays vazios, garantindo que o backup limpo nao recrie dados de exemplo.
+- A base possui 6 professores, 100 treinos, 82 avaliacoes, 150 mensalidades, 166 movimentos, 15 despesas e 30 fechamentos.
+- Incluidos 1.300 registros de frequencia e treino e 372 jornadas de professores, com uma jornada aberta para demonstracao.
+- A inadimplencia atual ficou em exatamente 5 de 50 alunos, correspondente a 10 por cento.
+- A mensalidade basica foi ajustada para R$ 89,90.
+- Cada modalidade adicional acrescenta R$ 30,00, gerando valores de R$ 119,90 com uma extra e R$ 149,90 com duas extras.
+- Incluidas combinacoes com Natacao, Jiu-jitsu, Ballet e Zumba.
+- A grade semanal ficticia possui 14 atividades, incluindo dois horarios de Zumba.
+- A API foi otimizada para retornar somente contagens depois de importAll, sem devolver novamente todo o banco.
+- Corrigida a formatacao do Sheets para preservar IDs, datas, horarios e competencias como texto.
+- API reimplantada como versao 7 na mesma URL publica.
+- A base ficticia foi importada na planilha 1GgKofWojTW6EgrJCnA3Z4ZOZvgmzeyc1refIz2Inj8Y.
+- Conferencia remota confirmou competencias 2026-05, 2026-06 e 2026-07, 10 por cento de inadimplencia, datas validas e Zumba.
+- A pasta backups foi adicionada ao .gitignore para nunca publicar dados operacionais no GitHub.

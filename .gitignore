@@ -1,0 +1,2 @@
+# Backups podem conter dados operacionais e nunca devem ser publicados.
+backups/

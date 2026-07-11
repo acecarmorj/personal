@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<meta content="#111111" name="theme-color"/>
+<title>Pro Fitness | Painel do Professor</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="assets/css/prof.css?v=20260711-final-fases" rel="stylesheet"/>
+</head>
+<body>
+<div class="prof-shell">
+<header aria-label="Pro Fitness Academia" class="prof-photo-header">
+<figure class="prof-academy-visual">
+<img alt="Fachada da Pro Fitness Academia" src="assets/images/pro-fitness-fachada.png"/>
+</figure>
+</header>
+<main class="prof-main">
+<div aria-live="polite" class="status-line">
+<span class="connection-dot" id="connectionDot"></span>
+<span id="connectionText">Carregando dados</span>
+<button class="sync-pending" hidden="" id="pendingSyncText" title="Tentar enviar novamente" type="button"></button>
+<span id="lastSyncText"></span>
+<button aria-label="Atualizar dados" class="status-refresh" id="refreshProfessorData" type="button">
+<span aria-hidden="true">↻</span>
+          Atualizar
+        </button>
+</div>
+<section class="prof-view active" data-view="inicio" id="profHomeView">
+<section class="quick-search-panel">
+<label for="profStudentSearch">Buscar aluno</label>
+<div class="search-field-wrap">
+<span aria-hidden="true">⌕</span>
+<input autocomplete="off" id="profStudentSearch" placeholder="Nome, telefone, plano ou código" type="search"/>
+<button hidden="" id="clearProfessorSearch" type="button">Limpar</button>
+</div>
+<div class="search-results" hidden="" id="profSearchResults"></div>
+</section>
+<section aria-label="Resumo do dia" class="prof-metrics">
+<article class="prof-metric-card">
+<span>Presentes agora</span>
+<strong id="metricInside">0</strong>
+</article>
+<article class="prof-metric-card">
+<span>Agenda de hoje</span>
+<strong id="metricAgenda">0</strong>
+</article>
+<article class="prof-metric-card">
+<span>Alunos ativos</span>
+<strong id="metricActiveStudents">0</strong>
+</article>
+<article class="prof-metric-card warning">
+<span>Acesso bloqueado</span>
+<strong id="metricBlocked">0</strong>
+</article>
+</section>
+<section class="prof-grid">
+<article class="prof-card present-card">
+<div class="prof-card-head">
+<h2>Alunos presentes</h2>
+<button class="text-button" data-open-view="alunos" type="button">Ver alunos</button>
+</div>
+<div class="compact-list" id="insideStudentsList"></div>
+</article>
+<article class="prof-card agenda-card">
+<div class="prof-card-head">
+<h2>Agenda de hoje</h2>
+<button class="text-button" data-open-view="agenda" type="button">Ver agenda</button>
+</div>
+<div class="compact-list" id="todayAgendaList"></div>
+</article>
+</section>
+</section>
+<section class="prof-view" data-view="alunos" hidden="" id="profStudentsView">
+<div class="view-title-row">
+<h1>Alunos</h1>
+
+<div class="prof-view-title-actions"><span id="profStudentCount">0 alunos</span><button class="compact-primary-action" id="newProfessorStudent" type="button">Novo aluno</button></div></div>
+<div class="sticky-search">
+<div class="search-field-wrap">
+<span aria-hidden="true">⌕</span>
+<input autocomplete="off" id="profStudentsListSearch" placeholder="Pesquisar aluno" type="search"/>
+</div>
+</div>
+<div class="student-card-list" id="profStudentList"></div>
+</section>
+<section class="prof-view" data-view="agenda" hidden="" id="profAgendaView">
+<div class="view-title-row">
+<h1>Agenda de hoje</h1>
+<span id="profAgendaDate"></span>
+</div>
+<div class="agenda-full-list" id="profFullAgendaList"></div>
+</section>
+<section class="prof-view" data-view="ponto" hidden="" id="profTimeView">
+<div class="view-title-row">
+<div>
+<p class="prof-view-kicker">Jornada do professor</p>
+<h1>Meu ponto</h1>
+</div>
+<span id="profTimeDate"></span>
+</div>
+<article class="prof-card staff-clock-card">
+<div class="staff-clock-identity">
+<label for="activeProfessorSelect">Quem esta usando o tablet?</label>
+<select id="activeProfessorSelect"></select>
+</div>
+<div class="staff-clock-display">
+<span id="staffClockStatus">Fora da academia</span>
+<strong id="staffClockCurrentTime">--:--</strong>
+<p id="staffClockDetail">Selecione seu nome e registre a entrada.</p>
+</div>
+<button class="staff-clock-action" id="toggleStaffClockButton" type="button">Registrar entrada</button>
+<div class="staff-clock-summary">
+<article><span>Tempo hoje</span><strong id="staffClockTodayTotal">0h 00min</strong></article>
+<article><span>Marcacoes hoje</span><strong id="staffClockTodayCount">0</strong></article>
+</div>
+</article>
+<article class="prof-card staff-clock-history-card">
+<div class="prof-card-head">
+<div><p class="prof-view-kicker">Ultimos registros</p><h2>Historico neste tablet</h2></div>
+</div>
+<div class="staff-clock-history" id="staffClockHistory"></div>
+</article>
+</section>
+</main>
+<nav aria-label="Navegação do painel do professor" class="prof-bottom-nav">
+<button aria-current="page" class="active" data-prof-view="inicio" type="button">
+<span aria-hidden="true">⌂</span>
+<strong>Início</strong>
+</button>
+<button data-prof-view="alunos" type="button">
+<span aria-hidden="true">◎</span>
+<strong>Alunos</strong>
+</button>
+<button data-prof-view="agenda" type="button">
+<span aria-hidden="true">▣</span>
+<strong>Agenda</strong>
+</button>
+<button data-prof-view="ponto" type="button">
+<span aria-hidden="true">◷</span>
+<strong>Meu ponto</strong>
+</button>
+</nav>
+</div>
+<dialog aria-labelledby="profStudentName" class="student-workspace-dialog" id="studentPreviewDialog">
+<div class="student-workspace-shell">
+<header class="student-workspace-header">
+<div class="student-workspace-identity">
+<span>ALUNO</span>
+<h2 id="profStudentName">Ficha do aluno</h2>
+<div class="student-workspace-badges" id="profStudentBadges"></div>
+</div>
+<button aria-label="Fechar ficha do aluno" class="dialog-close" id="closeStudentPreview" type="button">×</button>
+</header><nav aria-label="Áreas do aluno" class="student-module-tabs">
+<button aria-pressed="true" class="student-module-tab active" data-student-module="ficha" type="button">Ficha</button>
+<button aria-pressed="false" class="student-module-tab" data-student-module="treinos" type="button">Treinos <span id="profWorkoutTabCount">0</span></button>
+<button aria-pressed="false" class="student-module-tab" data-student-module="avaliacoes" type="button">Avaliações <span id="profAssessmentTabCount">0</span></button>
+<button aria-pressed="false" class="student-module-tab" data-student-module="agenda" type="button">Agenda <span id="profScheduleTabCount">0</span></button>
+<button aria-pressed="false" class="student-module-tab" data-student-module="presencas" type="button">Acesso <span id="profPresenceTabCount">0</span></button>
+</nav>
+<div class="student-workspace-scroll"><div class="student-module-panel active" data-student-module-panel="ficha"><section aria-label="Resumo do aluno" class="student-summary-grid">
+<article><span>Plano</span><strong id="profStudentPlan">-</strong></article>
+<article><span>Telefone</span><strong id="profStudentPhone">-</strong></article>
+<article class="summary-goal"><span>Objetivo</span><strong id="profStudentGoal">Não informado</strong></article>
+<article><span>Última presença</span><strong id="profStudentLastPresence">Nenhuma</strong></article>
+<article><span>Total de presenças</span><strong id="profStudentPresenceCount">0</strong></article>
+<article><span>Primeira presença</span><strong id="profStudentFirstPresence">Nenhuma</strong></article>
+<article><span>Presença agora</span><strong id="profStudentInsideStatus">Fora da academia</strong></article>
+</section><section class="health-alert" id="profStudentHealthAlert">
+<span>SAÚDE E RESTRIÇÕES</span>
+<strong id="profStudentRestrictionsSummary">Nenhuma restrição cadastrada</strong>
+</section><nav aria-label="Ações rápidas do aluno" class="student-quick-actions">
+<button class="student-action primary" id="profPresenceButton" type="button">Registrar entrada</button>
+<button class="student-action payment-action" id="profReceivePaymentButton" type="button">Receber mensalidade</button>
+<button class="student-action" data-prof-student-action="treino" type="button">Novo treino</button>
+<button class="student-action" data-prof-student-action="avaliacao" type="button">Nova avaliação</button>
+<button class="student-action" data-prof-student-action="agenda" type="button">Abrir agenda</button>
+<button class="student-action" id="editProfessorStudent" type="button">Editar ficha</button>
+</nav><section class="student-detail-section">
+<div class="student-detail-head">
+<h3>Ficha do aluno</h3>
+<span id="profStudentFormStatus">Somente visualização</span>
+</div>
+<form id="profStudentForm" novalidate="">
+<input name="id" type="hidden"/>
+<fieldset disabled="" id="profStudentFieldset">
+<div class="prof-form-grid">
+<label class="span-2">
+<span>Nome</span>
+<input name="name" required="" type="text"/>
+</label>
+<label>
+<span>Telefone</span>
+<input inputmode="tel" name="phone" type="tel"/>
+</label>
+<label>
+<span>E-mail</span>
+<input inputmode="email" name="email" type="email"/>
+</label>
+<label>
+<span>Data de nascimento</span>
+<input name="birthDate" type="date"/>
+</label>
+<label>
+<span>Plano</span>
+<input name="plan" type="text"/>
+</label>
+<label class="span-2">
+<span>Objetivo</span>
+<textarea name="goal" rows="2"></textarea>
+</label>
+<label class="span-2 health-field">
+<span>Restrições físicas, dores e cuidados</span>
+<textarea name="restrictions" rows="3"></textarea>
+</label>
+<label class="span-2">
+<span>Observações do professor</span>
+<textarea name="notes" rows="3"></textarea>
+</label>
+</div>
+</fieldset>
+<div class="student-save-bar" hidden="" id="profStudentSaveBar">
+<button class="secondary-action" id="cancelProfessorStudentEdit" type="button">Cancelar</button>
+<button class="primary-action" type="submit">Salvar ficha</button>
+</div>
+</form>
+</section></div><div class="student-module-panel" data-student-module-panel="treinos" hidden=""><section class="student-detail-section student-workouts-section">
+<div class="student-detail-head">
+<div>
+<h3>Treinos</h3>
+<span id="profWorkoutCount">0 treinos</span>
+</div>
+<button class="compact-primary-action" id="newProfessorWorkout" type="button">Novo treino</button>
+</div>
+<div class="prof-workout-list" id="profWorkoutList"></div>
+</section></div><div class="student-module-panel" data-student-module-panel="avaliacoes" hidden=""><section class="student-detail-section student-assessments-section" id="profStudentAssessmentsSection">
+<div class="student-detail-head">
+<div>
+<h3>Avaliações físicas</h3>
+<span id="profAssessmentCount">0 avaliações</span>
+</div>
+<button class="compact-primary-action" id="newProfessorAssessment" type="button">Nova avaliação</button>
+</div>
+<div class="assessment-summary-grid" id="profAssessmentSummary"></div>
+<div class="prof-assessment-list" id="profAssessmentList"></div>
+</section></div><div class="student-module-panel" data-student-module-panel="agenda" hidden=""><section class="student-detail-section student-agenda-section" id="profStudentAgendaSection">
+<div class="student-detail-head">
+<div>
+<h3>Agenda do aluno</h3>
+<span id="profStudentScheduleCount">0 agendamentos</span>
+</div>
+<button class="compact-primary-action" id="newProfessorSchedule" type="button">Novo agendamento</button>
+</div>
+<div class="prof-student-schedule-list" id="profStudentScheduleList"></div>
+</section></div><div class="student-module-panel" data-student-module-panel="presencas" hidden=""><section class="student-detail-section">
+<div class="student-detail-head">
+<h3>Acesso e presenças</h3>
+<span id="profPresenceHistoryCount">0 registros</span>
+</div>
+<div class="presence-history-list" id="profPresenceHistory"></div>
+</section></div></div>
+</div>
+</dialog>
+<dialog aria-labelledby="profWorkoutDialogTitle" class="prof-workout-dialog" id="profWorkoutDialog">
+<form class="prof-workout-form" id="profWorkoutForm" novalidate="">
+<header class="prof-workout-header">
+<div>
+<span>TREINO DO ALUNO</span>
+<h2 id="profWorkoutDialogTitle">Novo treino</h2>
+<p id="profWorkoutStudentName">Aluno</p>
+</div>
+<button aria-label="Fechar treino" class="dialog-close workout-close" id="closeProfessorWorkout" type="button">×</button>
+</header>
+<input name="id" type="hidden"/>
+<input name="studentId" type="hidden"/>
+<section class="prof-workout-main-fields">
+<label class="workout-title-field">
+<span>Nome do treino</span>
+<input name="title" placeholder="Ex.: Treino A - Superiores" required="" type="text"/>
+</label>
+<label>
+<span>Divisão</span>
+<select name="division">
+<option value="A">A</option>
+<option value="B">B</option>
+<option value="C">C</option>
+<option value="D">D</option>
+</select>
+</label>
+<label>
+<span>Grupo muscular</span>
+<input name="muscleGroup" placeholder="Ex.: Peito e tríceps" type="text"/>
+</label>
+<label>
+<span>Status</span>
+<select name="status">
+<option value="ativo">Ativo</option>
+<option value="encerrado">Encerrado</option>
+</select>
+</label>
+<label class="workout-notes-field">
+<span>Observações gerais</span>
+<textarea name="notes" placeholder="Orientações gerais do treino" rows="2"></textarea>
+</label>
+</section>
+<section class="prof-exercise-builder">
+<div class="exercise-builder-head">
+<div>
+<h3>Exercícios</h3>
+<span id="profExerciseCount">0 exercícios</span>
+</div>
+<button class="compact-primary-action" id="addProfessorExercise" type="button">Adicionar exercício</button>
+</div>
+<div class="exercise-editor-list" id="profExerciseEditorList"></div>
+<datalist id="profExerciseCatalog"></datalist>
+</section>
+<footer class="prof-workout-actions">
+<button class="secondary-action" id="cancelProfessorWorkout" type="button">Cancelar</button>
+<button class="primary-action" type="submit">Salvar treino</button>
+</footer>
+</form>
+</dialog>
+<dialog aria-labelledby="profAssessmentDialogTitle" class="prof-assessment-dialog" id="profAssessmentDialog">
+<form class="prof-assessment-form" id="profAssessmentForm" novalidate="">
+<header class="prof-module-dialog-header">
+<div>
+<span>AVALIAÇÃO FÍSICA</span>
+<h2 id="profAssessmentDialogTitle">Nova avaliação</h2>
+<p id="profAssessmentStudentName">Aluno</p>
+</div>
+<button aria-label="Fechar avaliação" class="dialog-close module-dialog-close" id="closeProfessorAssessment" type="button">×</button>
+</header>
+<input name="id" type="hidden"/>
+<input name="studentId" type="hidden"/>
+<div class="prof-module-form-grid assessment-form-grid">
+<label>
+<span>Data</span>
+<input name="date" required="" type="date"/>
+</label>
+<label>
+<span>Peso (kg)</span>
+<input inputmode="decimal" min="0" name="weight" required="" step="0.1" type="number"/>
+</label>
+<label>
+<span>Altura (m)</span>
+<input inputmode="decimal" min="0" name="height" required="" step="0.01" type="number"/>
+</label>
+<label>
+<span>IMC calculado</span>
+<input name="imc" readonly="" step="0.01" type="number"/>
+</label>
+<label>
+<span>Gordura corporal (%)</span>
+<input inputmode="decimal" min="0" name="bodyFat" step="0.1" type="number"/>
+</label>
+<label>
+<span>Peitoral (cm)</span>
+<input inputmode="decimal" min="0" name="chest" step="0.1" type="number"/>
+</label>
+<label>
+<span>Cintura (cm)</span>
+<input inputmode="decimal" min="0" name="waist" step="0.1" type="number"/>
+</label>
+<label>
+<span>Quadril (cm)</span>
+<input inputmode="decimal" min="0" name="hip" step="0.1" type="number"/>
+</label>
+<label>
+<span>Braço (cm)</span>
+<input inputmode="decimal" min="0" name="arm" step="0.1" type="number"/>
+</label>
+<label>
+<span>Coxa (cm)</span>
+<input inputmode="decimal" min="0" name="thigh" step="0.1" type="number"/>
+</label>
+<label class="span-2">
+<span>Observações</span>
+<textarea name="notes" placeholder="Evolução, cuidados e orientações" rows="3"></textarea>
+</label>
+</div>
+<footer class="prof-module-dialog-actions">
+<button class="secondary-action" id="cancelProfessorAssessment" type="button">Cancelar</button>
+<button class="primary-action" type="submit">Salvar avaliação</button>
+</footer>
+</form>
+</dialog>
+<dialog aria-labelledby="profScheduleDialogTitle" class="prof-schedule-dialog" id="profScheduleDialog">
+<form class="prof-schedule-form" id="profScheduleForm" novalidate="">
+<header class="prof-module-dialog-header">
+<div>
+<span>AGENDA DO ALUNO</span>
+<h2 id="profScheduleDialogTitle">Novo agendamento</h2>
+<p id="profScheduleStudentName">Aluno</p>
+</div>
+<button aria-label="Fechar agendamento" class="dialog-close module-dialog-close" id="closeProfessorSchedule" type="button">×</button>
+</header>
+<input name="id" type="hidden"/>
+<input name="studentId" type="hidden"/>
+<div class="prof-module-form-grid schedule-form-grid">
+<label>
+<span>Data</span>
+<input name="date" required="" type="date"/>
+</label>
+<label>
+<span>Horário</span>
+<input name="time" required="" type="time"/>
+</label>
+<label>
+<span>Modalidade</span>
+<select name="type">
+<option value="presencial">Presencial</option>
+<option value="online">Online</option>
+</select>
+</label>
+<label>
+<span>Status</span>
+<select name="status">
+<option value="marcada">Marcada</option>
+<option value="remarcada">Remarcada</option>
+<option value="realizada">Realizada</option>
+<option value="falta">Falta</option>
+<option value="cancelada">Cancelada</option>
+</select>
+</label>
+<label class="span-2">
+<span>Observações</span>
+<textarea name="notes" placeholder="Tipo de atendimento, local ou lembrete" rows="3"></textarea>
+</label>
+</div>
+<footer class="prof-module-dialog-actions">
+<button class="secondary-action" id="cancelProfessorSchedule" type="button">Cancelar</button>
+<button class="primary-action" type="submit">Salvar agendamento</button>
+</footer>
+</form>
+</dialog>
+<dialog aria-labelledby="profPaymentTitle" class="prof-payment-dialog" id="profPaymentDialog">
+<form class="prof-payment-form" id="profPaymentForm" novalidate="">
+<header class="prof-payment-header">
+<div>
+<span>MENSALIDADE</span>
+<h2 id="profPaymentTitle">Receber mensalidade</h2>
+</div>
+<button aria-label="Fechar recebimento" class="dialog-close payment-close" id="closeProfessorPayment" type="button">×</button>
+</header>
+<section class="prof-payment-context" id="profPaymentContext">
+<strong id="profPaymentStudentName">Aluno</strong>
+<span id="profPaymentStudentPlan">Plano</span>
+<span id="profPaymentContextReference">Competência</span>
+<span id="profPaymentContextDueDate">Vencimento</span>
+<span id="profPaymentContextStatus">Situação atual</span>
+</section>
+<input name="id" type="hidden"/>
+<input name="studentId" type="hidden"/>
+<input name="status" type="hidden" value="pago"/>
+<div class="prof-payment-grid">
+<label class="span-2">
+<span>Aluno</span>
+<input id="profPaymentStudentDisplay" readonly="" type="text"/>
+</label>
+<label>
+<span>Competência</span>
+<input name="reference" required="" type="month"/>
+</label>
+<label>
+<span>Vencimento</span>
+<input name="dueDate" required="" type="date"/>
+</label>
+<label>
+<span>Valor previsto</span>
+<input inputmode="decimal" min="0" name="amount" required="" step="0.01" type="number"/>
+</label>
+<label>
+<span>Status</span>
+<input readonly="" type="text" value="Pago"/>
+</label>
+<label>
+<span>Forma de pagamento</span>
+<select name="method" required="">
+<option value="pix">Pix</option>
+<option value="cartao">Cartão</option>
+<option value="dinheiro">Dinheiro</option>
+<option value="boleto">Boleto</option>
+<option value="transferencia">Transferência</option>
+</select>
+</label>
+<label>
+<span>Data do pagamento</span>
+<input name="paidAt" required="" type="date"/>
+</label>
+<label>
+<span>Valor pago</span>
+<input inputmode="decimal" min="0" name="paidAmount" required="" step="0.01" type="number"/>
+</label>
+<label>
+<span>Responsável pelo lançamento</span>
+<input name="recordedBy" required="" type="text"/>
+</label>
+</div>
+<div class="prof-payment-total">
+<span>Valor calculado</span>
+<strong id="profPaymentNetPreview">R$ 0,00</strong>
+</div>
+<details class="prof-payment-more">
+<summary>Desconto, multa e observação</summary>
+<div class="prof-payment-grid prof-payment-extra">
+<label>
+<span>Desconto</span>
+<input inputmode="decimal" min="0" name="discount" step="0.01" type="number" value="0"/>
+</label>
+<label>
+<span>Multa ou acréscimo</span>
+<input inputmode="decimal" min="0" name="fine" step="0.01" type="number" value="0"/>
+</label>
+<label class="span-2">
+<span>Observação</span>
+<textarea name="notes" rows="3"></textarea>
+</label>
+</div>
+</details>
+<footer class="prof-payment-actions">
+<button class="secondary-action" id="cancelProfessorPayment" type="button">Cancelar</button>
+<button class="primary-action" id="confirmProfessorPayment" type="submit">Confirmar recebimento</button>
+</footer>
+</form>
+</dialog>
+<div aria-live="polite" class="prof-toast" hidden="" id="profToast" role="status"></div>
+<script src="assets/js/app-config.js"></script>
+<script src="assets/js/shared-data.js?v=20260711-final-fases"></script>
+<script src="assets/js/finance-core.js?v=20260711-financeiro-fase2"></script>
+<script src="assets/js/prof.js?v=20260711-final-fases"></script>
+</body>
+</html>

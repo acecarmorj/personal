@@ -39,9 +39,10 @@ function syncState() {
 }
 
 function persistState(nextState, message) {
+  const previousState = state;
   state = Store.migrateData(nextState);
   Store.saveData(state);
-  Store.syncSnapshotIfConfigured(state).catch(() => null);
+  Store.syncSnapshotChanges(previousState, state).catch(() => null);
   syncState();
   render();
   if (message) {
@@ -298,7 +299,7 @@ function renderSchedule(student) {
           <div class="section-title">
             <div>
               <p class="eyebrow">${Store.formatDate(item.date)}</p>
-              <h2>${item.time}</h2>
+              <h2>${Store.formatTime(item.time)}</h2>
             </div>
             ${statusBadge(item.status, item.status)}
           </div>

@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --canvas: #eeeeea;
   --canvas-deep: #dcddd8;
   --surface: #fbfbf8;
@@ -76,11 +76,11 @@ button {
 .admin-header {
   position: relative;
   overflow: hidden;
-  min-height: 310px;
-  padding: 14px;
+  min-height: 224px;
+  padding: 10px;
   display: grid;
-  grid-template-columns: minmax(410px, 0.85fr) minmax(480px, 1.15fr);
-  gap: 14px;
+  grid-template-columns: minmax(410px, 0.95fr) minmax(460px, 1.05fr);
+  gap: 10px;
   border: 1px solid rgba(122, 99, 22, 0.12);
   border-radius: var(--radius-xl);
   color: var(--ink);
@@ -107,11 +107,11 @@ button {
   position: relative;
   z-index: 2;
   min-width: 0;
-  padding: 22px 20px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 30px;
+  gap: 16px;
 }
 
 .brand-row,
@@ -133,8 +133,8 @@ button {
 }
 
 .brand-mark {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   display: grid;
   flex: 0 0 auto;
   place-items: center;
@@ -173,16 +173,16 @@ button {
 .admin-header h1 {
   color: var(--ink);
   letter-spacing: -0.05em;
-  font-size: clamp(1.65rem, 3vw, 2.45rem);
+  font-size: clamp(1.65rem, 2.35vw, 2.12rem);
   line-height: 1;
 }
 
 .admin-header p:not(.header-kicker) {
-  max-width: 540px;
-  margin: 8px 0 0;
+  max-width: 570px;
+  margin: 7px 0 0;
   color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.6;
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 .header-actions {
@@ -197,7 +197,7 @@ button {
   position: relative;
   z-index: 1;
   min-width: 0;
-  min-height: 282px;
+  min-height: 204px;
   overflow: hidden;
   margin: 0;
   border-radius: 21px;
@@ -2385,6 +2385,26 @@ select:focus-visible {
   }
 }
 
+
+@media (min-width: 1021px) and (max-height: 820px) {
+  .dashboard-shell {
+    padding-top: 14px;
+  }
+
+  .admin-header {
+    min-height: 204px;
+  }
+
+  .header-content {
+    padding-top: 11px;
+    padding-bottom: 11px;
+  }
+
+  .academy-visual {
+    min-height: 184px;
+  }
+}
+
 @media (max-width: 1240px) {
   .workspace-grid,
   .footer-grid,
@@ -3590,5 +3610,3781 @@ select:focus-visible {
 
   body.printing-finance-report .report-table-row {
     break-inside: avoid;
+  }
+}
+
+/* Impede que o tamanho minimo de conteudos internos alargue o painel no celular. */
+.dashboard-shell > *,
+.panel-navigation-shell > *,
+.main-section,
+.admin-header,
+.academy-visual {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (max-width: 700px) {
+  .panel-utility-actions {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .panel-utility-actions .global-student-search,
+  .panel-utility-actions .global-student-search input {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* =========================================================
+   Ajuste de legibilidade para notebook de 15 polegadas
+   Mantem o cabecalho compacto e uniformiza fontes/controles.
+   ========================================================= */
+@media screen and (min-width: 881px) {
+  body {
+    font-size: 16px;
+  }
+
+  /* Titulos auxiliares e descricoes */
+  .header-kicker,
+  .eyebrow {
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+
+  .admin-header p:not(.header-kicker),
+  .overview-lead p:not(.eyebrow),
+  .weekly-management-hero p:not(.eyebrow),
+  .finance-hero p:not(.eyebrow),
+  .finance-module-head p:not(.eyebrow),
+  .section-description,
+  .finance-editor-copy {
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .section-head h2 {
+    font-size: 1.3rem;
+  }
+
+  .section-head h3 {
+    font-size: 1.08rem;
+  }
+
+  /* Navegacao principal */
+  .main-section-button {
+    min-height: 64px;
+    padding: 11px 15px;
+  }
+
+  .main-section-button span {
+    font-size: 0.96rem;
+  }
+
+  .main-section-button small {
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  /* Botoes e abas */
+  .primary-button,
+  .ghost-button,
+  .filter-button,
+  .student-tab,
+  .finance-tab,
+  .system-menu summary {
+    min-height: 46px;
+    padding: 12px 16px;
+    font-size: 0.94rem;
+    line-height: 1.2;
+  }
+
+  .small-button,
+  .roster-item .ghost-button,
+  .list-card .filter-button {
+    min-height: 38px;
+    padding: 9px 11px;
+    font-size: 0.84rem;
+  }
+
+  .finance-tab {
+    min-height: 46px;
+    padding-inline: 20px;
+  }
+
+  /* Formularios: rotulos, campos e placeholders */
+  .form-grid label,
+  .finance-period-control,
+  .compact-date-field,
+  .finance-filters label,
+  .weekly-admin-filters label,
+  .report-filters label {
+    gap: 8px;
+    color: #555650;
+    font-family: "Sora", sans-serif;
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .form-grid input,
+  .form-grid textarea,
+  .form-grid select,
+  .finance-period-control input,
+  .compact-date-field input,
+  .finance-filters input,
+  .finance-filters select,
+  .weekly-admin-filters input,
+  .weekly-admin-filters select,
+  .cash-filters input,
+  .cash-filters select,
+  .expense-filters input,
+  .expense-filters select,
+  .report-filters input,
+  .report-filters select {
+    min-height: 48px;
+    padding: 11px 13px;
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .form-grid textarea {
+    min-height: 104px;
+  }
+
+  .form-grid input::placeholder,
+  .form-grid textarea::placeholder,
+  .finance-filters input::placeholder,
+  .weekly-admin-filters input::placeholder,
+  .cash-filters input::placeholder,
+  .expense-filters input::placeholder {
+    color: #7e807a;
+    opacity: 1;
+  }
+
+  /* Bloco principal do financeiro */
+  .finance-hero-actions {
+    align-items: end;
+  }
+
+  .finance-period-control input {
+    min-width: 180px;
+  }
+
+  .finance-hero-actions > .primary-button,
+  .finance-hero-actions > .ghost-button {
+    min-height: 48px;
+  }
+
+  .finance-subnav {
+    gap: 7px;
+    padding: 7px;
+  }
+
+  .finance-module-head {
+    padding: 23px 25px;
+  }
+
+  .finance-module-head h2 {
+    font-size: clamp(1.35rem, 2.2vw, 1.72rem);
+  }
+
+  /* Indicadores e textos pequenos */
+  .privacy-chip,
+  .privacy-label,
+  .insight-label,
+  .result-count,
+  .live-indicator,
+  .badge,
+  .summary-card > span,
+  .metric-card > .metric-label,
+  .finance-metric-card > span,
+  .finance-legend,
+  .record-meta span {
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+
+  .metric-card > small,
+  .finance-metric-card small,
+  .summary-card p,
+  .agenda-total span,
+  .agenda-stat-grid small,
+  .student-mix-legend span,
+  .roster-item p,
+  .timeline-item p,
+  .record-description,
+  .record-note,
+  .helper-block,
+  .code-box,
+  .empty-state {
+    font-size: 0.8rem;
+  }
+
+  .roster-item strong,
+  .finance-student-cell strong,
+  .record-head h4 {
+    font-size: 0.94rem;
+  }
+
+  /* Tabela de mensalidades */
+  .finance-table-header {
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+
+  .finance-table-row {
+    min-height: 80px;
+    padding: 13px 14px;
+  }
+
+  .finance-table-row span,
+  .finance-table-row small {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .finance-amount {
+    font-size: 0.9rem;
+  }
+
+  .payment-total-preview span,
+  .cash-closing-preview span {
+    font-size: 0.82rem;
+  }
+
+  .payment-total-preview strong,
+  .cash-closing-preview strong {
+    font-size: 1.12rem;
+  }
+
+  /* Caixa e despesas */
+  .movement-item,
+  .expense-item {
+    padding: 14px;
+  }
+
+  .movement-info span,
+  .movement-info small,
+  .linked-label,
+  .cash-closing-history span,
+  .expense-info .record-head span,
+  .expense-info p {
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .movement-info strong,
+  .movement-amount {
+    font-size: 0.86rem;
+  }
+
+  .expense-due span {
+    font-size: 0.68rem;
+  }
+
+  /* Grade semanal */
+  .weekly-day-button {
+    min-height: 48px;
+  }
+
+  .weekly-day-button span {
+    font-size: 0.78rem;
+  }
+
+  .weekly-day-button small {
+    width: 24px;
+    height: 24px;
+    font-size: 0.68rem;
+  }
+
+  .weekly-day-column > header span {
+    font-size: 0.7rem;
+  }
+
+  .weekly-day-column > header strong {
+    font-size: 0.84rem;
+  }
+
+  .weekly-class-time strong {
+    font-size: 0.76rem;
+  }
+
+  .weekly-class-time span,
+  .weekly-class-info > span,
+  .upcoming-class-item > div:last-child > span {
+    font-size: 0.66rem;
+  }
+
+  .weekly-class-info h4,
+  .upcoming-class-item h4 {
+    font-size: 0.84rem;
+  }
+
+  .weekly-class-info p,
+  .weekly-class-info small,
+  .upcoming-class-item p,
+  .weekly-day-empty,
+  .weekly-admin-info p,
+  .weekly-admin-info small {
+    font-size: 0.74rem;
+  }
+
+  /* Graficos, relatorios e rodapes de cartoes */
+  .attendance-day > span,
+  .attendance-day > small,
+  .enrollment-row > span,
+  .finance-chart-value,
+  .finance-chart-column > span,
+  .evolution-column strong,
+  .evolution-column span {
+    font-size: 0.72rem;
+  }
+
+  .attendance-day > strong,
+  .enrollment-row > strong,
+  .finance-chart-column strong {
+    font-size: 0.8rem;
+  }
+
+  .finance-today-balance span,
+  .forecast-result span,
+  .finance-today-totals span,
+  .finance-today-methods span,
+  .finance-method-summary span,
+  .forecast-line span,
+  .forecast-line small,
+  .finance-priority-item span,
+  .finance-priority-item small {
+    font-size: 0.76rem;
+  }
+
+  .finance-priority-item strong,
+  .report-bar-row,
+  .report-bar-row strong,
+  .report-table-row {
+    font-size: 0.8rem;
+  }
+
+  .report-table-header {
+    font-size: 0.69rem;
+  }
+}
+
+/* Interface operacional: sem textos decorativos e com mais area util */
+.admin-header {
+  min-height: 0;
+  padding: 10px 14px;
+  display: block;
+}
+
+.header-content {
+  min-height: 64px;
+  padding: 4px 2px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.brand-row {
+  gap: 12px;
+}
+
+.brand-mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  font-size: 0.96rem;
+}
+
+.admin-header h1 {
+  font-size: clamp(1.55rem, 2.1vw, 2rem);
+  line-height: 1.1;
+}
+
+.header-actions {
+  justify-content: flex-end;
+}
+
+.main-section-nav {
+  gap: 7px;
+  padding: 6px;
+}
+
+.main-section-button {
+  min-height: 52px;
+  place-items: center;
+  padding: 11px 14px;
+  text-align: center;
+}
+
+.main-section-button span {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.main-section,
+.finance-panel.active {
+  gap: 14px;
+}
+
+.overview-lead.operational-bar {
+  min-height: 0;
+  padding: 14px 18px;
+  border-radius: 18px;
+}
+
+.overview-lead.operational-bar::after {
+  display: none;
+}
+
+.overview-lead.operational-bar h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 1.8vw, 1.45rem);
+  letter-spacing: -0.025em;
+}
+
+#openStudentsOverviewButton {
+  min-height: 48px;
+  padding: 13px 20px;
+  font-size: 1rem;
+}
+
+.section-head h2 {
+  font-size: clamp(1.15rem, 1.55vw, 1.42rem);
+  line-height: 1.2;
+}
+
+.section-head h3 {
+  font-size: 1.08rem;
+  line-height: 1.25;
+}
+
+.weekly-management-layout {
+  gap: 14px;
+}
+
+.finance-hero.finance-action-bar {
+  min-height: 0;
+  padding: 14px 18px;
+  justify-content: flex-end;
+}
+
+.finance-hero.finance-action-bar::after {
+  display: none;
+}
+
+.finance-action-bar .finance-hero-actions {
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.finance-module-head {
+  padding: 17px 20px;
+  min-height: 68px;
+}
+
+.finance-module-head h2 {
+  margin: 0;
+}
+
+.finance-editor > .section-head,
+.weekly-editor-card > .section-head {
+  margin-bottom: 14px;
+}
+
+.empty-state {
+  min-height: 90px;
+  place-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+@media screen and (min-width: 881px) {
+  .dashboard-shell {
+    gap: 14px;
+    padding: 16px 20px 24px;
+  }
+
+  .admin-header .primary-button,
+  .admin-header .ghost-button,
+  .admin-header .system-menu summary {
+    min-height: 44px;
+    padding: 11px 15px;
+    font-size: 0.92rem;
+  }
+
+  .finance-action-bar .finance-period-control input {
+    min-width: 190px;
+  }
+
+  .finance-action-bar .primary-button,
+  .finance-action-bar .ghost-button {
+    min-height: 48px;
+    padding-inline: 18px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Busca de aluno em destaque no recebimento de mensalidades */
+.payment-filters {
+  grid-template-columns: minmax(360px, 1fr) 190px;
+}
+
+.payment-filters .finance-search-field {
+  grid-column: auto;
+}
+
+.payment-filters .finance-search-field input {
+  min-height: 52px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border: 2px solid rgba(221, 178, 0, 0.42);
+  background: #fffef7;
+}
+
+.payment-filters .finance-search-field input:focus {
+  border-color: var(--primary);
+}
+
+/* ============================================================
+   PADRAO FINAL DO PAINEL DESKTOP
+   Interface operacional para notebook de 15 polegadas.
+   Mantem leitura confortavel e evita textos excessivamente pequenos.
+   ============================================================ */
+body {
+  font-size: 16px;
+}
+
+.dashboard-card,
+.sub-card {
+  min-width: 0;
+}
+
+.primary-button,
+.ghost-button,
+.filter-button,
+.student-tab,
+.finance-tab,
+.system-menu summary,
+.small-button {
+  font-size: 0.92rem;
+}
+
+.section-head h2 {
+  font-size: clamp(1.18rem, 1.55vw, 1.45rem);
+}
+
+.section-head h3,
+.record-head h4 {
+  font-size: 1rem;
+}
+
+.form-grid label,
+.finance-filters label,
+.weekly-admin-filters label,
+.report-filters label,
+.finance-period-control,
+.compact-date-field {
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+input,
+select,
+textarea {
+  font-size: 1rem;
+}
+
+.result-count,
+.badge,
+.metric-card > .metric-label,
+.metric-card > small,
+.finance-metric-card > span,
+.finance-metric-card small,
+.summary-card > span,
+.summary-card p,
+.record-meta span,
+.finance-legend,
+.finance-chart-value,
+.finance-chart-column > span,
+.finance-priority-item span,
+.finance-priority-item small,
+.movement-info span,
+.movement-info small,
+.linked-label,
+.cash-closing-history span,
+.expense-info .record-head span,
+.expense-info p,
+.expense-due span,
+.report-bar-row,
+.report-table-row,
+.weekly-day-button span,
+.weekly-day-button small,
+.weekly-day-column > header span,
+.weekly-class-time strong,
+.weekly-class-time span,
+.weekly-class-info > span,
+.weekly-class-info p,
+.weekly-class-info small,
+.upcoming-class-item p,
+.upcoming-class-item > div:last-child > span,
+.weekly-day-empty,
+.weekly-admin-info p,
+.weekly-admin-info small,
+.attendance-day > span,
+.attendance-day > small,
+.enrollment-row > span,
+.agenda-stat-grid small,
+.student-mix-ring span,
+.student-mix-legend span,
+.evolution-column strong,
+.evolution-column span {
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.finance-table-header,
+.report-table-header {
+  font-size: 0.8rem;
+}
+
+.finance-table-row span,
+.finance-table-row small,
+.report-table-row {
+  font-size: 0.88rem;
+}
+
+.finance-student-cell strong,
+.finance-amount,
+.movement-info strong,
+.movement-amount,
+.finance-priority-item strong {
+  font-size: 0.96rem;
+}
+
+.payment-filters {
+  align-items: end;
+}
+
+.payment-filters .finance-search-field input {
+  min-height: 54px;
+  padding-inline: 16px;
+  font-size: 1.06rem;
+}
+
+.finance-status-field select {
+  min-height: 54px;
+}
+
+.finance-list-head {
+  margin-bottom: 14px;
+}
+
+.finance-list-head h2 {
+  font-size: 1.32rem;
+}
+
+@media screen and (min-width: 881px) {
+  .header-actions {
+    flex-wrap: nowrap;
+  }
+
+  .main-section-button span {
+    font-size: 1.02rem;
+  }
+
+  .dashboard-card {
+    padding: 20px;
+  }
+
+  .finance-module-head,
+  .overview-lead.operational-bar,
+  .finance-hero.finance-action-bar {
+    padding: 14px 18px;
+  }
+}
+
+
+/*
+  2026-07-11 - Ajustes de cabecalho e horarios
+  - devolve a foto da fachada ao cabecalho
+  - cria wordmark Pro Fitness em preto e amarelo
+  - mantem cabecalho compacto
+*/
+.admin-header {
+  min-height: 188px;
+  grid-template-columns: minmax(430px, 1fr) minmax(280px, 420px);
+  align-items: stretch;
+  gap: 12px;
+  padding: 10px;
+}
+
+.header-content {
+  padding: 12px 16px;
+  gap: 14px;
+}
+
+.brand-block {
+  display: grid;
+  gap: 6px;
+}
+
+.brand-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  background: linear-gradient(180deg, #111111, #232323);
+  color: #f4c928;
+}
+
+.brand-wordmark {
+  display: grid;
+  gap: 1px;
+}
+
+.brand-wordmark-main {
+  color: #171717;
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+}
+
+.brand-wordmark-sub {
+  color: #a47b00;
+  font-family: "DM Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.admin-header h1 {
+  font-size: clamp(1.45rem, 2vw, 1.9rem);
+  line-height: 1.02;
+}
+
+.header-actions {
+  gap: 10px;
+}
+
+.academy-visual {
+  min-height: 166px;
+  border-radius: 18px;
+}
+
+.academy-visual figcaption {
+  right: 14px;
+  bottom: 12px;
+  left: 14px;
+}
+
+.academy-visual figcaption strong {
+  display: inline-block;
+  color: #f4c928;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.55);
+}
+
+.academy-visual figcaption small {
+  color: rgba(255,255,255,0.88);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1100px) {
+  .admin-header {
+    grid-template-columns: 1fr;
+  }
+
+  .academy-visual {
+    min-height: 154px;
+  }
+}
+
+
+/* ============================================================
+   2026-07-11 - CABECALHO SOMENTE COM FOTO + ABA ALUNOS OPERACIONAL
+   ============================================================ */
+.photo-only-header {
+  min-height: 0;
+  height: 168px;
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #161616;
+}
+
+.photo-only-header::after {
+  display: none;
+}
+
+.photo-only-header .academy-visual {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  border-radius: inherit;
+}
+
+.photo-only-header .academy-visual::after {
+  background: linear-gradient(90deg, rgba(0,0,0,0.12), transparent 30%, transparent 70%, rgba(0,0,0,0.12));
+}
+
+.photo-only-header .academy-visual img {
+  object-position: center 50%;
+}
+
+.panel-navigation-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.panel-navigation-shell .main-section-nav {
+  min-width: 0;
+}
+
+.panel-utility-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 5px;
+  border: 1px solid rgba(255,255,255,0.82);
+  border-radius: 18px;
+  background: rgba(255,254,250,0.84);
+  box-shadow: var(--shadow-card);
+}
+
+.panel-utility-actions > .ghost-button,
+.panel-utility-actions > .system-menu,
+.panel-utility-actions .system-menu summary {
+  min-height: 58px;
+}
+
+.panel-utility-actions > .ghost-button,
+.panel-utility-actions .system-menu summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  border-radius: 13px;
+  white-space: nowrap;
+}
+
+.panel-utility-actions .system-menu {
+  display: flex;
+}
+
+.panel-utility-actions .system-menu summary {
+  width: 100%;
+}
+
+.operation-command-bar {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) auto;
+  align-items: end;
+  gap: 16px;
+  padding: 16px 18px;
+}
+
+.operation-search-field {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.operation-search-field input {
+  min-height: 54px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  font-size: 1.04rem;
+  background: #fff;
+}
+
+.operation-search-field input:focus {
+  border-color: rgba(199,155,0,0.65);
+  outline: 3px solid rgba(244,201,40,0.16);
+}
+
+.operation-command-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.operation-command-actions .result-count {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 13px;
+  font-size: 0.9rem;
+}
+
+.operation-command-actions .primary-button {
+  min-height: 54px;
+  padding-inline: 22px;
+  font-size: 1rem;
+}
+
+.operation-list-head {
+  align-items: flex-start;
+}
+
+.operation-list-head .toolbar {
+  justify-content: flex-end;
+}
+
+.operation-section .list-card {
+  min-height: 620px;
+}
+
+.operation-section .detail-card {
+  min-height: 620px;
+}
+
+@media (max-width: 1180px) {
+  .panel-navigation-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-utility-actions {
+    justify-content: flex-end;
+  }
+}
+
+/* Central administrativa e catalogos */
+.global-student-search input {
+  width: clamp(190px, 18vw, 290px);
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 13px;
+  background: #fff;
+}
+
+.admin-daily-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-daily-card {
+  min-width: 0;
+  padding: 16px 18px;
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(251, 251, 248, 0.94);
+  box-shadow: var(--shadow-card);
+}
+
+.admin-daily-card span,
+.admin-daily-card small {
+  color: var(--muted);
+}
+
+.admin-daily-card strong {
+  font-size: 1.55rem;
+}
+
+.settings-section {
+  display: grid;
+  gap: 18px;
+}
+
+.settings-head,
+.settings-card,
+.admin-quality-card {
+  padding: 22px;
+}
+
+.settings-head h2,
+.settings-head p {
+  margin: 0;
+}
+
+.settings-head p {
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.settings-inline-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.55fr) auto;
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.settings-inline-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.settings-inline-form input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fff;
+}
+
+#modalityCatalogForm {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.settings-list {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-list-item {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.settings-list-item div {
+  display: grid;
+  gap: 3px;
+}
+
+.settings-list-item span {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.admin-quality-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-quality-item {
+  padding: 14px;
+  display: grid;
+  gap: 6px;
+  border-radius: 13px;
+  background: #edf3e9;
+}
+
+.admin-quality-item.warning {
+  background: #fff4d4;
+}
+
+.admin-quality-item span {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.admin-quality-item strong {
+  font-size: 1.25rem;
+}
+
+@media (max-width: 1100px) {
+  .admin-daily-grid,
+  .admin-quality-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .photo-only-header {
+    height: 142px;
+  }
+
+  .operation-command-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .operation-command-actions {
+    justify-content: space-between;
+  }
+}
+
+
+/* 2026-07-11 - Cartoes compactos da grade semanal */
+.weekly-admin-list {
+  display: grid;
+  gap: 8px;
+}
+
+.weekly-admin-item {
+  min-height: 0;
+  padding: 9px 10px;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+}
+
+.weekly-admin-day {
+  min-height: 52px;
+  height: 52px;
+  gap: 1px;
+  border-radius: 10px;
+}
+
+.weekly-admin-day strong {
+  font-size: 0.78rem;
+}
+
+.weekly-admin-day span {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.weekly-admin-info {
+  gap: 4px;
+  align-content: center;
+}
+
+.weekly-admin-title-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.weekly-admin-title {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+}
+
+.weekly-admin-title > span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.weekly-admin-title h4 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.weekly-admin-title-row .badge {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  font-size: 0.72rem;
+}
+
+.weekly-admin-meta {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.25;
+}
+
+.weekly-admin-meta span {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.weekly-admin-meta span:not(:last-child)::after {
+  content: "·";
+  margin: 0 7px;
+  color: #b7aa7b;
+}
+
+.weekly-admin-note {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weekly-admin-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.weekly-admin-actions .small-button {
+  min-height: 36px;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 1180px) {
+  .weekly-admin-item {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .weekly-admin-actions {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+}
+
+
+/* ================================================================
+   2026-07-11 - ALUNOS E TREINOS - FASES 1 E 2
+   Fase 1: lista simples, cartao inteiro clicavel e sem botao Abrir.
+   Fase 2: cabecalho fixo do aluno sem foto, com dados e presencas.
+   ================================================================ */
+.operation-section .workspace-grid {
+  grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
+}
+
+.roster-list {
+  gap: 8px;
+}
+
+.roster-item {
+  min-height: 92px;
+  padding: 13px 14px;
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  cursor: pointer;
+  outline: none;
+}
+
+.roster-item:focus-visible {
+  border-color: #c89b00;
+  box-shadow: 0 0 0 3px rgba(244, 201, 40, 0.22);
+}
+
+.roster-main-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.roster-name {
+  color: var(--ink);
+  font-size: 1.04rem !important;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.roster-plan {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.25;
+}
+
+.roster-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.roster-status-row .badge {
+  min-height: 27px;
+  padding: 6px 9px;
+  font-size: 0.72rem;
+}
+
+.detail-card {
+  position: relative;
+}
+
+.student-fixed-header {
+  position: sticky;
+  top: 10px;
+  z-index: 12;
+  margin: -6px -6px 16px;
+  padding: 16px;
+  display: grid;
+  gap: 13px;
+  border: 1px solid rgba(195, 151, 0, 0.28);
+  border-radius: 18px;
+  background: rgba(255, 254, 248, 0.97);
+  box-shadow: 0 12px 30px rgba(54, 45, 15, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.student-header-top {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(250px, 1fr) auto;
+  align-items: start;
+  gap: 16px;
+}
+
+.student-identity-block {
+  min-width: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.student-name-line {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.student-name-line h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1.35rem, 2vw, 1.82rem);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  overflow-wrap: anywhere;
+}
+
+.student-header-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.student-header-badges .badge {
+  min-height: 27px;
+  padding: 6px 9px;
+  font-size: 0.72rem;
+}
+
+.student-header-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.student-header-meta span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.student-header-meta strong {
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.045em;
+}
+
+.student-quick-actions {
+  max-width: 520px;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.student-quick-actions .primary-button,
+.student-quick-actions .ghost-button {
+  min-height: 39px;
+  padding: 9px 11px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.student-presence-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.student-presence-summary article {
+  min-width: 0;
+  padding: 10px 12px;
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.student-presence-summary span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+}
+
+.student-presence-summary strong {
+  color: var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1280px) {
+  .student-header-top {
+    grid-template-columns: 1fr;
+  }
+
+  .student-quick-actions {
+    max-width: none;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 980px) {
+  .operation-section .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-fixed-header {
+    position: relative;
+    top: auto;
+  }
+}
+
+
+/* 2026-07-11 - Passo 3: cinco abas operacionais do aluno */
+.student-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  overflow: visible;
+}
+
+.student-tab {
+  width: 100%;
+  min-height: 44px;
+  text-align: center;
+}
+
+.student-history-card {
+  margin-top: 0;
+}
+
+@media (max-width: 1100px) {
+  .student-tabs {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .student-tab {
+    width: auto;
+    min-width: 112px;
+  }
+}
+
+
+/* ================================================================
+   2026-07-11 - PASSO 4: FICHA DO ALUNO EM BLOCOS OPERACIONAIS
+   ================================================================ */
+.student-form-card {
+  padding: 15px;
+  overflow: visible;
+}
+
+.student-form-layout {
+  display: grid;
+  gap: 14px;
+}
+
+.student-form-sections {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.student-form-section {
+  min-width: 0;
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 5px 15px rgba(43, 44, 39, 0.035);
+}
+
+.student-form-section-head {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.student-form-section-head h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.04rem;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.student-form-grid {
+  gap: 12px;
+}
+
+.student-form-grid label {
+  gap: 7px;
+  color: #55564f;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.student-form-grid input,
+.student-form-grid select,
+.student-form-grid textarea {
+  min-height: 48px;
+  padding: 11px 12px;
+  font-size: 0.96rem;
+}
+
+.student-form-grid textarea {
+  min-height: 88px;
+}
+
+.student-form-savebar {
+  position: sticky;
+  z-index: 13;
+  bottom: 10px;
+  min-height: 66px;
+  padding: 10px 12px 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid rgba(195, 151, 0, 0.35);
+  border-radius: 15px;
+  background: rgba(255, 254, 248, 0.97);
+  box-shadow: 0 12px 28px rgba(54, 45, 15, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.student-form-savebar span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.student-form-savebar .primary-button {
+  min-width: 170px;
+  min-height: 48px;
+  padding: 12px 22px;
+  font-size: 0.98rem;
+}
+
+.student-history-card {
+  margin-top: 0;
+}
+
+@media (max-width: 1240px) {
+  .student-form-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .student-form-card {
+    padding: 10px;
+  }
+
+  .student-form-section {
+    padding: 13px;
+  }
+
+  .student-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-form-grid .full {
+    grid-column: auto;
+  }
+
+  .student-form-savebar {
+    bottom: 6px;
+  }
+
+  .student-form-savebar span {
+    display: none;
+  }
+
+  .student-form-savebar .primary-button {
+    width: 100%;
+  }
+}
+
+
+/* ================================================================
+   2026-07-11 - PASSO 5: RECEBIMENTO DIRETO PELO ALUNO
+   ================================================================ */
+.payment-editor-head {
+  margin-bottom: 0;
+}
+
+.payment-editor-context {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  border: 1px solid rgba(196, 151, 0, 0.28);
+  border-radius: 13px;
+  background: #fffaf0;
+}
+
+.payment-editor-context[hidden] {
+  display: none;
+}
+
+.payment-editor-context strong {
+  flex: 1 1 100%;
+  color: var(--ink);
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.payment-editor-context span {
+  color: #5e5a4d;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.finance-editor.payment-receive-mode {
+  border-color: rgba(196, 151, 0, 0.55);
+  box-shadow: 0 16px 36px rgba(110, 83, 0, 0.14);
+}
+
+.finance-editor.payment-receive-mode #paymentEditorTitle {
+  color: #715600;
+}
+
+.finance-editor.payment-receive-mode #paymentSubmitButton {
+  min-height: 50px;
+  width: 100%;
+  font-size: 1rem;
+}
+
+@media (max-width: 720px) {
+  .payment-editor-context {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+
+/* ==================================================================
+   2026-07-11 - FINANCEIRO FASE 1
+   Barra operacional, pesquisa rapida e quatro indicadores compactos.
+   ================================================================== */
+.finance-command-bar {
+  padding: 14px 16px;
+  border-color: rgba(221, 178, 0, 0.24);
+  background: linear-gradient(118deg, #fffef9, #fff7cf);
+}
+
+.finance-command-controls {
+  display: grid;
+  grid-template-columns: 190px minmax(300px, 1fr) auto auto auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.finance-command-field {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  color: #4f504b;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.finance-command-field span {
+  line-height: 1;
+}
+
+.finance-command-field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 1px solid rgba(69, 69, 61, 0.16);
+  border-radius: 12px;
+  color: var(--ink);
+  font: 600 1rem/1.2 "Sora", sans-serif;
+  background: #fff;
+  outline: none;
+}
+
+.finance-command-field input:focus {
+  border-color: rgba(185, 142, 0, 0.62);
+  box-shadow: 0 0 0 4px rgba(244, 201, 40, 0.18);
+}
+
+.finance-command-field input::placeholder {
+  color: #777973;
+  opacity: 1;
+}
+
+.finance-command-controls > .primary-button,
+.finance-command-controls > .ghost-button {
+  min-height: 48px;
+  padding-inline: 18px;
+  white-space: nowrap;
+  font-size: 0.94rem;
+}
+
+.finance-command-primary {
+  color: #f4c928;
+  background: #161616;
+  box-shadow: 0 10px 22px rgba(23, 23, 23, 0.2);
+}
+
+.finance-command-primary:hover {
+  background: #292929;
+  box-shadow: 0 13px 26px rgba(23, 23, 23, 0.24);
+}
+
+.finance-overview-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.finance-metric-card {
+  min-height: 108px;
+  padding: 15px 17px;
+  gap: 7px;
+  align-content: center;
+}
+
+.finance-metric-card > span {
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.finance-metric-card > strong {
+  font-size: clamp(1.3rem, 1.75vw, 1.72rem);
+  line-height: 1.08;
+}
+
+.finance-metric-card > small {
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+@media screen and (max-width: 1240px) {
+  .finance-command-controls {
+    grid-template-columns: 180px minmax(260px, 1fr) auto auto;
+  }
+
+  .finance-command-controls #newMovementButton {
+    grid-column: 4;
+  }
+}
+
+@media screen and (max-width: 980px) {
+  .finance-command-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .finance-command-student {
+    grid-column: 1 / -1;
+  }
+
+  .finance-command-controls #newMovementButton {
+    grid-column: auto;
+  }
+
+  .finance-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* ==================================================================
+   2026-07-11 - FINANCEIRO FASE 2
+   Lista mensal por aluno, busca completa e cobrancas ainda nao geradas.
+   ================================================================== */
+.finance-panel[data-finance-panel="payments"] .finance-layout {
+  grid-template-columns: minmax(0, 1.45fr) minmax(330px, 380px);
+  gap: 14px;
+}
+
+.payment-filters {
+  grid-template-columns: minmax(340px, 1fr) 190px;
+  gap: 10px;
+}
+
+#paymentHistory {
+  gap: 6px;
+}
+
+#paymentHistory .payment-table-header,
+#paymentHistory .payment-table-row {
+  grid-template-columns:
+    minmax(190px, 1.45fr)
+    minmax(115px, 0.82fr)
+    minmax(130px, 0.9fr)
+    minmax(105px, 0.75fr)
+    minmax(105px, 0.75fr)
+    minmax(105px, 0.72fr)
+    minmax(118px, 0.75fr);
+  gap: 9px;
+}
+
+#paymentHistory .payment-table-header {
+  padding: 0 12px 7px;
+  font-size: 0.76rem;
+}
+
+#paymentHistory .payment-table-row {
+  position: relative;
+  min-height: 66px;
+  padding: 9px 11px 9px 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+#paymentHistory .payment-table-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: #c8c8c3;
+}
+
+#paymentHistory .payment-status-vencido::before {
+  background: #c8443a;
+}
+
+#paymentHistory .payment-status-pendente::before,
+#paymentHistory .payment-status-sem-cobranca::before {
+  background: #e2b214;
+}
+
+#paymentHistory .payment-status-pago::before {
+  background: #4f8f61;
+}
+
+#paymentHistory .finance-student-cell {
+  gap: 2px;
+}
+
+#paymentHistory .finance-student-cell strong {
+  font-size: 0.98rem;
+  line-height: 1.2;
+}
+
+#paymentHistory .finance-student-cell small,
+#paymentHistory .finance-due-cell small {
+  overflow: hidden;
+  color: #6e706b;
+  font-size: 0.76rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#paymentHistory .finance-plan-cell span,
+#paymentHistory .finance-reference-cell strong,
+#paymentHistory .finance-due-cell span {
+  color: #30312e;
+  font-size: 0.88rem;
+  line-height: 1.3;
+}
+
+#paymentHistory .finance-reference-cell strong {
+  display: block;
+  font-weight: 700;
+}
+
+#paymentHistory .finance-due-cell {
+  display: grid;
+  gap: 2px;
+}
+
+#paymentHistory .finance-amount {
+  color: #181916;
+  font-size: 0.96rem;
+}
+
+#paymentHistory .finance-status-cell .badge {
+  min-width: 92px;
+  justify-content: center;
+  text-align: center;
+}
+
+#paymentHistory .finance-row-actions {
+  justify-content: flex-end;
+}
+
+#paymentHistory .finance-row-actions .small-button {
+  min-height: 40px;
+  min-width: 108px;
+  padding: 9px 11px;
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+
+#paymentHistory .payment-row-primary {
+  color: #f4c928;
+  background: #181818;
+  box-shadow: none;
+}
+
+#paymentHistory .payment-row-primary:hover {
+  background: #303030;
+  box-shadow: none;
+}
+
+@media screen and (max-width: 1280px) {
+  .finance-panel[data-finance-panel="payments"] .finance-layout {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+
+  #paymentHistory .payment-table-header,
+  #paymentHistory .payment-table-row {
+    grid-template-columns:
+      minmax(175px, 1.35fr)
+      minmax(105px, 0.78fr)
+      minmax(120px, 0.88fr)
+      minmax(100px, 0.72fr)
+      minmax(100px, 0.72fr)
+      minmax(100px, 0.7fr)
+      112px;
+    gap: 7px;
+  }
+}
+
+@media screen and (max-width: 1050px) {
+  .finance-panel[data-finance-panel="payments"] .finance-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-panel[data-finance-panel="payments"] .finance-editor {
+    position: static;
+  }
+}
+
+/* ==================================================================
+   2026-07-11 - FINANCEIRO FASE 3
+   Historico completo por aluno e recebimento rapido em janela compacta.
+   ================================================================== */
+.student-financial-history-card {
+  display: grid;
+  gap: 14px;
+}
+
+.student-financial-summary,
+.finance-student-history-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.student-financial-summary > article,
+.finance-student-history-summary > article {
+  min-width: 0;
+  min-height: 76px;
+  padding: 11px 12px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  border: 1px solid #e2ded1;
+  border-radius: 12px;
+  background: #fffdf7;
+}
+
+.student-financial-summary > article > span,
+.finance-student-history-summary > article > span {
+  color: #66675f;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.student-financial-summary > article > strong,
+.finance-student-history-summary > article > strong {
+  overflow: hidden;
+  color: #1c1d19;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+}
+
+.student-financial-summary > article > small,
+.finance-student-history-summary > article > small {
+  color: #a22c24;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.student-financial-summary > article.danger,
+.finance-student-history-summary > article.danger {
+  border-color: rgba(190, 56, 45, 0.34);
+  background: #fff6f4;
+}
+
+.student-financial-summary .summary-last-payment,
+.finance-student-history-summary .summary-last-payment {
+  grid-column: 1 / -1;
+  min-height: 62px;
+}
+
+.student-payment-history,
+.finance-student-history-list {
+  display: grid;
+  gap: 8px;
+}
+
+.student-payment-history {
+  max-height: 540px;
+  padding-right: 3px;
+  overflow: auto;
+}
+
+.student-payment-history-row {
+  position: relative;
+  display: grid;
+  gap: 9px;
+  padding: 11px 12px 11px 15px;
+  overflow: hidden;
+  border: 1px solid #e3e0d6;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.student-payment-history-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: #d4b13c;
+}
+
+.student-payment-history-row.payment-history-status-pago::before {
+  background: #4f8f61;
+}
+
+.student-payment-history-row.payment-history-status-vencido::before {
+  background: #c8443a;
+}
+
+.student-payment-history-row.payment-history-status-cancelado::before {
+  background: #777873;
+}
+
+.payment-history-title,
+.payment-history-details,
+.payment-history-actions {
+  display: flex;
+  align-items: center;
+}
+
+.payment-history-title {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.payment-history-title > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.payment-history-title strong {
+  color: #1d1e1a;
+  font-size: 0.98rem;
+}
+
+.payment-history-title span:not(.badge) {
+  color: #696a64;
+  font-size: 0.78rem;
+}
+
+.payment-history-values {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.payment-history-values > div {
+  min-width: 0;
+  padding: 7px 8px;
+  display: grid;
+  gap: 2px;
+  border-radius: 9px;
+  background: #f7f5ee;
+}
+
+.payment-history-values span {
+  color: #73746e;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.payment-history-values strong {
+  color: #242521;
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+
+.payment-history-details {
+  flex-wrap: wrap;
+  gap: 7px 16px;
+  color: #555750;
+  font-size: 0.78rem;
+}
+
+.payment-history-note {
+  margin: 0;
+  padding: 7px 9px;
+  color: #555750;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  border-radius: 8px;
+  background: #faf8f1;
+}
+
+.payment-history-actions {
+  justify-content: flex-end;
+}
+
+.finance-student-history-card {
+  position: sticky;
+  top: 14px;
+  align-self: start;
+  max-height: calc(100vh - 36px);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.finance-history-head h2 {
+  font-size: 1.08rem;
+}
+
+.finance-student-history-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.finance-student-history-summary > article {
+  min-height: 68px;
+}
+
+.finance-student-history-list {
+  min-height: 150px;
+  max-height: calc(100vh - 340px);
+  padding-right: 3px;
+  overflow: auto;
+}
+
+#paymentHistory .finance-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+#paymentHistory .finance-row-actions .small-button {
+  min-width: 74px;
+  min-height: 36px;
+  padding: 7px 8px;
+  font-size: 0.78rem;
+}
+
+#paymentHistory .payment-status-cancelado::before {
+  background: #777873;
+}
+
+.payment-dialog {
+  width: min(760px, calc(100vw - 30px));
+  max-height: calc(100vh - 30px);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 18px;
+  color: #1d1e1a;
+  background: #fffdf8;
+  box-shadow: 0 30px 90px rgba(25, 24, 18, 0.34);
+}
+
+.payment-dialog::backdrop {
+  background: rgba(22, 21, 17, 0.62);
+  backdrop-filter: blur(3px);
+}
+
+.payment-dialog-form {
+  max-height: calc(100vh - 30px);
+  padding: 18px;
+  display: grid;
+  gap: 13px;
+  overflow: auto;
+}
+
+.payment-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid #e5e0d3;
+}
+
+.payment-dialog-header > div {
+  display: grid;
+  gap: 3px;
+}
+
+.payment-dialog-kicker {
+  color: #9b7900;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.payment-dialog-header h2 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.dialog-close-button {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 11px;
+  color: #262720;
+  font-size: 1.75rem;
+  line-height: 1;
+  background: #f0ede3;
+  cursor: pointer;
+}
+
+.payment-dialog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.payment-dialog-grid label {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  color: #44453f;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.payment-dialog-grid .full {
+  grid-column: 1 / -1;
+}
+
+.payment-dialog-grid input,
+.payment-dialog-grid select,
+.payment-dialog-grid textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 11px;
+  border: 1px solid #d9d5c9;
+  border-radius: 10px;
+  color: #20211d;
+  font: inherit;
+  font-size: 0.94rem;
+  background: #fff;
+}
+
+.payment-dialog-grid textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
+.payment-dialog .payment-editor-context {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 10px 12px;
+}
+
+.payment-dialog .payment-total-preview {
+  min-height: 60px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-radius: 12px;
+  background: #1c1c1a;
+}
+
+.payment-dialog .payment-total-preview span {
+  color: #f5f1df;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.payment-dialog .payment-total-preview strong {
+  color: #f4c928;
+  font-size: 1.35rem;
+}
+
+.payment-more-options {
+  border: 1px solid #ded9cc;
+  border-radius: 12px;
+  background: #faf8f2;
+}
+
+.payment-more-options summary {
+  padding: 12px 13px;
+  color: #33342f;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.payment-extra-grid {
+  padding: 0 12px 12px;
+}
+
+.payment-dialog-actions {
+  position: sticky;
+  bottom: -18px;
+  padding: 12px 0 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  border-top: 1px solid #e5e0d3;
+  background: #fffdf8;
+}
+
+.payment-dialog-actions .primary-button,
+.payment-dialog-actions .ghost-button {
+  min-height: 46px;
+  min-width: 150px;
+  font-size: 0.9rem;
+}
+
+@media screen and (max-width: 1280px) {
+  .finance-panel[data-finance-panel="payments"] .finance-layout {
+    grid-template-columns: minmax(0, 1fr) 390px;
+  }
+
+  #paymentHistory .payment-table-header,
+  #paymentHistory .payment-table-row {
+    grid-template-columns:
+      minmax(170px, 1.3fr)
+      minmax(100px, 0.72fr)
+      minmax(112px, 0.82fr)
+      minmax(96px, 0.7fr)
+      minmax(96px, 0.7fr)
+      minmax(94px, 0.68fr)
+      minmax(150px, 0.92fr);
+  }
+}
+
+@media screen and (max-width: 1080px) {
+  .finance-panel[data-finance-panel="payments"] .finance-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-student-history-card {
+    position: static;
+    max-height: none;
+  }
+
+  .finance-student-history-list {
+    max-height: 520px;
+  }
+}
+
+@media screen and (max-width: 760px) {
+  .student-financial-summary,
+  .finance-student-history-summary,
+  .payment-history-values,
+  .payment-dialog-grid,
+  .payment-dialog .payment-editor-context {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .payment-dialog-grid .full,
+  .student-financial-summary .summary-last-payment,
+  .finance-student-history-summary .summary-last-payment {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ==================================================================
+   2026-07-11 - FINANCEIRO FASE 4
+   Caixa diario e despesas compactos para uso operacional em notebook.
+   ================================================================== */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.cash-module-head,
+.expense-module-head {
+  min-height: 68px;
+  padding: 12px 16px;
+}
+
+.cash-day-status {
+  min-height: 42px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 12px;
+  color: #6d4d00;
+  font-size: 0.9rem;
+  font-weight: 800;
+  background: #fff2b8;
+}
+
+.cash-day-status.closed {
+  color: #245d35;
+  background: #dff1e4;
+}
+
+.cash-metric-grid,
+.expense-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cash-metric-grid .finance-metric-card,
+.expense-metric-grid .finance-metric-card {
+  min-height: 104px;
+  padding: 14px 16px;
+}
+
+.cash-metric-grid .finance-metric-card > span,
+.expense-metric-grid .finance-metric-card > span {
+  font-size: 0.8rem;
+}
+
+.cash-metric-grid .finance-metric-card strong,
+.expense-metric-grid .finance-metric-card strong {
+  font-size: clamp(1.28rem, 2vw, 1.8rem);
+}
+
+.cash-metric-grid .finance-metric-card small,
+.expense-metric-grid .finance-metric-card small {
+  font-size: 0.78rem;
+}
+
+.cash-layout,
+.expense-layout {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.cash-layout.editor-open,
+.expense-layout.editor-open {
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 380px);
+}
+
+.cash-list-card,
+.expense-list-card {
+  padding: 16px;
+}
+
+.cash-filters {
+  grid-template-columns: 180px 180px minmax(260px, 1fr);
+  margin-bottom: 10px;
+  padding: 8px;
+}
+
+.cash-filters input,
+.cash-filters select,
+.expense-filters input {
+  min-height: 44px;
+  font-size: 0.94rem;
+}
+
+.movement-table-header,
+.movement-item {
+  display: grid;
+  grid-template-columns: 82px minmax(240px, 1.5fr) minmax(135px, 0.8fr) 90px 120px minmax(145px, auto);
+  align-items: center;
+  gap: 10px;
+}
+
+.movement-table-header {
+  padding: 0 11px 6px;
+  color: #72736d;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.movement-item {
+  min-height: 62px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.movement-item.entrada {
+  border-left: 4px solid #5b9b69;
+}
+
+.movement-item.saida {
+  border-left: 4px solid #cb4c42;
+}
+
+.movement-time {
+  color: #23241f;
+  font-size: 0.95rem;
+}
+
+.movement-info,
+.movement-method {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.movement-info strong,
+.movement-method strong {
+  overflow: hidden;
+  color: #252620;
+  font-size: 0.92rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.movement-info small,
+.movement-method small {
+  overflow: hidden;
+  color: #70716b;
+  font-size: 0.76rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.movement-type-pill {
+  min-width: 74px;
+  padding: 7px 9px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.movement-type-pill.entrada {
+  color: #245d35;
+  background: #dff1e4;
+}
+
+.movement-type-pill.saida {
+  color: #8b342d;
+  background: #f8dedb;
+}
+
+.movement-amount {
+  font-size: 0.96rem;
+  text-align: right;
+}
+
+.movement-actions {
+  justify-content: flex-end;
+}
+
+.movement-actions .small-button {
+  min-height: 36px;
+  padding: 7px 9px;
+  font-size: 0.78rem;
+}
+
+.compact-cash-closing {
+  grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.65fr);
+  gap: 14px;
+}
+
+.cash-closing-card,
+.cash-history-card {
+  padding: 16px;
+}
+
+.cash-closing-form {
+  display: grid;
+  grid-template-columns: 160px 160px minmax(180px, 1fr) minmax(370px, 1.4fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.cash-closing-form label,
+.cash-closing-notes {
+  display: grid;
+  gap: 6px;
+  color: #5f605a;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.cash-closing-form input,
+.cash-closing-notes textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 0.94rem;
+  background: #fff;
+}
+
+.cash-closing-preview {
+  min-height: 44px;
+  padding: 7px 11px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 9px;
+}
+
+.cash-closing-preview div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.cash-closing-preview span {
+  font-size: 0.7rem;
+}
+
+.cash-closing-preview strong {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.cash-closing-notes {
+  grid-column: 1 / -2;
+}
+
+.cash-closing-notes summary {
+  width: fit-content;
+  cursor: pointer;
+  color: #55564f;
+  font-size: 0.84rem;
+}
+
+.cash-closing-notes textarea {
+  margin-top: 6px;
+}
+
+.cash-closing-action {
+  grid-column: -2 / -1;
+  align-self: end;
+}
+
+.cash-closing-action .primary-button {
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.cash-closing-history {
+  gap: 6px;
+}
+
+.cash-closing-history .cash-history-row {
+  min-height: 54px;
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: minmax(120px, 1.2fr) repeat(3, minmax(85px, 0.8fr));
+  align-items: center;
+  gap: 9px;
+  border-radius: 10px;
+}
+
+.cash-history-row > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.cash-history-row strong {
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+
+.cash-history-row span {
+  font-size: 0.72rem;
+}
+
+.expense-filters {
+  grid-template-columns: 190px minmax(300px, 1fr);
+  margin-bottom: 8px;
+  padding: 8px;
+}
+
+.expense-status-tabs {
+  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.expense-status-button {
+  min-height: 38px;
+  padding: 7px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: #55564f;
+  font-size: 0.84rem;
+  font-weight: 800;
+  background: #fff;
+}
+
+.expense-status-button:hover,
+.expense-status-button.active {
+  color: #171812;
+  border-color: #e2b214;
+  background: #f8dc61;
+}
+
+.expense-table-header,
+.expense-item {
+  display: grid;
+  grid-template-columns: 118px minmax(210px, 1.5fr) minmax(105px, 0.72fr) minmax(130px, 0.86fr) 105px 96px minmax(135px, auto);
+  align-items: center;
+  gap: 9px;
+}
+
+.expense-table-header {
+  padding: 0 11px 6px;
+  color: #72736d;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.expense-item {
+  min-height: 62px;
+  padding: 8px 10px 8px 13px;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.expense-item.expense-vencido {
+  border-left: 4px solid #cb4c42;
+}
+
+.expense-item.expense-pendente {
+  border-left: 4px solid #e2b214;
+}
+
+.expense-item.expense-pago {
+  border-left: 4px solid #5b9b69;
+}
+
+.expense-date,
+.expense-description {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.expense-date strong,
+.expense-description strong,
+.expense-category,
+.expense-supplier,
+.expense-amount {
+  overflow: hidden;
+  color: #272822;
+  font-size: 0.88rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expense-date small,
+.expense-description small {
+  overflow: hidden;
+  color: #74756f;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expense-amount {
+  font-size: 0.96rem;
+  text-align: right;
+}
+
+.expense-status .badge {
+  min-width: 82px;
+  justify-content: center;
+}
+
+.expense-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.expense-actions .small-button {
+  min-height: 36px;
+  padding: 7px 9px;
+  font-size: 0.78rem;
+}
+
+@media screen and (max-width: 1280px) {
+  .movement-table-header,
+  .movement-item {
+    grid-template-columns: 72px minmax(190px, 1.4fr) minmax(120px, 0.78fr) 82px 105px 130px;
+    gap: 7px;
+  }
+
+  .expense-table-header,
+  .expense-item {
+    grid-template-columns: 105px minmax(180px, 1.35fr) 100px 120px 96px 90px 125px;
+    gap: 7px;
+  }
+
+  .compact-cash-closing {
+    grid-template-columns: 1fr;
+  }
+
+  .cash-closing-form {
+    grid-template-columns: 150px 150px minmax(170px, 1fr) minmax(330px, 1.3fr) auto;
+  }
+}
+
+@media screen and (max-width: 1080px) {
+  .cash-layout.editor-open,
+  .expense-layout.editor-open {
+    grid-template-columns: 1fr;
+  }
+
+  .movement-table-header,
+  .expense-table-header {
+    display: none;
+  }
+
+  .movement-item,
+  .expense-item {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .movement-item > *,
+  .expense-item > * {
+    min-width: 0;
+  }
+
+  .movement-item > *::before,
+  .expense-item > *::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 3px;
+    color: #777871;
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .cash-closing-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cash-closing-preview,
+  .cash-closing-notes,
+  .cash-closing-action {
+    grid-column: 1 / -1;
+  }
+}
+
+/* =========================================================
+   2026-07-11 - Financeiro Fase 5
+   Relatorios por aluno, conferencia e comprovante de pagamento
+   ========================================================= */
+.report-filters-final {
+  grid-template-columns: 150px 150px minmax(240px, 1.4fr) minmax(170px, 0.85fr) minmax(150px, 0.75fr) auto;
+  align-items: end;
+}
+
+.report-student-filter select {
+  font-weight: 700;
+}
+
+.report-reconciliation-card {
+  padding: 18px 20px;
+  display: grid;
+  gap: 14px;
+  border-left: 6px solid var(--lime);
+}
+
+.report-reconciliation-card.warning {
+  border-left-color: #d89614;
+  background: linear-gradient(135deg, rgba(255, 249, 225, 0.98), rgba(255, 255, 255, 0.96));
+}
+
+.report-reconciliation-title,
+.report-reconciliation-grid,
+.student-report-identification,
+.student-report-metrics {
+  display: grid;
+}
+
+.report-reconciliation-title {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.report-reconciliation-title > div {
+  display: grid;
+  gap: 3px;
+}
+
+.report-reconciliation-title span,
+.report-reconciliation-grid span,
+.student-report-identification span,
+.student-report-metric span,
+.receipt-grid span,
+.receipt-student span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.report-reconciliation-title strong {
+  font-size: 1.12rem;
+}
+
+.report-reconciliation-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.report-reconciliation-grid > div {
+  min-height: 66px;
+  padding: 11px 13px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  border: 1px solid rgba(94, 79, 29, 0.1);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.report-reconciliation-grid strong {
+  font-size: 1.12rem;
+}
+
+.report-reconciliation-note {
+  padding-top: 10px;
+  border-top: 1px solid rgba(94, 79, 29, 0.12);
+  color: #825600;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.student-report-card {
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.student-report-card[hidden] {
+  display: none;
+}
+
+.student-report-identification {
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+}
+
+.student-report-identification > div {
+  min-height: 66px;
+  padding: 11px 13px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  border: 1px solid rgba(94, 79, 29, 0.1);
+  border-radius: 13px;
+  background: rgba(255, 253, 244, 0.78);
+}
+
+.student-report-identification strong {
+  font-size: 1rem;
+}
+
+.student-report-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.student-report-metric {
+  min-height: 82px;
+  padding: 13px 15px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  border: 1px solid rgba(94, 79, 29, 0.1);
+  border-radius: 15px;
+  background: #fff;
+}
+
+.student-report-metric strong {
+  font-size: 1.25rem;
+}
+
+.student-report-metric.success { border-left: 5px solid #47945c; }
+.student-report-metric.warning { border-left: 5px solid #ddb200; }
+.student-report-metric.danger { border-left: 5px solid #b9473f; }
+.student-report-metric.neutral { border-left: 5px solid #77705f; }
+
+.student-report-payment-table {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgba(94, 79, 29, 0.12);
+  border-radius: 14px;
+}
+
+.student-report-payment-header,
+.student-report-payment-row {
+  display: grid;
+  grid-template-columns: 1.1fr 0.95fr 0.95fr 0.9fr 0.9fr 0.8fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.student-report-payment-header {
+  min-height: 42px;
+  padding: 8px 12px;
+  color: #645b42;
+  background: #f6f0dd;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.student-report-payment-row {
+  min-height: 58px;
+  padding: 9px 12px;
+  border-top: 1px solid rgba(94, 79, 29, 0.09);
+  background: rgba(255, 255, 255, 0.94);
+  font-size: 0.9rem;
+}
+
+.student-report-payment-row:hover {
+  background: #fffdf5;
+}
+
+.report-row-action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.receipt-dialog {
+  width: min(720px, calc(100vw - 28px));
+  max-height: calc(100vh - 28px);
+  padding: 0;
+  overflow: auto;
+  border: 0;
+  border-radius: 22px;
+  background: #f7f4e9;
+  box-shadow: 0 30px 90px rgba(25, 22, 13, 0.32);
+}
+
+.receipt-dialog::backdrop {
+  background: rgba(24, 21, 13, 0.56);
+  backdrop-filter: blur(3px);
+}
+
+.payment-receipt {
+  margin: 16px;
+  padding: 26px;
+  display: grid;
+  gap: 18px;
+  border: 1px solid rgba(40, 35, 18, 0.14);
+  border-radius: 17px;
+  color: #171713;
+  background: #fff;
+}
+
+.receipt-header {
+  padding-bottom: 17px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 3px solid #f0c900;
+}
+
+.receipt-brand,
+.receipt-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.receipt-brand-mark {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  color: #f4c928;
+  background: #151515;
+  font-family: "DM Mono", monospace;
+  font-weight: 800;
+}
+
+.receipt-brand > div,
+.receipt-heading {
+  display: grid;
+  gap: 3px;
+}
+
+.receipt-brand strong {
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+}
+
+.receipt-brand small {
+  color: #9a7600;
+  font-family: "DM Mono", monospace;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.receipt-heading {
+  text-align: right;
+}
+
+.receipt-heading span {
+  color: #5f5949;
+  font-size: 0.83rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.receipt-heading strong {
+  font-family: "DM Mono", monospace;
+  font-size: 0.83rem;
+}
+
+.receipt-student {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+}
+
+.receipt-student > div,
+.receipt-grid > div {
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+  border-radius: 11px;
+  background: #faf8f0;
+}
+
+.receipt-student strong,
+.receipt-grid strong {
+  font-size: 0.92rem;
+}
+
+.receipt-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.receipt-total {
+  min-height: 88px;
+  padding: 17px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-radius: 15px;
+  color: #171713;
+  background: linear-gradient(135deg, #f6d851, #efc500);
+}
+
+.receipt-total span {
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.receipt-total strong {
+  font-size: 1.8rem;
+}
+
+.receipt-note {
+  padding: 12px 14px;
+  border-left: 4px solid #ddb200;
+  border-radius: 8px;
+  background: #fff9df;
+  font-size: 0.88rem;
+}
+
+.receipt-document-footer {
+  padding-top: 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid rgba(40, 35, 18, 0.13);
+  color: #77705f;
+  font-size: 0.74rem;
+}
+
+.receipt-dialog-actions {
+  position: sticky;
+  bottom: 0;
+  padding: 12px 16px 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(247, 244, 233, 0), #f7f4e9 26%);
+}
+
+@media (max-width: 1180px) {
+  .report-filters-final {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Salvaguarda final de largura para todos os modulos do painel. */
+.dashboard-shell > *,
+.panel-navigation-shell > *,
+.main-section,
+.admin-header,
+.academy-visual {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (max-width: 760px) {
+  .report-filters-final,
+  .report-reconciliation-grid,
+  .student-report-identification,
+  .student-report-metrics,
+  .receipt-student,
+  .receipt-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-report-payment-header {
+    display: none;
+  }
+
+  .student-report-payment-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .student-report-payment-row > *::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+
+  .receipt-header,
+  .receipt-document-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .receipt-heading {
+    text-align: left;
+  }
+}
+
+@media print {
+  body.printing-student-report * {
+    visibility: hidden !important;
+  }
+
+  body.printing-student-report #printableStudentFinanceReport,
+  body.printing-student-report #printableStudentFinanceReport * {
+    visibility: visible !important;
+  }
+
+  body.printing-student-report #printableStudentFinanceReport {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  body.printing-student-report .report-row-action,
+  body.printing-student-report button {
+    display: none !important;
+  }
+
+  body.printing-student-report .student-report-payment-row {
+    break-inside: avoid;
+  }
+
+  body.printing-payment-receipt * {
+    visibility: hidden !important;
+  }
+
+  body.printing-payment-receipt #printablePaymentReceipt,
+  body.printing-payment-receipt #printablePaymentReceipt * {
+    visibility: visible !important;
+  }
+
+  body.printing-payment-receipt #printablePaymentReceipt {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    margin: 0;
+    padding: 8mm;
+    border: 0;
+    box-shadow: none;
+  }
+
+  body.printing-payment-receipt .receipt-total {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+.print-report-summary {
+  display: none;
+}
+
+@media print {
+  body.printing-finance-report .print-report-summary {
+    margin: 0 0 16px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  body.printing-finance-report .print-report-summary > div {
+    padding: 9px 11px;
+    display: grid;
+    gap: 3px;
+    border: 1px solid #d8d2bd;
+    border-radius: 7px;
+  }
+
+  body.printing-finance-report .print-report-summary span {
+    font-size: 9pt;
+  }
+
+  body.printing-finance-report .print-report-summary strong {
+    font-size: 11pt;
+  }
+}
+
+/* ======================================================================
+   2026-07-11 - Compatibilidade com treinos estruturados do tablet
+   Exibe series, repeticoes, carga e intervalo por exercicio no notebook.
+   ====================================================================== */
+.workout-exercise-detail-list {
+  margin: 10px 0;
+  display: grid;
+  gap: 6px;
+}
+
+.workout-exercise-detail-list > div {
+  min-height: 44px;
+  padding: 7px 9px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(87, 79, 48, .12);
+  border-radius: 10px;
+  background: #faf9f5;
+}
+
+.workout-exercise-detail-list > div > span {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #211b06;
+  background: #f4c928;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.workout-exercise-detail-list p {
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.workout-exercise-detail-list strong {
+  font-size: 14px;
+}
+
+.workout-exercise-detail-list small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+
+/* 2026-07-11 - Separação de responsabilidades: notebook administrativo */
+.readonly-chip {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #665000;
+  background: rgba(244, 201, 40, 0.22);
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.admin-readonly-card,
+.admin-presence-card {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-student-data-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-student-data-grid article,
+.admin-stat-grid article {
+  min-width: 0;
+  padding: 14px 15px;
+  border: 1px solid rgba(103, 84, 21, 0.12);
+  border-radius: 14px;
+  background: #fffef9;
+}
+
+.admin-student-data-grid span,
+.admin-stat-grid span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-student-data-grid strong,
+.admin-stat-grid strong {
+  display: block;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-stat-grid.compact {
+  margin-bottom: 14px;
+}
+
+.admin-stat-grid article strong {
+  font-size: 1.15rem;
+}
+
+.admin-finance-only-actions {
+  justify-content: flex-end;
+}
+
+.admin-finance-only-actions .primary-button {
+  min-width: 190px;
+}
+
+.admin-readonly-record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 13px 14px;
+}
+
+.admin-readonly-record .record-copy {
+  min-width: 0;
+}
+
+.admin-readonly-record .record-copy p,
+.admin-readonly-record .record-copy small {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.admin-presence-history {
+  display: grid;
+  gap: 8px;
+}
+
+@media (max-width: 1180px) {
+  .admin-student-data-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* Garante que qualquer elemento marcado como hidden permaneça oculto. */
+[hidden] { display: none !important; }
+
+/* Financeiro: pagamentos parciais, cobranca e centros de custo */
+.payment-status-parcial {
+  border-left-color: #d5a900;
+  background: linear-gradient(90deg, rgba(244, 201, 40, 0.12), transparent 18%);
+}
+
+.whatsapp-button {
+  color: #245f3f;
+  border-color: rgba(36, 95, 63, 0.28);
+  background: #eef8f1;
+  text-decoration: none;
+}
+
+/* Equipe e ponto: relatorio administrativo separado das operacoes financeiras. */
+.staff-section { display: grid; gap: 16px; }
+
+.staff-report-hero {
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  background:
+    radial-gradient(circle at 92% 18%, rgba(244, 201, 40, .28), transparent 15rem),
+    var(--surface);
+}
+
+.staff-report-hero h2,
+.staff-time-report h2 { margin: 3px 0 5px; }
+.staff-report-hero p { margin-bottom: 0; color: var(--muted); }
+.staff-report-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+
+.staff-report-filters {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, .6fr)) minmax(220px, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.staff-report-filters label {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.staff-report-filters input,
+.staff-report-filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  color: var(--ink);
+  background: white;
+}
+
+.staff-time-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.staff-time-metric {
+  min-width: 0;
+  min-height: 126px;
+  padding: 18px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.staff-time-metric.primary { border-top: 5px solid var(--primary); }
+.staff-time-metric.danger { border-top: 5px solid var(--danger); }
+.staff-time-metric.success { border-top: 5px solid #858575; }
+.staff-time-metric span,
+.staff-time-metric small { color: var(--muted); font-size: .78rem; font-weight: 700; }
+.staff-time-metric strong { overflow: hidden; font-size: clamp(1.45rem, 2.6vw, 2.1rem); text-overflow: ellipsis; }
+
+.staff-time-report { padding: 22px; }
+.staff-time-report-head { margin-bottom: 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.staff-time-report-head p { margin: 0; color: var(--muted); }
+.staff-time-report-head > strong { padding: 8px 12px; border-radius: 999px; background: rgba(244, 201, 40, .22); }
+.staff-time-table { display: grid; gap: 0; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 14px; }
+.staff-time-table-head,
+.staff-time-table-row { min-width: 780px; display: grid; grid-template-columns: 1.45fr .8fr .65fr .65fr .8fr .8fr; align-items: center; gap: 10px; }
+.staff-time-table-head { padding: 11px 13px; color: #f4f1e8; background: #2d2d29; font-size: .75rem; font-weight: 800; text-transform: uppercase; }
+.staff-time-table-row { padding: 12px 13px; border-top: 1px solid var(--line); background: white; font-size: .86rem; }
+.staff-time-table-row:nth-child(odd) { background: #f8f7f1; }
+.staff-time-signatures { margin-top: 54px; display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 50px; }
+.staff-time-signatures span { padding-top: 8px; border-top: 1px solid #777; text-align: center; font-size: 10pt; }
+.staff-settings-card { grid-column: 1 / -1; }
+.staff-inline-form { grid-template-columns: minmax(200px, 1fr) minmax(220px, 1fr) auto; }
+
+.data-tools-card {
+  padding: 22px;
+  display: grid;
+  gap: 18px;
+}
+
+.data-tools-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.file-action {
+  cursor: pointer;
+  text-align: center;
+}
+
+.data-audit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.data-audit-grid article {
+  min-width: 0;
+  padding: 14px;
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #f8f7f1;
+}
+
+.data-audit-grid span { color: var(--muted); font-size: .75rem; font-weight: 750; }
+.data-audit-grid strong { font-size: 1.25rem; }
+.data-audit-list { display: grid; gap: 8px; }
+
+.data-audit-item,
+.data-audit-ok {
+  min-width: 0;
+  padding: 13px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: white;
+}
+
+.data-audit-item.warning { border-left: 5px solid var(--primary); }
+.data-audit-item.danger { border-left: 5px solid var(--danger); }
+.data-audit-item p { margin: 3px 0 0; color: var(--muted); font-size: .82rem; }
+.data-audit-ok { justify-content: flex-start; color: #344b3a; background: #eef5ee; }
+.data-audit-ok { display: grid; gap: 3px; }
+.data-audit-ok span { color: #596d5d; font-size: .82rem; }
+
+@media (max-width: 1000px) {
+  .staff-time-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .staff-report-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .staff-time-table { overflow-x: auto; }
+  .data-audit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 650px) {
+  .staff-report-hero { align-items: stretch; flex-direction: column; }
+  .staff-report-actions > * { flex: 1 1 150px; }
+  .staff-report-filters,
+  .staff-time-metrics,
+  .staff-inline-form { grid-template-columns: 1fr; }
+  .staff-time-table { overflow: visible; border: 0; gap: 9px; }
+  .staff-time-table-head { display: none; }
+  .staff-time-table-row { min-width: 0; padding: 13px; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; gap: 9px; }
+  .staff-time-table-row > * { min-width: 0; display: grid; gap: 3px; }
+  .staff-time-table-row > *::before { content: attr(data-label); color: var(--muted); font-size: .65rem; font-weight: 800; text-transform: uppercase; }
+}
+
+@media print {
+  body.printing-staff-time-report * { visibility: hidden !important; }
+  body.printing-staff-time-report #staffTimePrintableReport,
+  body.printing-staff-time-report #staffTimePrintableReport * { visibility: visible !important; }
+  body.printing-staff-time-report #staffTimePrintableReport { position: absolute; inset: 0; width: 100%; margin: 0; padding: 8mm; border: 0; box-shadow: none; }
+  body.printing-staff-time-report .staff-time-table-head,
+  body.printing-staff-time-report .staff-time-table-row { min-width: 0; grid-template-columns: 1.45fr .8fr .65fr .65fr .8fr .8fr; font-size: 8.5pt; }
+  body.printing-staff-time-report .staff-time-table-row { break-inside: avoid; }
+  body.printing-staff-time-report .staff-time-signatures { display: grid; }
+}
+
+.finance-row-actions .whatsapp-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 1180px) {
+  .report-filters-final {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

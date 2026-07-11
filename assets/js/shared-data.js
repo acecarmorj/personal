@@ -4,15 +4,25 @@
   const SESSION_KEY = "profitness-student-session-v1";
   const API_PLACEHOLDER = "COLE_A_URL_DO_WEB_APP_AQUI";
   const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
+  const SYNC_DEVICE_KEY = "profitness-sync-device-v1";
+
+  function dateToSaoPauloISO(date) {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(date || new Date());
+  }
 
   function todayISO() {
-    return new Date().toISOString().slice(0, 10);
+    return dateToSaoPauloISO(new Date());
   }
 
   function demoDateDaysAgo(days) {
     const date = new Date();
     date.setDate(date.getDate() - days);
-    return date.toISOString().slice(0, 10);
+    return dateToSaoPauloISO(date);
   }
 
   function demoTimestampDaysAgo(days, hour, minute) {
@@ -30,21 +40,68 @@
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value || 0));
   }
 
-  function formatDate(value) {
+  function parseDateInput(value) {
     if (!value) {
+      return null;
+    }
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value;
+    }
+    const raw = String(value).trim();
+    if (!raw) {
+      return null;
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      return new Date(`${raw}T12:00:00`);
+    }
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  function formatDate(value) {
+    const parsed = parseDateInput(value);
+    if (!parsed) {
       return "-";
     }
-    return new Intl.DateTimeFormat("pt-BR").format(new Date(`${value}T00:00:00`));
+    if (parsed.getUTCFullYear() <= 1900) {
+      return "-";
+    }
+    return new Intl.DateTimeFormat("pt-BR").format(parsed);
+  }
+
+  function formatTime(value) {
+    if (!value && value !== 0) {
+      return "--:--";
+    }
+    const raw = String(value).trim();
+    if (!raw) {
+      return "--:--";
+    }
+    const match = raw.match(/^(\d{1,2}):(\d{2})/);
+    if (match) {
+      return `${match[1].padStart(2, "0")}:${match[2]}`;
+    }
+    const parsed = parseDateInput(raw);
+    if (!parsed) {
+      return raw;
+    }
+    return new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "UTC"
+    }).format(parsed);
   }
 
   function formatDateTime(value) {
-    if (!value) {
+    const parsed = parseDateInput(value);
+    if (!parsed) {
       return "-";
     }
     return new Intl.DateTimeFormat("pt-BR", {
       dateStyle: "short",
       timeStyle: "short"
-    }).format(new Date(value));
+    }).format(parsed);
   }
 
   function uid(prefix) {
@@ -61,6 +118,32 @@
 
   function clone(data) {
     return JSON.parse(JSON.stringify(data));
+  }
+
+  function getSyncDeviceId() {
+    let deviceId = localStorage.getItem(SYNC_DEVICE_KEY);
+    if (!deviceId) {
+      deviceId = uid("DEV");
+      localStorage.setItem(SYNC_DEVICE_KEY, deviceId);
+    }
+    return deviceId;
+  }
+
+  function getSyncSource() {
+    const page = String(window.location?.pathname || "").split("/").pop().toLowerCase();
+    if (page === "prof.html") return "tablet-professor";
+    if (page === "painel.html") return "painel-administrativo";
+    if (page === "index.html" || !page) return "app-aluno";
+    return "aplicacao-web";
+  }
+
+  function prepareRemoteRecord(record) {
+    const prepared = clone(record || {});
+    prepared.updatedAt = prepared.updatedAt || prepared.createdAt || new Date().toISOString();
+    prepared.updatedBy = prepared.updatedBy || prepared.recordedBy || (getSyncSource() === "tablet-professor" ? "Professor" : "Administracao");
+    prepared.source = prepared.source || getSyncSource();
+    prepared.deviceId = prepared.deviceId || getSyncDeviceId();
+    return prepared;
   }
 
   function getRuntimeConfig() {
@@ -102,6 +185,7 @@
       monthlyFee: Number(student.monthlyFee || 0),
       notes: student.notes || "",
       createdAt: student.createdAt || todayISO(),
+      updatedAt: student.updatedAt || student.createdAt || new Date().toISOString(),
       enrollmentToken: student.enrollmentToken || createCode("MAT"),
       enrollmentStatus: student.enrollmentStatus || "pendente",
       enrollmentCompletedAt: student.enrollmentCompletedAt || "",
@@ -118,6 +202,8 @@
     const amount = Number(payment.amount || 0);
     const discount = Number(payment.discount || 0);
     const fine = Number(payment.fine || 0);
+    const netAmount = Number(payment.netAmount ?? Math.max(0, amount - discount + fine));
+    const status = payment.status || "pendente";
     return {
       id: payment.id || uid("PG"),
       studentId: payment.studentId || "",
@@ -125,13 +211,19 @@
       amount: amount,
       discount: discount,
       fine: fine,
-      netAmount: Number(payment.netAmount ?? Math.max(0, amount - discount + fine)),
+      netAmount: netAmount,
+      paidAmount: Number(payment.paidAmount ?? (status === "pago" ? netAmount : 0)),
       dueDate: payment.dueDate || todayISO(),
-      status: payment.status || "pendente",
+      status: status,
       method: payment.method || "pix",
       paidAt: payment.paidAt || "",
+      recordedBy: payment.recordedBy || "Equipe Pro Fitness",
+      reversalReason: payment.reversalReason || "",
+      reversedBy: payment.reversedBy || "",
+      reversedAt: payment.reversedAt || "",
       description: payment.description || "Mensalidade",
       createdAt: payment.createdAt || new Date().toISOString(),
+      updatedAt: payment.updatedAt || payment.createdAt || new Date().toISOString(),
       notes: payment.notes || ""
     };
   }
@@ -148,11 +240,16 @@
       amount: Number(movement.amount || 0),
       method: movement.method || "pix",
       account: movement.account || "caixa-principal",
+      costCenter: movement.costCenter || "geral",
       studentId: movement.studentId || "",
       paymentId: movement.paymentId || "",
       expenseId: movement.expenseId || "",
       status: movement.status || "confirmado",
+      voidReason: movement.voidReason || "",
+      voidedBy: movement.voidedBy || "",
+      voidedAt: movement.voidedAt || "",
       createdAt: movement.createdAt || new Date().toISOString(),
+      updatedAt: movement.updatedAt || movement.createdAt || new Date().toISOString(),
       notes: movement.notes || ""
     };
   }
@@ -170,9 +267,12 @@
       paidAt: expense.paidAt || "",
       method: expense.method || "pix",
       account: expense.account || "caixa-principal",
+      costCenter: expense.costCenter || "geral",
       recurring: expense.recurring || "nao",
+      recurrenceId: expense.recurrenceId || "",
       document: expense.document || "",
       createdAt: expense.createdAt || new Date().toISOString(),
+      updatedAt: expense.updatedAt || expense.createdAt || new Date().toISOString(),
       notes: expense.notes || ""
     };
   }
@@ -193,6 +293,25 @@
       closedBy: closing.closedBy || "Administracao",
       closedAt: closing.closedAt || new Date().toISOString(),
       notes: closing.notes || ""
+    };
+  }
+
+  function createStaffTimeEntryRecord(overrides) {
+    const entry = overrides || {};
+    return {
+      id: entry.id || uid("PTO"),
+      staffId: entry.staffId || "",
+      staffName: entry.staffName || "Professor Pro Fitness",
+      date: entry.date || todayISO(),
+      clockIn: entry.clockIn || "",
+      clockOut: entry.clockOut || "",
+      durationMinutes: Number(entry.durationMinutes || 0),
+      status: entry.status || (entry.clockOut ? "concluido" : "aberto"),
+      source: entry.source || "tablet-professor",
+      deviceId: entry.deviceId || "",
+      notes: entry.notes || "",
+      createdAt: entry.createdAt || entry.clockIn || new Date().toISOString(),
+      updatedAt: entry.updatedAt || entry.clockOut || entry.clockIn || new Date().toISOString()
     };
   }
 
@@ -666,8 +785,11 @@
         { id: "EX-002", name: "Prancha", muscleGroup: "Core", equipment: "Solo" }
       ],
       users: [
-        { id: "USR-001", name: "Equipe Pro Fitness", email: "gestao@exemplo.com", role: "admin" }
+        { id: "USR-001", name: "Equipe Pro Fitness", email: "gestao@exemplo.com", role: "admin", status: "ativo" },
+        { id: "USR-PROF-001", name: "Prof. Rafael", email: "", role: "professor", status: "ativo" },
+        { id: "USR-PROF-002", name: "Profa. Camila", email: "", role: "professor", status: "ativo" }
       ],
+      staffTimeEntries: [],
       config: [
         { id: "CFG-001", timezone: "America/Sao_Paulo", currency: "BRL", appName: "Pro Fitness Academia", supportPhone: "(22) 98823-3216" }
       ],
@@ -683,18 +805,19 @@
     const base = buildDemoData();
     const data = raw && typeof raw === "object" ? raw : {};
     return {
-      students: safeArray(data.students).length ? safeArray(data.students).map(createStudentRecord) : base.students,
-      assessments: safeArray(data.assessments).length ? safeArray(data.assessments) : base.assessments,
-      workouts: safeArray(data.workouts).length ? safeArray(data.workouts) : base.workouts,
-      schedule: safeArray(data.schedule).length ? safeArray(data.schedule) : base.schedule,
-      payments: safeArray(data.payments).length ? safeArray(data.payments).map(createPaymentRecord) : base.payments,
-      movements: safeArray(data.movements).length ? safeArray(data.movements).map(createMovementRecord) : base.movements,
-      expenses: safeArray(data.expenses).length ? safeArray(data.expenses).map(createExpenseRecord) : base.expenses,
-      cashClosings: safeArray(data.cashClosings).length ? safeArray(data.cashClosings).map(createCashClosingRecord) : base.cashClosings,
-      checkins: safeArray(data.checkins).length ? safeArray(data.checkins) : base.checkins,
-      exercises: safeArray(data.exercises).length ? safeArray(data.exercises) : base.exercises,
-      users: safeArray(data.users).length ? safeArray(data.users) : base.users,
-      config: safeArray(data.config).length ? safeArray(data.config) : base.config,
+      students: Array.isArray(data.students) ? data.students.map(createStudentRecord) : base.students,
+      assessments: Array.isArray(data.assessments) ? data.assessments : base.assessments,
+      workouts: Array.isArray(data.workouts) ? data.workouts : base.workouts,
+      schedule: Array.isArray(data.schedule) ? data.schedule : base.schedule,
+      payments: Array.isArray(data.payments) ? data.payments.map(createPaymentRecord) : base.payments,
+      movements: Array.isArray(data.movements) ? data.movements.map(createMovementRecord) : base.movements,
+      expenses: Array.isArray(data.expenses) ? data.expenses.map(createExpenseRecord) : base.expenses,
+      cashClosings: Array.isArray(data.cashClosings) ? data.cashClosings.map(createCashClosingRecord) : base.cashClosings,
+      checkins: Array.isArray(data.checkins) ? data.checkins : base.checkins,
+      exercises: Array.isArray(data.exercises) ? data.exercises : base.exercises,
+      users: Array.isArray(data.users) ? data.users : base.users,
+      staffTimeEntries: safeArray(data.staffTimeEntries).map(createStaffTimeEntryRecord),
+      config: Array.isArray(data.config) ? data.config : base.config,
       log: safeArray(data.log)
     };
   }
@@ -706,6 +829,25 @@
     const normalized = migrateData(parsed);
     saveData(normalized);
     return normalized;
+  }
+
+  async function fetchJson(url, options, timeoutMs) {
+    const controller = typeof AbortController === "function" ? new AbortController() : null;
+    const timeout = window.setTimeout(() => controller?.abort(), Number(timeoutMs || 15000));
+    try {
+      const response = await fetch(url, { ...(options || {}), ...(controller ? { signal: controller.signal } : {}) });
+      if (!response.ok) {
+        throw new Error(`Falha HTTP ${response.status}.`);
+      }
+      return await response.json();
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        throw new Error("A comunicacao com a API demorou demais.");
+      }
+      throw error;
+    } finally {
+      window.clearTimeout(timeout);
+    }
   }
 
   async function requestRemote(method, payload) {
@@ -725,8 +867,7 @@
       options.body = JSON.stringify(payload);
     }
 
-    const response = await fetch(apiBaseUrl, options);
-    const data = await response.json();
+    const data = await fetchJson(apiBaseUrl, options, 20000);
 
     if (!data.ok) {
       throw new Error(data.message || "Falha ao comunicar com a API do Sheets.");
@@ -737,8 +878,7 @@
 
   async function fetchRemoteSnapshot() {
     const exportUrl = `${getApiBaseUrl()}?action=exportAll`;
-    const exportResponse = await fetch(exportUrl);
-    const data = await exportResponse.json();
+    const data = await fetchJson(exportUrl, {}, 20000);
 
     if (!data.ok) {
       throw new Error(data.message || "Falha ao exportar snapshot remoto.");
@@ -749,8 +889,7 @@
 
   async function setupRemoteSpreadsheet() {
     const setupUrl = `${getApiBaseUrl()}?action=setup`;
-    const response = await fetch(setupUrl);
-    const data = await response.json();
+    const data = await fetchJson(setupUrl, {}, 20000);
 
     if (!data.ok) {
       throw new Error(data.message || "Falha ao preparar a planilha.");
@@ -761,14 +900,83 @@
 
   async function fetchRemoteHealth() {
     const healthUrl = `${getApiBaseUrl()}?action=health`;
-    const response = await fetch(healthUrl);
-    const data = await response.json();
+    const data = await fetchJson(healthUrl, {}, 12000);
 
     if (!data.ok) {
       throw new Error(data.message || "Falha ao consultar a API.");
     }
 
     return data.data;
+  }
+
+  async function upsertRemoteRecord(resource, record) {
+    if (!resource || !record || !record.id) {
+      throw new Error("Registro remoto invalido.");
+    }
+    const data = await requestRemote("POST", {
+      action: "upsert",
+      resource: resource,
+      data: prepareRemoteRecord(record)
+    });
+    if (data.data?._conflict) {
+      const conflict = new Error(data.data._conflictMessage || "Conflito de sincronizacao.");
+      conflict.code = "SYNC_CONFLICT";
+      conflict.remoteRecord = data.data;
+      throw conflict;
+    }
+    return data.data;
+  }
+
+  async function deleteRemoteRecord(resource, recordId) {
+    if (!resource || !recordId) {
+      throw new Error("Registro remoto invalido.");
+    }
+    const data = await requestRemote("POST", {
+      action: "delete",
+      resource: resource,
+      data: { id: recordId }
+    });
+    return data.data;
+  }
+
+  function buildRemoteRecordOperations(beforeSnapshot, afterSnapshot, resources) {
+    const operationResources = Array.isArray(resources) && resources.length
+      ? resources
+      : ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "exercises", "users", "staffTimeEntries", "config"];
+    const operations = [];
+    operationResources.forEach((resource) => {
+      const beforeItems = Array.isArray(beforeSnapshot?.[resource]) ? beforeSnapshot[resource] : [];
+      const afterItems = Array.isArray(afterSnapshot?.[resource]) ? afterSnapshot[resource] : [];
+      const beforeMap = new Map(beforeItems.filter((item) => item?.id).map((item) => [String(item.id), item]));
+      const afterMap = new Map(afterItems.filter((item) => item?.id).map((item) => [String(item.id), item]));
+
+      afterMap.forEach((record, recordId) => {
+        if (!beforeMap.has(recordId) || JSON.stringify(beforeMap.get(recordId)) !== JSON.stringify(record)) {
+          operations.push({ action: "upsert", resource, recordId, data: clone(record) });
+        }
+      });
+      beforeMap.forEach((record, recordId) => {
+        if (!afterMap.has(recordId)) {
+          operations.push({ action: "delete", resource, recordId, data: { id: recordId } });
+        }
+      });
+    });
+    return operations;
+  }
+
+  async function syncSnapshotChanges(beforeSnapshot, afterSnapshot, resources) {
+    if (!isRemoteConfigured() || !shouldAutoSyncToRemote()) {
+      return { sent: 0 };
+    }
+    const operations = buildRemoteRecordOperations(beforeSnapshot, afterSnapshot, resources);
+    for (const operation of operations) {
+      if (operation.action === "delete") {
+        await deleteRemoteRecord(operation.resource, operation.recordId);
+      } else {
+        await upsertRemoteRecord(operation.resource, operation.data);
+      }
+    }
+    return { sent: operations.length };
   }
 
   async function pushRemoteSnapshot(snapshot) {
@@ -782,8 +990,19 @@
   }
 
   function snapshotHasMeaningfulData(snapshot) {
-    const keys = ["students", "assessments", "workouts", "schedule", "payments", "checkins", "exercises", "users", "movements", "expenses", "cashClosings"];
+    const keys = ["students", "assessments", "workouts", "schedule", "payments", "checkins", "exercises", "users", "staffTimeEntries", "movements", "expenses", "cashClosings"];
     return keys.some((key) => Array.isArray(snapshot?.[key]) && snapshot[key].length > 0);
+  }
+
+  function mergeRemoteCollectionWithNewerLocal(remoteItems, localItems) {
+    const localById = new Map(safeArray(localItems).filter((item) => item?.id).map((item) => [String(item.id), item]));
+    return safeArray(remoteItems).map((remoteRecord) => {
+      const localRecord = localById.get(String(remoteRecord?.id || ""));
+      if (!localRecord?.updatedAt || !remoteRecord?.updatedAt) return remoteRecord;
+      const localTime = new Date(localRecord.updatedAt).getTime();
+      const remoteTime = new Date(remoteRecord.updatedAt).getTime();
+      return Number.isFinite(localTime) && Number.isFinite(remoteTime) && localTime > remoteTime ? clone(localRecord) : remoteRecord;
+    });
   }
 
   async function hydrateFromRemoteIfConfigured() {
@@ -801,7 +1020,12 @@
       }
 
       const remoteSnapshot = migrateData(remoteRawSnapshot);
-      ["movements", "expenses", "cashClosings"].forEach((key) => {
+      Object.keys(remoteRawSnapshot).forEach((key) => {
+        if (Array.isArray(remoteRawSnapshot[key]) && Array.isArray(localSnapshot[key])) {
+          remoteSnapshot[key] = mergeRemoteCollectionWithNewerLocal(remoteSnapshot[key], localSnapshot[key]);
+        }
+      });
+      ["movements", "expenses", "cashClosings", "staffTimeEntries"].forEach((key) => {
         if (!Array.isArray(remoteRawSnapshot[key]) && Array.isArray(localSnapshot[key])) {
           remoteSnapshot[key] = clone(localSnapshot[key]);
         }
@@ -897,11 +1121,13 @@
       realizada: "success",
       aviso: "warning",
       pendente: "warning",
+      parcial: "warning",
       remarcada: "warning",
       pausado: "warning",
       bloqueado: "danger",
       vencido: "danger",
       cancelada: "danger",
+      cancelado: "neutral",
       inativo: "danger",
       falta: "danger"
     };
@@ -973,7 +1199,7 @@
       };
     }
 
-    if (payment.status === "vencido" || (payment.status === "pendente" && payment.dueDate && payment.dueDate < today)) {
+    if (payment.status === "vencido" || (["pendente", "parcial"].includes(payment.status) && payment.dueDate && payment.dueDate < today)) {
       return {
         status: "bloqueado",
         label: "Acesso bloqueado",
@@ -983,11 +1209,11 @@
       };
     }
 
-    if (payment.status === "pendente") {
+    if (["pendente", "parcial"].includes(payment.status)) {
       return {
         status: "aviso",
-        label: "Pagamento pendente",
-        reason: `Mensalidade pendente com vencimento em ${formatDate(payment.dueDate)}.`,
+        label: payment.status === "parcial" ? "Pagamento parcial" : "Pagamento pendente",
+        reason: `Mensalidade ${payment.status === "parcial" ? "parcialmente paga" : "pendente"} com vencimento em ${formatDate(payment.dueDate)}.`,
         payment: payment,
         allowsGate: true
       };
@@ -1105,6 +1331,7 @@
     buildDemoData: buildDemoData,
     buildEnrollmentPayload: buildEnrollmentPayload,
     buildGatePayload: buildGatePayload,
+    buildRemoteRecordOperations: buildRemoteRecordOperations,
     appendLog: appendLog,
     clearStudentSession: clearStudentSession,
     clone: clone,
@@ -1116,10 +1343,12 @@
     createStudentRecord: createStudentRecord,
     currency: currency,
     currentMonth: currentMonth,
+    deleteRemoteRecord: deleteRemoteRecord,
     fetchRemoteHealth: fetchRemoteHealth,
     fetchRemoteSnapshot: fetchRemoteSnapshot,
     findStudent: findStudent,
     formatDate: formatDate,
+    formatTime: formatTime,
     formatDateTime: formatDateTime,
     getAccessState: getAccessState,
     getCurrentPayment: getCurrentPayment,
@@ -1147,10 +1376,12 @@
     snapshotHasMeaningfulData: snapshotHasMeaningfulData,
     shouldAutoSyncToRemote: shouldAutoSyncToRemote,
     shouldUseRemoteOnLoad: shouldUseRemoteOnLoad,
+    syncSnapshotChanges: syncSnapshotChanges,
     syncSnapshotIfConfigured: syncSnapshotIfConfigured,
     todayISO: todayISO,
     touchGateSync: touchGateSync,
     uid: uid,
+    upsertRemoteRecord: upsertRemoteRecord,
     upsertPayment: upsertPayment,
     upsertStudent: upsertStudent,
     updateStudent: updateStudent

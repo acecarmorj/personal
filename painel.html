@@ -1,957 +1,1026 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pro Fitness | Painel de Gestao</title>
-    <meta name="theme-color" content="#f4c928" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="assets/css/painel.css" />
-  </head>
-  <body>
-    <div class="dashboard-shell">
-      <header class="admin-header">
-        <div class="header-content">
-          <div class="brand-row">
-            <span class="brand-mark">PF</span>
-            <div>
-              <p class="header-kicker" id="sectionKicker">Pro Fitness Carmo / Visao geral</p>
-              <h1 id="sectionTitle">Visao geral da academia</h1>
-              <p id="sectionDescription">Indicadores gerais para acompanhar o movimento da Pro Fitness.</p>
-            </div>
-          </div>
-          <div class="header-actions">
-            <a class="ghost-button" href="index.html">App do aluno</a>
-            <button class="primary-button" id="newStudentButton">Novo aluno</button>
-            <details class="system-menu">
-              <summary>Ferramentas</summary>
-              <div class="system-menu-popover">
-                <button class="ghost-button" id="setupSheetsButton">Preparar Sheets</button>
-                <button class="ghost-button" id="syncSheetsButton">Sincronizar Sheets</button>
-                <button class="ghost-button danger-button" id="resetDemoButton">Restaurar demonstracao</button>
-              </div>
-            </details>
-          </div>
-        </div>
-        <figure class="academy-visual">
-          <img src="assets/images/pro-fitness-fachada.png" alt="Fachada estilizada da Pro Fitness Academia em Carmo" />
-          <figcaption>
-            <span>Pro Fitness Academia</span>
-            <small>Carmo, Rio de Janeiro</small>
-          </figcaption>
-        </figure>
-      </header>
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pro Fitness | Painel de Gestao</title>
+<meta content="#f4c928" name="theme-color"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="assets/css/painel.css?v=20260711-final-fases" rel="stylesheet"/>
+</head>
+<body>
+<div class="dashboard-shell">
+<header class="admin-header photo-only-header">
+<figure class="academy-visual">
+<img alt="Fachada da Pro Fitness Academia" src="assets/images/pro-fitness-fachada.png"/>
+</figure>
+</header>
+<div class="panel-navigation-shell">
+<nav aria-label="Areas do painel" class="main-section-nav">
+<button aria-pressed="true" class="main-section-button active" data-main-section="overview" type="button">
+<span>Visão geral</span>
+</button>
+<button aria-pressed="false" class="main-section-button" data-main-section="operation" type="button">
+<span>Alunos e estatísticas</span>
+</button>
+<button aria-pressed="false" class="main-section-button" data-main-section="weekly" type="button">
+<span>Grade semanal</span>
+</button>
+<button aria-pressed="false" class="main-section-button" data-main-section="staff" type="button">
+<span>Equipe e ponto</span>
+</button>
+<button aria-pressed="false" class="main-section-button finance-nav-button" data-main-section="finance" type="button">
+<span>Financeiro</span>
+</button>
+<button aria-pressed="false" class="main-section-button" data-main-section="settings" type="button"><span>Configuracoes</span></button>
+</nav>
+<div class="panel-utility-actions">
+<label class="global-student-search"><span class="visually-hidden">Busca global de aluno</span><input autocomplete="off" id="globalStudentSearch" list="globalStudentSearchList" placeholder="Localizar aluno" type="search"/><datalist id="globalStudentSearchList"></datalist></label>
+<a class="ghost-button" href="index.html">App do aluno</a>
+<details class="system-menu">
+<summary>Ferramentas</summary>
+<div class="system-menu-popover">
+<button class="ghost-button" id="setupSheetsButton">Preparar Sheets</button>
+<button class="ghost-button" id="syncSheetsButton">Sincronizar Sheets</button>
+<button class="ghost-button danger-button" id="resetDemoButton">Restaurar demonstracao</button>
+</div>
+</details>
+</div>
+</div>
+<section class="main-section overview-section" data-main-panel="overview" id="overviewSection">
+<article class="overview-lead operational-bar">
+<div>
+<h2 id="overviewDate">Hoje na Pro Fitness</h2>
+</div>
+<div class="overview-lead-actions">
+<button class="primary-button" id="openStudentsOverviewButton" type="button">Ver alunos</button>
+</div>
+</article>
+<section class="overview-grid" id="metricGrid"></section>
+<section class="admin-daily-grid" id="adminDailyGrid"></section>
+<section class="insight-grid">
+<article class="dashboard-card insight-card attendance-card">
+<div class="section-head">
+<div>
+<h2>Frequencia nos ultimos 7 dias</h2>
+</div>
+<span class="insight-label" id="attendanceTotal">0 entradas</span>
+</div>
+<div aria-label="Grafico de entradas dos ultimos sete dias" class="attendance-chart" id="attendanceChart"></div>
+</article>
+<article class="dashboard-card insight-card agenda-summary-card">
+<div class="section-head">
+<div>
+<h2>Agenda de hoje</h2>
+</div>
+</div>
+<div class="agenda-summary" id="todayAgendaSummary"></div>
+</article>
+<article class="dashboard-card insight-card enrollment-chart-card">
+<div class="section-head">
+<div>
+<h2>Novas matriculas por mes</h2>
+</div>
+<span class="insight-label">Ultimos 6 meses</span>
+</div>
+<div aria-label="Grafico de novas matriculas dos ultimos seis meses" class="enrollment-chart" id="enrollmentChart"></div>
+</article>
+<article class="dashboard-card insight-card student-mix-card">
+<div class="section-head">
+<div>
+<h2>Situacao dos alunos</h2>
+</div>
+</div>
+<div class="student-mix" id="studentMix"></div>
+</article>
+</section>
+<article class="dashboard-card weekly-overview-card">
+<div class="section-head weekly-overview-head">
+<div>
+<h2>Agenda semanal</h2>
+</div>
+<button class="ghost-button" id="manageWeeklyScheduleButton" type="button">Atualizar grade</button>
+</div>
+<div class="weekly-overview-layout">
+<section aria-label="Calendario semanal de atividades" class="weekly-calendar-panel">
+<div class="weekly-day-selector" id="weeklyDaySelector"></div>
+<div class="weekly-calendar" id="weeklyScheduleCalendar"></div>
+</section>
+<aside class="upcoming-classes-panel">
+<div class="upcoming-panel-head">
+<h3>Proximas aulas</h3>
+</div>
+<div class="upcoming-class-list" id="upcomingClassList"></div>
+</aside>
+</div>
+</article>
+</section>
+<section class="main-section operation-section" data-main-panel="operation" hidden="" id="operationSection">
+<article class="dashboard-card operation-command-bar">
+<label class="operation-search-field">
+<span>Buscar aluno</span>
+<input autocomplete="off" id="studentSearchFilter" placeholder="Nome, telefone ou plano" type="search"/>
+</label>
+<div class="operation-command-actions">
+<span class="result-count" id="studentRosterCount">0 alunos</span>
 
-      <nav class="main-section-nav" aria-label="Areas do painel">
-        <button class="main-section-button active" type="button" data-main-section="overview" aria-pressed="true">
-          <span>Visao geral</span>
-          <small>Indicadores da academia</small>
-        </button>
-        <button class="main-section-button" type="button" data-main-section="operation" aria-pressed="false">
-          <span>Alunos e treinos</span>
-          <small>Gestao individual</small>
-        </button>
-        <button class="main-section-button" type="button" data-main-section="weekly" aria-pressed="false">
-          <span>Grade semanal</span>
-          <small>Aulas e professores</small>
-        </button>
-        <button class="main-section-button finance-nav-button" type="button" data-main-section="finance" aria-pressed="false">
-          <span>Financeiro</span>
-          <small>Area reservada</small>
-        </button>
-      </nav>
+</div>
+</article>
+<section class="workspace-grid">
+<article class="dashboard-card list-card">
+<div class="section-head operation-list-head">
+<div>
+<h2>Alunos</h2>
+</div>
+<div class="toolbar">
+<button class="filter-button active" data-filter="todos">Todos</button>
+<button class="filter-button" data-filter="ativos">Liberados</button>
+<button class="filter-button" data-filter="bloqueados">Bloqueados</button>
+<button class="filter-button" data-filter="pendentes">Matricula pendente</button>
+</div>
+</div>
+<div class="roster-list" id="studentRoster"></div>
+</article>
+<article class="dashboard-card detail-card">
+<div class="empty-state" id="workspaceEmpty">Selecione um aluno.</div>
+<div hidden="" id="workspaceContent">
+<section class="student-fixed-header" id="studentFixedHeader">
+<div class="student-header-top">
+<div class="student-identity-block">
+<div class="student-name-line">
+<h2 id="workspaceTitle">Selecione um aluno</h2>
+<div class="student-header-badges" id="studentHeaderBadges"></div>
+</div>
+<div class="student-header-meta" id="studentHeaderMeta"></div>
+</div>
+<div aria-label="Acoes rapidas do aluno" class="student-quick-actions admin-finance-only-actions">
+<button class="primary-button" data-quick-action="payment" type="button">Receber mensalidade</button>
 
-      <section class="main-section overview-section" id="overviewSection" data-main-panel="overview">
-        <article class="overview-lead">
-          <div>
-            <p class="eyebrow" id="overviewDate">Hoje na Pro Fitness</p>
-            <h2>A Pro Fitness hoje, em numeros.</h2>
-            <p>Acompanhe matriculas, presenca, frequencia e atividades programadas para manter a rotina da academia sob controle.</p>
-          </div>
-          <div class="overview-lead-actions">
-            <span class="privacy-chip">Resumo operacional</span>
-            <button class="primary-button" type="button" id="openStudentsOverviewButton">Gerenciar alunos</button>
-          </div>
-        </article>
 
-        <section class="overview-grid" id="metricGrid"></section>
 
-        <section class="insight-grid">
-          <article class="dashboard-card insight-card attendance-card">
-            <div class="section-head">
-              <div>
-                <p class="eyebrow">Frequencia</p>
-                <h2>Movimento nos ultimos 7 dias</h2>
-              </div>
-              <span class="insight-label" id="attendanceTotal">0 entradas</span>
-            </div>
-            <div class="attendance-chart" id="attendanceChart" aria-label="Grafico de entradas dos ultimos sete dias"></div>
-          </article>
 
-          <article class="dashboard-card insight-card agenda-summary-card">
-            <div class="section-head">
-              <div>
-                <p class="eyebrow">Agenda de hoje</p>
-                <h2>Panorama das atividades</h2>
-              </div>
-            </div>
-            <div class="agenda-summary" id="todayAgendaSummary"></div>
-          </article>
-
-          <article class="dashboard-card insight-card enrollment-chart-card">
-            <div class="section-head">
-              <div>
-                <p class="eyebrow">Crescimento</p>
-                <h2>Novas matriculas por mes</h2>
-              </div>
-              <span class="insight-label">Ultimos 6 meses</span>
-            </div>
-            <div class="enrollment-chart" id="enrollmentChart" aria-label="Grafico de novas matriculas dos ultimos seis meses"></div>
-          </article>
-
-          <article class="dashboard-card insight-card student-mix-card">
-            <div class="section-head">
-              <div>
-                <p class="eyebrow">Base de alunos</p>
-                <h2>Composicao atual</h2>
-              </div>
-            </div>
-            <div class="student-mix" id="studentMix"></div>
-          </article>
-        </section>
-
-        <article class="dashboard-card weekly-overview-card">
-          <div class="section-head weekly-overview-head">
-            <div>
-              <p class="eyebrow">Programacao da academia</p>
-              <h2>Agenda semanal</h2>
-              <p class="section-description">Horarios fixos de natacao, lutas e demais atividades coletivas.</p>
-            </div>
-            <button class="ghost-button" type="button" id="manageWeeklyScheduleButton">Atualizar grade</button>
-          </div>
-          <div class="weekly-overview-layout">
-            <section class="weekly-calendar-panel" aria-label="Calendario semanal de atividades">
-              <div class="weekly-day-selector" id="weeklyDaySelector"></div>
-              <div class="weekly-calendar" id="weeklyScheduleCalendar"></div>
-            </section>
-            <aside class="upcoming-classes-panel">
-              <div class="upcoming-panel-head">
-                <span class="live-indicator"><i></i> proximas</span>
-                <h3>O que vem por ai</h3>
-              </div>
-              <div class="upcoming-class-list" id="upcomingClassList"></div>
-            </aside>
-          </div>
-        </article>
-      </section>
-
-      <section class="main-section operation-section" id="operationSection" data-main-panel="operation" hidden>
-
-        <section class="workspace-grid">
-        <article class="dashboard-card list-card">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Operacao</p>
-              <h2>Alunos e acessos</h2>
-            </div>
-            <div class="toolbar">
-              <button class="filter-button active" data-filter="todos">Todos</button>
-              <button class="filter-button" data-filter="ativos">Liberados</button>
-              <button class="filter-button" data-filter="bloqueados">Bloqueados</button>
-              <button class="filter-button" data-filter="pendentes">Matricula pendente</button>
-            </div>
-          </div>
-          <div id="studentRoster" class="roster-list"></div>
-        </article>
-
-        <article class="dashboard-card detail-card">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Gestao central</p>
-              <h2 id="workspaceTitle">Selecione um aluno</h2>
-            </div>
-          </div>
-
-          <div id="workspaceEmpty" class="empty-state">
-            Selecione um aluno na lista para gerenciar cadastro, treinos, agenda e QR de acesso.
-          </div>
-
-          <div id="workspaceContent" hidden>
-            <div class="student-tabs" role="tablist" aria-label="Gestao do aluno">
-              <button class="student-tab active" type="button" role="tab" aria-selected="true" aria-controls="tabResumo" data-panel-tab="resumo">Resumo</button>
-              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabCadastro" data-panel-tab="cadastro">Cadastro</button>
-              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabTreinos" data-panel-tab="treinos">Treinos</button>
-              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabAvaliacoes" data-panel-tab="avaliacoes">Avaliacoes</button>
-              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabAgenda" data-panel-tab="agenda">Agenda</button>
-              <button class="student-tab" type="button" role="tab" aria-selected="false" aria-controls="tabAcessos" data-panel-tab="acessos">Acessos</button>
-            </div>
-
-            <section class="student-tab-panel active" id="tabResumo" data-panel="resumo" role="tabpanel">
-              <div id="studentSummary" class="student-summary-grid"></div>
-              <section class="sub-card module-card">
-                <div class="section-head compact-head">
-                  <div>
-                    <p class="eyebrow">Linha do tempo</p>
-                    <h3>Treinos, agenda e acessos</h3>
-                  </div>
-                </div>
-                <div id="studentTimeline" class="timeline-list"></div>
-              </section>
-            </section>
-
-            <section class="student-tab-panel" id="tabCadastro" data-panel="cadastro" role="tabpanel" hidden>
-              <section class="sub-card module-card">
-                <div class="section-head compact-head">
-                  <div>
-                    <p class="eyebrow">Perfil do aluno</p>
-                    <h3>Cadastro e preferencias de acesso</h3>
-                  </div>
-                </div>
-                <form id="studentForm" class="form-grid">
-                  <input type="hidden" name="id" />
-                  <label>
-                    Nome
-                    <input type="text" name="name" required />
-                  </label>
-                  <label>
-                    Telefone
-                    <input type="tel" name="phone" required />
-                  </label>
-                  <label>
-                    E-mail
-                    <input type="email" name="email" required />
-                  </label>
-                  <label>
-                    Data de nascimento
-                    <input type="date" name="birthDate" />
-                  </label>
-                  <label>
-                    Objetivo
-                    <input type="text" name="goal" placeholder="Ex.: hipertrofia" />
-                  </label>
-                  <label>
-                    Plano
-                    <input type="text" name="plan" placeholder="Ex.: 3x por semana" />
-                  </label>
-                  <label>
-                    Status do aluno
-                    <select name="status">
-                      <option value="ativo">Ativo</option>
-                      <option value="pausado">Pausado</option>
-                      <option value="inativo">Inativo</option>
-                    </select>
-                  </label>
-                  <label>
-                    Status da matricula
-                    <select name="enrollmentStatus">
-                      <option value="pendente">Pendente</option>
-                      <option value="ativo">Ativo</option>
-                    </select>
-                  </label>
-                  <label>
-                    Politica de acesso
-                    <select name="appAccessPolicy">
-                      <option value="auto">Automatico pelas regras do sistema</option>
-                      <option value="liberado">Liberado manualmente</option>
-                      <option value="bloqueado">Bloqueado manualmente</option>
-                    </select>
-                  </label>
-                  <label class="full">
-                    Restricoes fisicas
-                    <textarea name="restrictions" rows="3" placeholder="Lesoes, dores, limitacoes e cuidados importantes."></textarea>
-                  </label>
-                  <label class="full">
-                    Motivo do bloqueio ou observacao
-                    <textarea name="accessBlockReason" rows="3"></textarea>
-                  </label>
-                  <label class="full">
-                    Observacoes gerais
-                    <textarea name="notes" rows="3"></textarea>
-                  </label>
-                  <div class="form-actions full">
-                    <button type="submit" class="primary-button">Salvar aluno</button>
-                  </div>
-                </form>
-              </section>
-            </section>
-
-            <section class="student-tab-panel" id="tabTreinos" data-panel="treinos" role="tabpanel" hidden>
-              <div class="module-grid">
-                <section class="sub-card module-card">
-                  <div class="section-head compact-head">
-                    <div>
-                      <p class="eyebrow">Ficha de treino</p>
-                      <h3>Criar ou editar treino</h3>
-                    </div>
-                    <button class="ghost-button" type="button" id="newWorkoutButton">Novo treino</button>
-                  </div>
-                  <form id="workoutForm" class="form-grid">
-                    <input type="hidden" name="id" />
-                    <input type="hidden" name="studentId" />
-                    <label>
+</div>
+</div>
+<div class="student-presence-summary" id="studentPresenceSummary"></div>
+</section>
+<div aria-label="Gestao do aluno" class="student-tabs" role="tablist">
+<button aria-controls="tabFicha" aria-selected="true" class="student-tab active" data-panel-tab="ficha" role="tab" type="button">Resumo</button>
+<button aria-controls="tabTreinos" aria-selected="false" class="student-tab" data-panel-tab="treinos" role="tab" type="button">Treinos</button>
+<button aria-controls="tabAvaliacoes" aria-selected="false" class="student-tab" data-panel-tab="avaliacoes" role="tab" type="button">Avaliacoes</button>
+<button aria-controls="tabAgenda" aria-selected="false" class="student-tab" data-panel-tab="agenda" role="tab" type="button">Agenda</button>
+<button aria-controls="tabPresencas" aria-selected="false" class="student-tab" data-panel-tab="presencas" role="tab" type="button">Presenças</button>
+</div>
+<section class="student-tab-panel active" data-panel="ficha" id="tabFicha" role="tabpanel"><section class="sub-card module-card admin-readonly-card">
+<div class="section-head compact-head">
+<div><h3>Resumo administrativo</h3></div>
+<span class="readonly-chip">Somente consulta</span>
+</div>
+<div class="admin-student-data-grid" id="adminStudentSummary"></div>
+<div class="admin-stat-grid" id="adminOperationalStats"></div>
+</section>
+<section class="sub-card module-card student-form-card" hidden="">
+<form class="student-form-layout" id="studentForm">
+<input name="id" type="hidden"/>
+<div class="student-form-sections">
+<section aria-labelledby="personalDataTitle" class="student-form-section">
+<div class="student-form-section-head">
+<h3 id="personalDataTitle">Dados pessoais</h3>
+</div>
+<div class="form-grid student-form-grid">
+<label class="full">
+Nome
+<input name="name" required="" type="text"/>
+</label>
+<label>
+Telefone
+<input name="phone" required="" type="tel"/>
+</label>
+<label>
+E-mail
+<input name="email" required="" type="email"/>
+</label>
+<label>
+Data de nascimento
+<input name="birthDate" type="date"/>
+</label>
+<label>
+Objetivo
+<input name="goal" placeholder="Ex.: hipertrofia" type="text"/>
+</label>
+<label class="full">
+Observacoes gerais
+<textarea name="notes" rows="3"></textarea>
+</label>
+</div>
+</section>
+<section aria-labelledby="planDataTitle" class="student-form-section">
+<div class="student-form-section-head">
+<h3 id="planDataTitle">Plano e mensalidade</h3>
+</div>
+<div class="form-grid student-form-grid">
+<label class="full">
+Plano
+<input name="plan" placeholder="Ex.: 3x por semana" type="text"/>
+</label>
+<label>
+Valor mensal
+<input min="0" name="monthlyFee" placeholder="0,00" step="0.01" type="number"/>
+</label>
+<label>
+Status do aluno
+<select name="status">
+<option value="ativo">Ativo</option>
+<option value="pausado">Pausado</option>
+<option value="inativo">Inativo</option>
+</select>
+</label>
+</div>
+</section>
+<section aria-labelledby="healthDataTitle" class="student-form-section">
+<div class="student-form-section-head">
+<h3 id="healthDataTitle">Saude e restricoes</h3>
+</div>
+<div class="form-grid student-form-grid">
+<label class="full">
+Restricoes fisicas
+<textarea name="restrictions" placeholder="Lesoes, dores, limitacoes e cuidados importantes." rows="5"></textarea>
+</label>
+</div>
+</section>
+<section aria-labelledby="accessDataTitle" class="student-form-section">
+<div class="student-form-section-head">
+<h3 id="accessDataTitle">Acesso ao aplicativo</h3>
+</div>
+<div class="form-grid student-form-grid">
+<label>
+Status da matricula
+<select name="enrollmentStatus">
+<option value="pendente">Pendente</option>
+<option value="ativo">Ativo</option>
+</select>
+</label>
+<label>
+Politica de acesso
+<select name="appAccessPolicy">
+<option value="auto">Automatico pelas regras do sistema</option>
+<option value="liberado">Liberado manualmente</option>
+<option value="bloqueado">Bloqueado manualmente</option>
+</select>
+</label>
+<label class="full">
+Motivo do bloqueio ou observacao
+<textarea name="accessBlockReason" rows="3"></textarea>
+</label>
+</div>
+</section>
+</div>
+<div class="student-form-savebar">
+<span id="studentFormSaveStatus">Ficha do aluno</span>
+<button class="primary-button" type="submit">Salvar aluno</button>
+</div>
+</form>
+</section>
+<section class="sub-card module-card student-financial-history-card">
+<div class="section-head compact-head">
+<div>
+<h3>Historico de pagamentos</h3>
+</div>
+<button class="ghost-button" id="openStudentFinanceHistoryButton" type="button">Abrir no Financeiro</button>
+</div>
+<div class="student-financial-summary" id="studentFinancialSummary"></div>
+<div class="student-payment-history" id="studentPaymentHistory"></div>
+</section>
+<section class="sub-card module-card student-history-card">
+<div class="section-head compact-head">
+<div>
+<h3>Atividade operacional</h3>
+</div>
+</div>
+<div class="timeline-list" id="studentTimeline"></div>
+</section>
+</section>
+<section class="student-tab-panel" data-panel="treinos" hidden="" id="tabTreinos" role="tabpanel">
+<div class="module-grid">
+<section class="sub-card module-card" hidden="">
+<div class="section-head compact-head">
+<div>
+<h3>Treino</h3>
+</div>
+<button class="ghost-button" id="newWorkoutButton" type="button">Novo treino</button>
+</div>
+<form class="form-grid" id="workoutForm">
+<input name="id" type="hidden"/>
+<input name="studentId" type="hidden"/>
+<label>
                       Nome do treino
-                      <input type="text" name="title" required placeholder="Ex.: Treino A - Superiores" />
-                    </label>
-                    <label>
+                      <input name="title" placeholder="Ex.: Treino A - Superiores" required="" type="text"/>
+</label>
+<label>
                       Divisao
                       <select name="division">
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                      </select>
-                    </label>
-                    <label>
+<option value="A">A</option>
+<option value="B">B</option>
+<option value="C">C</option>
+<option value="D">D</option>
+</select>
+</label>
+<label>
                       Grupo muscular
-                      <input type="text" name="muscleGroup" placeholder="Ex.: Peito e triceps" />
-                    </label>
-                    <label>
+                      <input name="muscleGroup" placeholder="Ex.: Peito e triceps" type="text"/>
+</label>
+<label>
                       Status
                       <select name="status">
-                        <option value="ativo">Ativo</option>
-                        <option value="encerrado">Encerrado</option>
-                      </select>
-                    </label>
-                    <label class="full">
+<option value="ativo">Ativo</option>
+<option value="encerrado">Encerrado</option>
+</select>
+</label>
+<label class="full">
                       Exercicios
-                      <textarea name="exercises" rows="4" required placeholder="Um exercicio por linha ou separado por virgula."></textarea>
-                    </label>
-                    <label>
+                      <textarea name="exercises" placeholder="Um exercicio por linha ou separado por virgula." required="" rows="4"></textarea>
+</label>
+<label>
                       Series
-                      <input type="text" name="sets" placeholder="Ex.: 4x" />
-                    </label>
-                    <label>
+                      <input name="sets" placeholder="Ex.: 4x" type="text"/>
+</label>
+<label>
                       Repeticoes
-                      <input type="text" name="reps" placeholder="Ex.: 8-12" />
-                    </label>
-                    <label>
+                      <input name="reps" placeholder="Ex.: 8-12" type="text"/>
+</label>
+<label>
                       Carga de referencia
-                      <input type="text" name="load" placeholder="Ex.: 30 kg" />
-                    </label>
-                    <label>
+                      <input name="load" placeholder="Ex.: 30 kg" type="text"/>
+</label>
+<label>
                       Intervalo
-                      <input type="text" name="rest" placeholder="Ex.: 60 s" />
-                    </label>
-                    <label class="full">
+                      <input name="rest" placeholder="Ex.: 60 s" type="text"/>
+</label>
+<label class="full">
                       Observacoes
                       <textarea name="notes" rows="3"></textarea>
-                    </label>
-                    <div class="form-actions full">
-                      <button type="submit" class="primary-button">Salvar treino</button>
-                    </div>
-                  </form>
-                </section>
-
-                <section class="sub-card module-card">
-                  <div class="section-head compact-head">
-                    <div>
-                      <p class="eyebrow">Biblioteca do aluno</p>
-                      <h3>Treinos cadastrados</h3>
-                    </div>
-                  </div>
-                  <div id="workoutList" class="record-list"></div>
-                </section>
-              </div>
-            </section>
-
-            <section class="student-tab-panel" id="tabAvaliacoes" data-panel="avaliacoes" role="tabpanel" hidden>
-              <div class="module-grid">
-                <section class="sub-card module-card">
-                  <div class="section-head compact-head">
-                    <div>
-                      <p class="eyebrow">Avaliacao fisica</p>
-                      <h3>Registrar medidas</h3>
-                    </div>
-                    <button class="ghost-button" type="button" id="newAssessmentButton">Nova avaliacao</button>
-                  </div>
-                  <form id="assessmentForm" class="form-grid">
-                    <input type="hidden" name="id" />
-                    <input type="hidden" name="studentId" />
-                    <label>
+</label>
+<div class="form-actions full">
+<button class="primary-button" type="submit">Salvar treino</button>
+</div>
+</form>
+</section>
+<section class="sub-card module-card">
+<div class="section-head compact-head">
+<div>
+<h3>Treinos registrados pelo professor</h3>
+</div>
+</div>
+<div class="admin-stat-grid compact" id="adminWorkoutStats"></div><div class="record-list" id="workoutList"></div>
+</section>
+</div>
+</section>
+<section class="student-tab-panel" data-panel="avaliacoes" hidden="" id="tabAvaliacoes" role="tabpanel">
+<div class="module-grid">
+<section class="sub-card module-card" hidden="">
+<div class="section-head compact-head">
+<div>
+<h3>Nova avaliacao fisica</h3>
+</div>
+<button class="ghost-button" id="newAssessmentButton" type="button">Nova avaliacao</button>
+</div>
+<form class="form-grid" id="assessmentForm">
+<input name="id" type="hidden"/>
+<input name="studentId" type="hidden"/>
+<label>
                       Data
-                      <input type="date" name="date" required />
-                    </label>
-                    <label>
+                      <input name="date" required="" type="date"/>
+</label>
+<label>
                       Peso (kg)
-                      <input type="number" step="0.1" min="0" name="weight" required />
-                    </label>
-                    <label>
+                      <input min="0" name="weight" required="" step="0.1" type="number"/>
+</label>
+<label>
                       Altura (m)
-                      <input type="number" step="0.01" min="0" name="height" required />
-                    </label>
-                    <label>
+                      <input min="0" name="height" required="" step="0.01" type="number"/>
+</label>
+<label>
                       IMC calculado
-                      <input type="number" step="0.01" name="imc" readonly />
-                    </label>
-                    <label>
+                      <input name="imc" readonly="" step="0.01" type="number"/>
+</label>
+<label>
                       Gordura corporal (%)
-                      <input type="number" step="0.1" min="0" name="bodyFat" />
-                    </label>
-                    <label>
+                      <input min="0" name="bodyFat" step="0.1" type="number"/>
+</label>
+<label>
                       Peitoral (cm)
-                      <input type="number" step="0.1" min="0" name="chest" />
-                    </label>
-                    <label>
+                      <input min="0" name="chest" step="0.1" type="number"/>
+</label>
+<label>
                       Cintura (cm)
-                      <input type="number" step="0.1" min="0" name="waist" />
-                    </label>
-                    <label>
+                      <input min="0" name="waist" step="0.1" type="number"/>
+</label>
+<label>
                       Quadril (cm)
-                      <input type="number" step="0.1" min="0" name="hip" />
-                    </label>
-                    <label>
+                      <input min="0" name="hip" step="0.1" type="number"/>
+</label>
+<label>
                       Braco (cm)
-                      <input type="number" step="0.1" min="0" name="arm" />
-                    </label>
-                    <label>
+                      <input min="0" name="arm" step="0.1" type="number"/>
+</label>
+<label>
                       Coxa (cm)
-                      <input type="number" step="0.1" min="0" name="thigh" />
-                    </label>
-                    <label class="full">
+                      <input min="0" name="thigh" step="0.1" type="number"/>
+</label>
+<label class="full">
                       Fotos de evolucao (links)
-                      <textarea name="photos" rows="2" placeholder="Cole links das fotos, separados por virgula."></textarea>
-                    </label>
-                    <label class="full">
+                      <textarea name="photos" placeholder="Cole links das fotos, separados por virgula." rows="2"></textarea>
+</label>
+<label class="full">
                       Observacoes
                       <textarea name="notes" rows="3"></textarea>
-                    </label>
-                    <div class="form-actions full">
-                      <button type="submit" class="primary-button">Salvar avaliacao</button>
-                    </div>
-                  </form>
-                </section>
-
-                <section class="sub-card module-card">
-                  <div class="section-head compact-head">
-                    <div>
-                      <p class="eyebrow">Evolucao</p>
-                      <h3>Historico e tendencia</h3>
-                    </div>
-                  </div>
-                  <div id="assessmentEvolution" class="evolution-chart"></div>
-                  <div id="assessmentList" class="record-list"></div>
-                </section>
-              </div>
-            </section>
-
-            <section class="student-tab-panel" id="tabAgenda" data-panel="agenda" role="tabpanel" hidden>
-              <div class="module-grid">
-                <section class="sub-card module-card">
-                  <div class="section-head compact-head">
-                    <div>
-                      <p class="eyebrow">Agenda</p>
-                      <h3>Marcar aula</h3>
-                    </div>
-                    <button class="ghost-button" type="button" id="newScheduleButton">Nova aula</button>
-                  </div>
-                  <form id="scheduleForm" class="form-grid">
-                    <input type="hidden" name="id" />
-                    <input type="hidden" name="studentId" />
-                    <label>
+</label>
+<div class="form-actions full">
+<button class="primary-button" type="submit">Salvar avaliacao</button>
+</div>
+</form>
+</section>
+<section class="sub-card module-card">
+<div class="section-head compact-head">
+<div>
+<h3>Avaliações registradas pelo professor</h3>
+</div>
+</div>
+<div class="admin-stat-grid compact" id="adminAssessmentStats"></div><div class="evolution-chart" hidden="" id="assessmentEvolution"></div>
+<div class="record-list" id="assessmentList"></div>
+</section>
+</div>
+</section>
+<section class="student-tab-panel" data-panel="agenda" hidden="" id="tabAgenda" role="tabpanel">
+<div class="module-grid">
+<section class="sub-card module-card" hidden="">
+<div class="section-head compact-head">
+<div>
+<h3>Marcar aula</h3>
+</div>
+<button class="ghost-button" id="newScheduleButton" type="button">Nova aula</button>
+</div>
+<form class="form-grid" id="scheduleForm">
+<input name="id" type="hidden"/>
+<input name="studentId" type="hidden"/>
+<label>
                       Data
-                      <input type="date" name="date" required />
-                    </label>
-                    <label>
+                      <input name="date" required="" type="date"/>
+</label>
+<label>
                       Horario
-                      <input type="time" name="time" required />
-                    </label>
-                    <label>
+                      <input name="time" required="" type="time"/>
+</label>
+<label>
                       Modalidade
                       <select name="type">
-                        <option value="presencial">Presencial</option>
-                        <option value="online">Online</option>
-                      </select>
-                    </label>
-                    <label>
+<option value="presencial">Presencial</option>
+<option value="online">Online</option>
+</select>
+</label>
+<label>
                       Status
                       <select name="status">
-                        <option value="marcada">Marcada</option>
-                        <option value="realizada">Realizada</option>
-                        <option value="falta">Falta</option>
-                        <option value="remarcada">Remarcada</option>
-                        <option value="cancelada">Cancelada</option>
-                      </select>
-                    </label>
-                    <label class="full">
+<option value="marcada">Marcada</option>
+<option value="realizada">Realizada</option>
+<option value="falta">Falta</option>
+<option value="remarcada">Remarcada</option>
+<option value="cancelada">Cancelada</option>
+</select>
+</label>
+<label class="full">
                       Observacoes
-                      <textarea name="notes" rows="4" placeholder="Detalhes da sessao, local ou lembretes."></textarea>
-                    </label>
-                    <div class="form-actions full">
-                      <button type="submit" class="primary-button">Salvar aula</button>
-                    </div>
-                  </form>
-                </section>
-
-                <section class="sub-card module-card">
-                  <div class="section-head compact-head">
-                    <div>
-                      <p class="eyebrow">Proximas aulas</p>
-                      <h3>Agenda do aluno</h3>
-                    </div>
-                  </div>
-                  <div id="scheduleList" class="record-list"></div>
-                </section>
-              </div>
-            </section>
-
-            <section class="student-tab-panel" id="tabAcessos" data-panel="acessos" role="tabpanel" hidden>
-              <div class="double-grid">
-                <section class="sub-card module-card">
-                  <div class="section-head compact-head">
-                    <div>
-                      <p class="eyebrow">Matricula</p>
-                      <h3>QR da primeira matricula</h3>
-                    </div>
-                    <button class="ghost-button" type="button" id="regenEnrollmentButton">Reemitir QR de matricula</button>
-                  </div>
-                  <div class="code-box" id="enrollmentCodeBox"></div>
-                  <div class="qr-box" id="enrollmentQr"></div>
-                </section>
-
-                <section class="sub-card module-card">
-                  <div class="section-head compact-head">
-                    <div>
-                      <p class="eyebrow">Roleta</p>
-                      <h3>QR de acesso do aluno</h3>
-                    </div>
-                    <button class="ghost-button" type="button" id="regenGateButton">Regenerar QR da roleta</button>
-                  </div>
-                  <div class="code-box" id="gateCodeBox"></div>
-                  <div class="qr-box" id="gateQr"></div>
-                  <div id="gateStateBox" class="helper-block"></div>
-                </section>
-              </div>
-            </section>
-          </div>
-        </article>
-      </section>
-
-        <section class="footer-grid">
-        <article class="dashboard-card">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Alertas</p>
-              <h2>Acessos e cadastros</h2>
-            </div>
-          </div>
-          <div id="alertBoard" class="timeline-list"></div>
-        </article>
-
-        <article class="dashboard-card">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Atividade recente</p>
-              <h2>Historico do sistema</h2>
-            </div>
-          </div>
-          <div id="logBoard" class="timeline-list"></div>
-        </article>
-        </section>
-      </section>
-
-      <section class="main-section weekly-management-section" id="weeklyManagementSection" data-main-panel="weekly" hidden>
-        <header class="dashboard-card weekly-management-hero">
-          <div>
-            <p class="eyebrow">Programacao fixa</p>
-            <h2>Gerenciar grade semanal</h2>
-            <p>Cadastre aulas, professores e horarios que se repetem toda semana na Pro Fitness.</p>
-          </div>
-          <span class="privacy-chip">Administracao</span>
-        </header>
-
-        <section class="weekly-management-layout">
-          <article class="dashboard-card weekly-editor-card">
-            <div class="section-head compact-head">
-              <div>
-                <p class="eyebrow">Cadastro de horario</p>
-                <h2 id="weeklyEditorTitle">Nova atividade</h2>
-              </div>
-            </div>
-            <form id="weeklyScheduleForm" class="form-grid weekly-schedule-form">
-              <input type="hidden" name="id" />
-              <label class="full">
+                      <textarea name="notes" placeholder="Detalhes da sessao, local ou lembretes." rows="4"></textarea>
+</label>
+<div class="form-actions full">
+<button class="primary-button" type="submit">Salvar aula</button>
+</div>
+</form>
+</section>
+<section class="sub-card module-card">
+<div class="section-head compact-head">
+<div>
+<h3>Agenda registrada pelo professor</h3>
+</div>
+</div>
+<div class="admin-stat-grid compact" id="adminScheduleStats"></div><div class="record-list" id="scheduleList"></div>
+</section>
+</div>
+</section>
+<section class="student-tab-panel" data-panel="presencas" hidden="" id="tabPresencas" role="tabpanel"><section class="sub-card module-card admin-presence-card">
+<div class="section-head compact-head">
+<div><h3>Presenças e acesso</h3></div>
+<span class="readonly-chip">Somente consulta</span>
+</div>
+<div class="admin-stat-grid" id="adminPresenceStats"></div>
+<div class="record-list admin-presence-history" id="adminPresenceHistory"></div>
+</section>
+<div class="double-grid" hidden="">
+<section class="sub-card module-card">
+<div class="section-head compact-head">
+<div>
+<h3>QR da matricula</h3>
+</div>
+<button class="ghost-button" id="regenEnrollmentButton" type="button">Reemitir QR de matricula</button>
+</div>
+<div class="code-box" id="enrollmentCodeBox"></div>
+<div class="qr-box" id="enrollmentQr"></div>
+</section>
+<section class="sub-card module-card">
+<div class="section-head compact-head">
+<div>
+<h3>QR de acesso</h3>
+</div>
+<button class="ghost-button" id="regenGateButton" type="button">Regenerar QR da roleta</button>
+</div>
+<div class="code-box" id="gateCodeBox"></div>
+<div class="qr-box" id="gateQr"></div>
+<div class="helper-block" id="gateStateBox"></div>
+</section>
+</div>
+</section>
+</div>
+</article>
+</section>
+<section class="footer-grid">
+<article class="dashboard-card">
+<div class="section-head">
+<div>
+<h2>Alertas de acesso e cadastro</h2>
+</div>
+</div>
+<div class="timeline-list" id="alertBoard"></div>
+</article>
+<article class="dashboard-card">
+<div class="section-head">
+<div>
+<h2>Historico do sistema</h2>
+</div>
+</div>
+<div class="timeline-list" id="logBoard"></div>
+</article>
+</section>
+</section>
+<section class="main-section weekly-management-section" data-main-panel="weekly" hidden="" id="weeklyManagementSection">
+<section class="weekly-management-layout">
+<article class="dashboard-card weekly-editor-card">
+<div class="section-head compact-head">
+<div>
+<h2 id="weeklyEditorTitle">Nova atividade</h2>
+</div>
+</div>
+<form class="form-grid weekly-schedule-form" id="weeklyScheduleForm">
+<input name="id" type="hidden"/>
+<label class="full">
                 Nome da atividade
-                <input type="text" name="title" required placeholder="Ex.: Natacao infantil" />
-              </label>
-              <label>
+                <input name="title" placeholder="Ex.: Natacao infantil" required="" type="text"/>
+</label>
+<label>
                 Modalidade
-                <select name="category" required>
-                  <option value="natacao">Natacao</option>
-                  <option value="hidroginastica">Hidroginastica</option>
-                  <option value="karate">Karate</option>
-                  <option value="jiu-jitsu">Jiu-jitsu</option>
-                  <option value="funcional">Treino funcional</option>
-                  <option value="danca">Danca</option>
-                  <option value="musculacao">Musculacao orientada</option>
-                  <option value="outra">Outra atividade</option>
-                </select>
-              </label>
-              <label>
+                <select name="category" required="">
+<option value="natacao">Natacao</option>
+<option value="hidroginastica">Hidroginastica</option>
+<option value="karate">Karate</option>
+<option value="jiu-jitsu">Jiu-jitsu</option>
+<option value="funcional">Treino funcional</option>
+<option value="danca">Danca</option>
+<option value="musculacao">Musculacao orientada</option>
+<option value="outra">Outra atividade</option>
+</select>
+</label>
+<label>
                 Dia da semana
-                <select name="dayOfWeek" required>
-                  <option value="1">Segunda-feira</option>
-                  <option value="2">Terca-feira</option>
-                  <option value="3">Quarta-feira</option>
-                  <option value="4">Quinta-feira</option>
-                  <option value="5">Sexta-feira</option>
-                  <option value="6">Sabado</option>
-                  <option value="0">Domingo</option>
-                </select>
-              </label>
-              <label>
+                <select name="dayOfWeek" required="">
+<option value="1">Segunda-feira</option>
+<option value="2">Terca-feira</option>
+<option value="3">Quarta-feira</option>
+<option value="4">Quinta-feira</option>
+<option value="5">Sexta-feira</option>
+<option value="6">Sabado</option>
+<option value="0">Domingo</option>
+</select>
+</label>
+<label>
                 Inicio
-                <input type="time" name="startTime" required />
-              </label>
-              <label>
+                <input name="startTime" required="" type="time"/>
+</label>
+<label>
                 Termino
-                <input type="time" name="endTime" required />
-              </label>
-              <label class="full">
+                <input name="endTime" required="" type="time"/>
+</label>
+<label class="full">
                 Professor
-                <input type="text" name="teacherName" required placeholder="Nome do professor" />
-              </label>
-              <label>
+                <input name="teacherName" placeholder="Nome do professor" required="" type="text"/>
+</label>
+<label>
                 Local
-                <input type="text" name="location" placeholder="Ex.: Piscina" />
-              </label>
-              <label>
+                <input name="location" placeholder="Ex.: Piscina" type="text"/>
+</label>
+<label>
                 Limite de alunos
-                <input type="number" name="capacity" min="0" step="1" placeholder="Ex.: 20" />
-              </label>
-              <label class="full">
+                <input min="0" name="capacity" placeholder="Ex.: 20" step="1" type="number"/>
+</label>
+<label class="full">
                 Status
                 <select name="status">
-                  <option value="ativo">Ativa na grade</option>
-                  <option value="inativo">Oculta temporariamente</option>
-                </select>
-              </label>
-              <label class="full">
+<option value="ativo">Ativa na grade</option>
+<option value="inativo">Oculta temporariamente</option>
+</select>
+</label>
+<label class="full">
                 Observacoes
-                <textarea name="notes" rows="3" placeholder="Faixa etaria, nivel ou orientacoes importantes."></textarea>
-              </label>
-              <div class="form-actions full weekly-form-actions">
-                <button class="ghost-button" type="button" id="clearWeeklyScheduleButton">Limpar</button>
-                <button class="primary-button" type="submit">Salvar na grade</button>
-              </div>
-            </form>
-          </article>
-
-          <article class="dashboard-card weekly-admin-list-card">
-            <div class="section-head weekly-admin-list-head">
-              <div>
-                <p class="eyebrow">Horarios cadastrados</p>
-                <h2>Programacao semanal</h2>
-              </div>
-              <span class="result-count" id="weeklyScheduleCount">0 horarios</span>
-            </div>
-            <div class="weekly-admin-filters">
-              <label>
+                <textarea name="notes" placeholder="Faixa etaria, nivel ou orientacoes importantes." rows="3"></textarea>
+</label>
+<div class="form-actions full weekly-form-actions">
+<button class="ghost-button" id="clearWeeklyScheduleButton" type="button">Limpar</button>
+<button class="primary-button" type="submit">Salvar na grade</button>
+</div>
+</form>
+</article>
+<article class="dashboard-card weekly-admin-list-card">
+<div class="section-head weekly-admin-list-head">
+<div>
+<h2>Programacao semanal</h2>
+</div>
+<span class="result-count" id="weeklyScheduleCount">0 horarios</span>
+</div>
+<div class="weekly-admin-filters">
+<label>
                 Dia
                 <select id="weeklyDayFilter">
-                  <option value="todos">Todos os dias</option>
-                  <option value="1">Segunda-feira</option>
-                  <option value="2">Terca-feira</option>
-                  <option value="3">Quarta-feira</option>
-                  <option value="4">Quinta-feira</option>
-                  <option value="5">Sexta-feira</option>
-                  <option value="6">Sabado</option>
-                  <option value="0">Domingo</option>
-                </select>
-              </label>
-              <label>
+<option value="todos">Todos os dias</option>
+<option value="1">Segunda-feira</option>
+<option value="2">Terca-feira</option>
+<option value="3">Quarta-feira</option>
+<option value="4">Quinta-feira</option>
+<option value="5">Sexta-feira</option>
+<option value="6">Sabado</option>
+<option value="0">Domingo</option>
+</select>
+</label>
+<label>
                 Buscar
-                <input type="search" id="weeklySearchFilter" placeholder="Atividade ou professor" />
-              </label>
-            </div>
-            <div class="weekly-admin-list" id="weeklyScheduleAdminList"></div>
-          </article>
-        </section>
-      </section>
-
-      <section class="main-section finance-section" id="financeSection" data-main-panel="finance" hidden>
-        <header class="dashboard-card finance-hero">
-          <div>
-            <p class="eyebrow">Area reservada</p>
-            <h2>Central financeira</h2>
-            <p>Mensalidades, caixa, despesas, fechamentos e relatorios em uma rotina simples para a administracao.</p>
-          </div>
-          <div class="finance-hero-actions">
-            <label class="finance-period-control">
-              Competencia
-              <input type="month" id="financeMonthFilter" />
-            </label>
-            <button class="ghost-button" type="button" id="newMovementButton">Lancar no caixa</button>
-            <button class="ghost-button" type="button" id="newExpenseButton">Nova despesa</button>
-            <button class="primary-button" type="button" id="newPaymentButton">Nova mensalidade</button>
-          </div>
-        </header>
-
-        <nav class="finance-subnav" aria-label="Modulos financeiros">
-          <button class="finance-tab active" type="button" data-finance-tab="summary" aria-pressed="true">Resumo</button>
-          <button class="finance-tab" type="button" data-finance-tab="payments" aria-pressed="false">Mensalidades</button>
-          <button class="finance-tab" type="button" data-finance-tab="cash" aria-pressed="false">Caixa diario</button>
-          <button class="finance-tab" type="button" data-finance-tab="expenses" aria-pressed="false">Despesas</button>
-          <button class="finance-tab" type="button" data-finance-tab="reports" aria-pressed="false">Relatorios</button>
-        </nav>
-
-        <section class="finance-panel active" data-finance-panel="summary">
-          <section class="finance-overview-grid" id="financeMetricGrid"></section>
-
-          <section class="finance-summary-layout">
-            <article class="dashboard-card finance-chart-card">
-              <div class="section-head">
-                <div>
-                  <p class="eyebrow">Receita recorrente</p>
-                  <h2>Previsto x recebido</h2>
-                </div>
-                <div class="finance-legend" aria-label="Legenda do grafico">
-                  <span><i class="legend-dot paid"></i> Recebido</span>
-                  <span><i class="legend-dot expected"></i> Previsto</span>
-                </div>
-              </div>
-              <div class="finance-chart" id="financeChart"></div>
-            </article>
-
-            <article class="dashboard-card finance-today-card">
-              <div class="section-head">
-                <div>
-                  <p class="eyebrow">Hoje</p>
-                  <h2>Movimento do caixa</h2>
-                </div>
-              </div>
-              <div id="financeTodaySummary" class="finance-today-summary"></div>
-            </article>
-          </section>
-
-          <section class="finance-summary-lower">
-            <article class="dashboard-card finance-priority-card">
-              <div class="section-head">
-                <div>
-                  <p class="eyebrow">Atencao diaria</p>
-                  <h2>Pendencias prioritarias</h2>
-                </div>
-              </div>
-              <div id="financePriorityList" class="finance-priority-list"></div>
-            </article>
-
-            <article class="dashboard-card finance-forecast-card">
-              <div class="section-head">
-                <div>
-                  <p class="eyebrow">Proximos 30 dias</p>
-                  <h2>Previsao financeira</h2>
-                </div>
-              </div>
-              <div id="financeForecast" class="finance-forecast"></div>
-            </article>
-          </section>
-        </section>
-
-        <section class="finance-panel" data-finance-panel="payments" hidden>
-          <header class="dashboard-card finance-module-head">
-            <div>
-              <p class="eyebrow">Receita recorrente</p>
-              <h2>Mensalidades dos alunos</h2>
-              <p>Gere cobrancas do mes, acompanhe vencimentos e registre recebimentos.</p>
-            </div>
-            <div class="finance-module-actions">
-              <button class="ghost-button" type="button" id="generateMonthlyPaymentsButton">Gerar mensalidades do mes</button>
-              <button class="primary-button" type="button" id="paymentTabNewButton">Nova mensalidade</button>
-            </div>
-          </header>
-
-          <section class="finance-layout">
-            <article class="dashboard-card finance-list-card">
-              <div class="section-head finance-list-head">
-                <div>
-                  <p class="eyebrow">Cobrancas</p>
-                  <h2>Controle de mensalidades</h2>
-                </div>
-                <span class="result-count" id="financeResultCount">0 registros</span>
-              </div>
-
-              <div class="finance-filters payment-filters">
-                <label>
+                <input id="weeklySearchFilter" placeholder="Atividade ou professor" type="search"/>
+</label>
+</div>
+<div class="weekly-admin-list" id="weeklyScheduleAdminList"></div>
+</article>
+</section>
+</section>
+<section class="main-section staff-section" data-main-panel="staff" hidden="" id="staffSection">
+<header class="dashboard-card staff-report-hero">
+<div><p class="eyebrow">Gestao da equipe</p><h2>Relatorio de ponto dos professores</h2><p>Acompanhe entradas, saidas e o tempo de permanencia na academia.</p></div>
+<div class="staff-report-actions"><button class="ghost-button" id="exportStaffTimeCsvButton" type="button">Exportar CSV</button><button class="primary-button" id="printStaffTimeReportButton" type="button">Imprimir relatorio</button></div>
+</header>
+<article class="dashboard-card staff-report-filters">
+<label>De<input id="staffReportStartDate" type="date"/></label>
+<label>Ate<input id="staffReportEndDate" type="date"/></label>
+<label>Professor<select id="staffReportProfessorFilter"><option value="">Toda a equipe</option></select></label>
+<button class="primary-button" id="applyStaffTimeFiltersButton" type="button">Aplicar filtros</button>
+</article>
+<section class="staff-time-metrics" id="staffTimeMetrics"></section>
+<article class="dashboard-card staff-time-report" id="staffTimePrintableReport">
+<header class="staff-time-report-head"><div><p class="eyebrow">Pro Fitness Academia</p><h2>Espelho de ponto</h2><p id="staffTimeReportPeriod">Periodo selecionado</p></div><strong id="staffTimeReportPerson">Toda a equipe</strong></header>
+<div class="staff-time-table" id="staffTimeTable"></div>
+<footer class="staff-time-signatures"><span>Responsavel administrativo</span><span>Professor</span></footer>
+</article>
+</section>
+<section class="main-section settings-section" data-main-panel="settings" hidden="" id="settingsSection">
+<header class="dashboard-card settings-head"><div><h2>Configuracoes administrativas</h2><p>Planos e modalidades usados nos cadastros e relatorios.</p></div></header>
+<section class="settings-grid">
+<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Planos</h2></div></div><form class="settings-inline-form" id="planCatalogForm"><label>Nome<input name="name" required type="text"/></label><label>Valor mensal<input min="0" name="monthlyFee" step="0.01" type="number"/></label><button class="primary-button" type="submit">Adicionar plano</button></form><div class="settings-list" id="planCatalogList"></div></article>
+<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Modalidades</h2></div></div><form class="settings-inline-form" id="modalityCatalogForm"><label>Nome<input name="name" required type="text"/></label><button class="primary-button" type="submit">Adicionar modalidade</button></form><div class="settings-list" id="modalityCatalogList"></div></article>
+<article class="dashboard-card settings-card staff-settings-card"><div class="section-head"><div><h2>Professores</h2><p>Os nomes cadastrados ficam disponiveis no ponto do tablet.</p></div></div><form class="settings-inline-form staff-inline-form" id="staffCatalogForm"><label>Nome<input name="name" required type="text"/></label><label>E-mail<input name="email" type="email"/></label><button class="primary-button" type="submit">Adicionar professor</button></form><div class="settings-list" id="staffCatalogList"></div></article>
+</section>
+<article class="dashboard-card admin-quality-card"><div class="section-head"><div><h2>Qualidade cadastral</h2></div></div><div class="admin-quality-grid" id="adminQualityGrid"></div></article>
+<article class="dashboard-card data-tools-card">
+<div class="section-head"><div><p class="eyebrow">Seguranca operacional</p><h2>Dados, importacao e backup</h2><p>Use estas ferramentas antes de migracoes ou alteracoes em grande volume.</p></div></div>
+<div class="data-tools-actions">
+<button class="primary-button" id="downloadDataBackupButton" type="button">Baixar backup JSON</button>
+<label class="ghost-button file-action" for="restoreDataBackupInput">Restaurar backup<input accept="application/json,.json" hidden id="restoreDataBackupInput" type="file"/></label>
+<label class="ghost-button file-action" for="importStudentsCsvInput">Importar alunos CSV<input accept="text/csv,.csv" hidden id="importStudentsCsvInput" type="file"/></label>
+<button class="ghost-button" id="runDataAuditButton" type="button">Executar auditoria</button>
+</div>
+<div class="data-audit-grid" id="dataAuditGrid"></div>
+<div class="data-audit-list" id="dataAuditList"></div>
+</article>
+</section>
+<section class="main-section finance-section" data-main-panel="finance" hidden="" id="financeSection">
+<header class="dashboard-card finance-command-bar">
+<div class="finance-command-controls">
+<label class="finance-command-field finance-command-period">
+<span>Competencia</span>
+<input id="financeMonthFilter" type="month"/>
+</label>
+<label class="finance-command-field finance-command-student">
+<span>Aluno</span>
+<input autocomplete="off" id="financeQuickStudentSearch" list="financeQuickStudentList" placeholder="Nome, telefone ou codigo" type="search"/>
+<datalist id="financeQuickStudentList"></datalist>
+</label>
+<button class="primary-button finance-command-primary" id="quickReceivePaymentButton" type="button">Receber mensalidade</button>
+<button class="ghost-button" id="newExpenseButton" type="button">Nova despesa</button>
+<button class="ghost-button" id="newMovementButton" type="button">Novo lancamento</button>
+</div>
+</header>
+<nav aria-label="Modulos financeiros" class="finance-subnav">
+<button aria-pressed="true" class="finance-tab active" data-finance-tab="summary" type="button">Resumo</button>
+<button aria-pressed="false" class="finance-tab" data-finance-tab="payments" type="button">Mensalidades</button>
+<button aria-pressed="false" class="finance-tab" data-finance-tab="cash" type="button">Caixa diario</button>
+<button aria-pressed="false" class="finance-tab" data-finance-tab="expenses" type="button">Despesas</button>
+<button aria-pressed="false" class="finance-tab" data-finance-tab="reports" type="button">Relatorios</button>
+</nav>
+<section class="finance-panel active" data-finance-panel="summary">
+<section class="finance-overview-grid" id="financeMetricGrid"></section>
+<section class="finance-summary-layout">
+<article class="dashboard-card finance-chart-card">
+<div class="section-head">
+<div>
+<h2>Mensalidades: previsto x recebido</h2>
+</div>
+<div aria-label="Legenda do grafico" class="finance-legend">
+<span><i class="legend-dot paid"></i> Recebido</span>
+<span><i class="legend-dot expected"></i> Previsto</span>
+</div>
+</div>
+<div class="finance-chart" id="financeChart"></div>
+</article>
+<article class="dashboard-card finance-today-card">
+<div class="section-head">
+<div>
+<h2>Caixa de hoje</h2>
+</div>
+</div>
+<div class="finance-today-summary" id="financeTodaySummary"></div>
+</article>
+</section>
+<section class="finance-summary-lower">
+<article class="dashboard-card finance-priority-card">
+<div class="section-head">
+<div>
+<h2>Pendencias prioritarias</h2>
+</div>
+</div>
+<div class="finance-priority-list" id="financePriorityList"></div>
+</article>
+<article class="dashboard-card finance-forecast-card">
+<div class="section-head">
+<div>
+<h2>Previsao dos proximos 30 dias</h2>
+</div>
+</div>
+<div class="finance-forecast" id="financeForecast"></div>
+</article>
+</section>
+</section>
+<section class="finance-panel" data-finance-panel="payments" hidden="">
+<header class="dashboard-card finance-module-head">
+<div>
+<h2>Mensalidades</h2>
+</div>
+<div class="finance-module-actions">
+<button class="ghost-button" id="generateMonthlyPaymentsButton" type="button">Gerar mensalidades do mes</button>
+</div>
+</header>
+<section class="finance-layout">
+<article class="dashboard-card finance-list-card">
+<div class="section-head finance-list-head">
+<div>
+<h2>Mensalidades da competencia</h2>
+</div>
+<span class="result-count" id="financeResultCount">0 registros</span>
+</div>
+<div class="finance-filters payment-filters"><label class="finance-search-field">
+                  Buscar aluno
+                  <input id="financeSearchFilter" placeholder="Nome, telefone, codigo ou plano" type="search"/>
+</label>
+<label class="finance-status-field">
                   Status
                   <select id="financeStatusFilter">
-                    <option value="todos">Todos</option>
-                    <option value="pago">Pago</option>
-                    <option value="pendente">Pendente</option>
-                    <option value="vencido">Vencido</option>
-                  </select>
-                </label>
-                <label class="finance-search-field">
-                  Buscar aluno
-                  <input type="search" id="financeSearchFilter" placeholder="Nome do aluno" />
-                </label>
-              </div>
-
-              <div class="finance-table" id="paymentHistory"></div>
-            </article>
-
-            <aside class="dashboard-card finance-editor" id="paymentEditorCard">
-              <div class="section-head compact-head">
-                <div>
-                  <p class="eyebrow">Lancamento</p>
-                  <h2>Detalhes da mensalidade</h2>
-                </div>
-              </div>
-              <p class="finance-editor-copy">Selecione uma cobranca para editar ou crie um novo lancamento.</p>
-              <form id="paymentForm" class="form-grid finance-form">
-                <input type="hidden" name="id" />
-                <label class="full">Aluno<select name="studentId" id="financeStudentSelect" required></select></label>
-                <label>Competencia<input type="month" name="reference" required /></label>
-                <label>Vencimento<input type="date" name="dueDate" required /></label>
-                <label>Valor base<input type="number" step="0.01" min="0" name="amount" required /></label>
-                <label>Desconto<input type="number" step="0.01" min="0" name="discount" value="0" /></label>
-                <label>Multa/acrescimo<input type="number" step="0.01" min="0" name="fine" value="0" /></label>
-                <label>Status<select name="status"><option value="pago">Pago</option><option value="pendente">Pendente</option><option value="vencido">Vencido</option></select></label>
-                <label>Forma de pagamento<select name="method"><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="boleto">Boleto</option><option value="dinheiro">Dinheiro</option><option value="transferencia">Transferencia</option></select></label>
-                <label>Data do recebimento<input type="date" name="paidAt" /></label>
-                <div class="payment-total-preview full"><span>Valor final</span><strong id="paymentNetPreview">R$ 0,00</strong></div>
-                <label class="full">Observacoes<textarea name="notes" rows="3"></textarea></label>
-                <div class="form-actions full"><button type="submit" class="primary-button">Salvar mensalidade</button></div>
-              </form>
-            </aside>
-          </section>
-        </section>
-
-        <section class="finance-panel" data-finance-panel="cash" hidden>
-          <header class="dashboard-card finance-module-head">
-            <div>
-              <p class="eyebrow">Operacao do dia</p>
-              <h2>Caixa diario</h2>
-              <p>Registre entradas e saidas, confira formas de pagamento e feche o caixa.</p>
-            </div>
-            <div class="finance-module-actions">
-              <label class="compact-date-field">Data<input type="date" id="cashDateFilter" /></label>
-              <button class="primary-button" type="button" id="cashTabNewMovementButton">Novo lancamento</button>
-            </div>
-          </header>
-
-          <section class="cash-metric-grid" id="cashMetricGrid"></section>
-
-          <section class="finance-layout cash-layout">
-            <article class="dashboard-card finance-list-card">
-              <div class="section-head"><div><p class="eyebrow">Movimentacoes</p><h2>Entradas e saidas</h2></div><span class="result-count" id="movementResultCount">0 registros</span></div>
-              <div class="cash-filters">
-                <select id="movementTypeFilter"><option value="todos">Entradas e saidas</option><option value="entrada">Somente entradas</option><option value="saida">Somente saidas</option></select>
-                <select id="movementMethodFilter"><option value="todos">Todas as formas</option><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select>
-                <input type="search" id="movementSearchFilter" placeholder="Buscar descricao" />
-              </div>
-              <div class="movement-list" id="movementList"></div>
-            </article>
-
-            <aside class="dashboard-card finance-editor" id="movementEditorCard">
-              <div class="section-head compact-head"><div><p class="eyebrow">Lancamento de caixa</p><h2 id="movementEditorTitle">Novo movimento</h2></div></div>
-              <form id="movementForm" class="form-grid finance-form">
-                <input type="hidden" name="id" />
-                <label>Data<input type="date" name="date" required /></label>
-                <label>Horario<input type="time" name="time" required /></label>
-                <label>Tipo<select name="type"><option value="entrada">Entrada</option><option value="saida">Saida</option></select></label>
-                <label>Categoria<select name="category"><option value="mensalidade">Mensalidade</option><option value="avaliacao">Avaliacao</option><option value="venda">Venda</option><option value="limpeza">Limpeza</option><option value="manutencao">Manutencao</option><option value="utilidades">Utilidades</option><option value="salarios">Salarios</option><option value="impostos">Impostos</option><option value="outros">Outros</option></select></label>
-                <label class="full">Descricao<input type="text" name="description" required /></label>
-                <label>Valor<input type="number" step="0.01" min="0" name="amount" required /></label>
-                <label>Forma<select name="method"><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select></label>
-                <label class="full">Conta<select name="account"><option value="caixa-principal">Caixa principal</option><option value="conta-bancaria">Conta bancaria</option></select></label>
-                <label class="full">Observacoes<textarea name="notes" rows="3"></textarea></label>
-                <div class="form-actions full finance-dual-actions"><button class="ghost-button" type="button" id="clearMovementButton">Limpar</button><button class="primary-button" type="submit">Salvar movimento</button></div>
-              </form>
-            </aside>
-          </section>
-
-          <section class="cash-closing-layout">
-            <article class="dashboard-card cash-closing-card">
-              <div class="section-head"><div><p class="eyebrow">Conferencia</p><h2>Fechamento de caixa</h2></div><span class="result-count" id="cashClosingStatus">Em aberto</span></div>
-              <form id="cashClosingForm" class="form-grid finance-form">
-                <input type="hidden" name="id" />
-                <label>Saldo inicial<input type="number" step="0.01" name="openingBalance" value="0" /></label>
-                <label>Dinheiro contado<input type="number" step="0.01" name="countedCash" required /></label>
-                <label class="full">Responsavel<input type="text" name="closedBy" value="Administracao" required /></label>
-                <label class="full">Observacoes<textarea name="notes" rows="2"></textarea></label>
-                <div class="cash-closing-preview full" id="cashClosingPreview"></div>
-                <div class="form-actions full"><button class="primary-button" type="submit">Salvar fechamento</button></div>
-              </form>
-            </article>
-            <article class="dashboard-card cash-history-card">
-              <div class="section-head"><div><p class="eyebrow">Historico</p><h2>Ultimos fechamentos</h2></div></div>
-              <div id="cashClosingHistory" class="cash-closing-history"></div>
-            </article>
-          </section>
-        </section>
-
-        <section class="finance-panel" data-finance-panel="expenses" hidden>
-          <header class="dashboard-card finance-module-head">
-            <div><p class="eyebrow">Contas a pagar</p><h2>Despesas da academia</h2><p>Controle fornecedores, recorrencias, vencimentos e pagamentos.</p></div>
-            <button class="primary-button" type="button" id="expenseTabNewButton">Nova despesa</button>
-          </header>
-          <section class="finance-layout">
-            <article class="dashboard-card finance-list-card">
-              <div class="section-head"><div><p class="eyebrow">Despesas</p><h2>Contas cadastradas</h2></div><span class="result-count" id="expenseResultCount">0 registros</span></div>
-              <div class="expense-filters">
-                <input type="month" id="expenseMonthFilter" />
-                <select id="expenseStatusFilter"><option value="todos">Todos os status</option><option value="pago">Pago</option><option value="pendente">Pendente</option><option value="vencido">Vencido</option></select>
-                <input type="search" id="expenseSearchFilter" placeholder="Buscar despesa ou fornecedor" />
-              </div>
-              <div class="expense-list" id="expenseList"></div>
-            </article>
-            <aside class="dashboard-card finance-editor" id="expenseEditorCard">
-              <div class="section-head compact-head"><div><p class="eyebrow">Conta a pagar</p><h2 id="expenseEditorTitle">Nova despesa</h2></div></div>
-              <form id="expenseForm" class="form-grid finance-form">
-                <input type="hidden" name="id" />
-                <label class="full">Descricao<input type="text" name="description" required /></label>
-                <label class="full">Fornecedor<input type="text" name="supplier" /></label>
-                <label>Categoria<select name="category"><option value="utilidades">Utilidades</option><option value="aluguel">Aluguel</option><option value="limpeza">Limpeza</option><option value="manutencao">Manutencao</option><option value="equipamentos">Equipamentos</option><option value="salarios">Salarios</option><option value="impostos">Impostos</option><option value="marketing">Marketing</option><option value="outros">Outros</option></select></label>
-                <label>Valor<input type="number" step="0.01" min="0" name="amount" required /></label>
-                <label>Vencimento<input type="date" name="dueDate" required /></label>
-                <label>Status<select name="status"><option value="pendente">Pendente</option><option value="pago">Pago</option><option value="vencido">Vencido</option></select></label>
-                <label>Forma<select name="method"><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select></label>
-                <label>Recorrencia<select name="recurring"><option value="nao">Nao recorrente</option><option value="mensal">Mensal</option><option value="anual">Anual</option></select></label>
-                <label class="full">Documento/nota<input type="text" name="document" /></label>
-                <label class="full">Observacoes<textarea name="notes" rows="3"></textarea></label>
-                <div class="form-actions full finance-dual-actions"><button class="ghost-button" type="button" id="clearExpenseButton">Limpar</button><button class="primary-button" type="submit">Salvar despesa</button></div>
-              </form>
-            </aside>
-          </section>
-        </section>
-
-        <section class="finance-panel finance-report-panel" data-finance-panel="reports" hidden>
-          <header class="dashboard-card finance-module-head report-module-head">
-            <div><p class="eyebrow">Analise financeira</p><h2>Relatorios e resultados</h2><p>Consulte qualquer periodo e gere um arquivo para conferencia ou contabilidade.</p></div>
-            <div class="finance-module-actions"><button class="ghost-button" type="button" id="exportFinanceCsvButton">Exportar CSV</button><button class="primary-button" type="button" id="printFinanceReportButton">Imprimir / PDF</button></div>
-          </header>
-
-          <article class="dashboard-card report-filter-card">
-            <div class="report-filters">
-              <label>Data inicial<input type="date" id="reportStartDate" /></label>
-              <label>Data final<input type="date" id="reportEndDate" /></label>
-              <label>Tipo<select id="reportTypeFilter"><option value="todos">Entradas e saidas</option><option value="entrada">Entradas</option><option value="saida">Saidas</option></select></label>
-              <label>Forma<select id="reportMethodFilter"><option value="todos">Todas</option><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select></label>
-              <button class="primary-button" type="button" id="applyReportFiltersButton">Atualizar relatorio</button>
-            </div>
-          </article>
-
-          <section class="report-metric-grid" id="reportMetricGrid"></section>
-          <section class="report-chart-grid">
-            <article class="dashboard-card report-chart-card"><div class="section-head"><div><p class="eyebrow">Por categoria</p><h2>Composicao do resultado</h2></div></div><div id="reportCategoryChart" class="report-bar-list"></div></article>
-            <article class="dashboard-card report-chart-card"><div class="section-head"><div><p class="eyebrow">Recebimentos</p><h2>Formas de pagamento</h2></div></div><div id="reportMethodChart" class="report-bar-list"></div></article>
-          </section>
-          <article class="dashboard-card report-table-card" id="printableFinanceReport">
-            <div class="print-report-header"><div><strong>Pro Fitness Academia</strong><span>Relatorio financeiro</span></div><span id="reportPeriodLabel"></span></div>
-            <div class="section-head"><div><p class="eyebrow">Detalhamento</p><h2>Movimentacoes do periodo</h2></div><span class="result-count" id="reportResultCount">0 registros</span></div>
-            <div id="reportMovementTable" class="report-movement-table"></div>
-          </article>
-        </section>
-      </section>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="assets/js/app-config.js"></script>
-    <script src="assets/js/shared-data.js"></script>
-    <script src="assets/js/painel.js"></script>
-  </body>
+<option value="todos">Todos</option>
+<option value="vencido">Vencidos</option>
+<option value="parcial">Parcialmente pagos</option>
+<option value="pendente">Pendentes</option>
+<option value="sem-cobranca">Sem cobranca</option>
+<option value="pago">Pagos</option>
+<option value="cancelado">Cancelados</option>
+</select>
+</label>
+</div>
+<div class="finance-table" id="paymentHistory"></div>
+</article>
+<aside class="dashboard-card finance-student-history-card" id="financeStudentHistoryCard">
+<div class="section-head compact-head finance-history-head">
+<div>
+<h2 id="financeStudentHistoryTitle">Historico do aluno</h2>
+</div>
+<button class="ghost-button small-button" id="openFinanceStudentProfileButton" type="button">Abrir ficha</button>
+</div>
+<div class="finance-student-history-summary" id="financeStudentHistorySummary"></div>
+<div class="finance-student-history-list" id="financeStudentHistoryList">
+<div class="empty-state">Selecione um aluno para consultar o historico.</div>
+</div>
+</aside>
+</section>
+</section>
+<section class="finance-panel" data-finance-panel="cash" hidden="">
+<header class="dashboard-card finance-module-head cash-module-head">
+<div><h2>Caixa diario</h2></div>
+<div class="finance-module-actions">
+<label class="compact-date-field">Data<input id="cashDateFilter" type="date"/></label>
+<span class="cash-day-status" id="cashDayStatus">Em aberto</span>
+</div>
+</header>
+<section class="cash-metric-grid" id="cashMetricGrid"></section>
+<section class="finance-layout cash-layout" id="cashWorkArea">
+<article class="dashboard-card finance-list-card cash-list-card">
+<div class="section-head"><div><h2>Movimentacoes</h2></div><span class="result-count" id="movementResultCount">0 registros</span></div>
+<div class="cash-filters">
+<select id="movementTypeFilter"><option value="todos">Entradas e saidas</option><option value="entrada">Somente entradas</option><option value="saida">Somente saidas</option></select>
+<select id="movementMethodFilter"><option value="todos">Todas as formas</option><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select>
+<input id="movementSearchFilter" placeholder="Buscar descricao ou categoria" type="search"/>
+</div>
+<div aria-hidden="true" class="movement-table-header"><span>Horario</span><span>Descricao</span><span>Forma / conta</span><span>Tipo</span><span>Valor</span><span>Acao</span></div>
+<div class="movement-list" id="movementList"></div>
+</article>
+<aside class="dashboard-card finance-editor" hidden="" id="movementEditorCard">
+<div class="section-head compact-head"><div><h2 id="movementEditorTitle">Novo lancamento</h2></div></div>
+<form class="form-grid finance-form" id="movementForm">
+<input name="id" type="hidden"/>
+<label>Data<input name="date" required="" type="date"/></label>
+<label>Horario<input name="time" required="" type="time"/></label>
+<label>Tipo<select name="type"><option value="entrada">Entrada</option><option value="saida">Saida</option></select></label>
+<label>Categoria<select name="category"><option value="mensalidade">Mensalidade</option><option value="avaliacao">Avaliacao</option><option value="venda">Venda</option><option value="limpeza">Limpeza</option><option value="manutencao">Manutencao</option><option value="utilidades">Utilidades</option><option value="salarios">Salarios</option><option value="impostos">Impostos</option><option value="outros">Outros</option></select></label>
+<label>Centro de custo<select name="costCenter"><option value="geral">Geral</option><option value="musculacao">Musculacao</option><option value="natacao">Natacao</option><option value="lutas">Lutas</option><option value="aulas">Aulas coletivas</option><option value="administrativo">Administrativo</option></select></label>
+<label class="full">Descricao<input name="description" required="" type="text"/></label>
+<label>Valor<input min="0" name="amount" required="" step="0.01" type="number"/></label>
+<label>Forma<select name="method"><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select></label>
+<label class="full">Conta<select name="account"><option value="caixa-principal">Caixa principal</option><option value="conta-bancaria">Conta bancaria</option></select></label>
+<label class="full">Observacoes<textarea name="notes" rows="2"></textarea></label>
+<div class="form-actions full finance-dual-actions"><button class="ghost-button" id="clearMovementButton" type="button">Cancelar</button><button class="primary-button" type="submit">Salvar movimento</button></div>
+</form>
+</aside>
+</section>
+<section class="cash-closing-layout compact-cash-closing">
+<article class="dashboard-card cash-closing-card">
+<div class="section-head"><div><h2>Fechamento</h2></div><span class="result-count" id="cashClosingStatus">Em aberto</span></div>
+<form class="cash-closing-form" id="cashClosingForm">
+<input name="id" type="hidden"/>
+<label>Saldo inicial<input name="openingBalance" step="0.01" type="number" value="0"/></label>
+<label>Dinheiro contado<input name="countedCash" required="" step="0.01" type="number"/></label>
+<label>Responsavel<input name="closedBy" required="" type="text" value="Administracao"/></label>
+<div class="cash-closing-preview" id="cashClosingPreview"></div>
+<details class="cash-closing-notes"><summary>Observacoes</summary><textarea name="notes" rows="2"></textarea></details>
+<div class="cash-closing-action"><button class="primary-button" id="cashClosingSubmitButton" type="submit">Fechar caixa</button></div>
+</form>
+</article>
+<article class="dashboard-card cash-history-card">
+<div class="section-head"><div><h2>Ultimos fechamentos</h2></div></div>
+<div class="cash-closing-history" id="cashClosingHistory"></div>
+</article>
+</section>
+</section>
+<section class="finance-panel" data-finance-panel="expenses" hidden="">
+<header class="dashboard-card finance-module-head expense-module-head">
+<div><h2>Despesas</h2></div><div class="finance-module-actions"><button class="ghost-button" id="generateRecurringExpensesButton" type="button">Gerar recorrentes</button></div>
+</header>
+<section class="expense-metric-grid" id="expenseMetricGrid"></section>
+<section class="finance-layout expense-layout" id="expenseWorkArea">
+<article class="dashboard-card finance-list-card expense-list-card">
+<div class="section-head"><div><h2>Contas</h2></div><span class="result-count" id="expenseResultCount">0 registros</span></div>
+<div class="expense-filters">
+<input aria-label="Mes das despesas" id="expenseMonthFilter" type="month"/>
+<input id="expenseSearchFilter" placeholder="Buscar despesa ou fornecedor" type="search"/>
+<select class="visually-hidden" id="expenseStatusFilter" tabindex="-1"><option value="todos">Todas</option><option value="pendente">Pendentes</option><option value="proximas">Proximas</option><option value="vencido">Vencidas</option><option value="pago">Pagas</option></select>
+</div>
+<div aria-label="Filtrar despesas por situacao" class="expense-status-tabs" id="expenseStatusTabs" role="group">
+<button class="expense-status-button active" data-expense-status="todos" type="button">Todas</button>
+<button class="expense-status-button" data-expense-status="pendente" type="button">Pendentes</button>
+<button class="expense-status-button" data-expense-status="proximas" type="button">Proximas</button>
+<button class="expense-status-button" data-expense-status="vencido" type="button">Vencidas</button>
+<button class="expense-status-button" data-expense-status="pago" type="button">Pagas</button>
+</div>
+<div aria-hidden="true" class="expense-table-header"><span>Vencimento</span><span>Despesa</span><span>Categoria</span><span>Fornecedor</span><span>Valor</span><span>Status</span><span>Acao</span></div>
+<div class="expense-list" id="expenseList"></div>
+</article>
+<aside class="dashboard-card finance-editor" hidden="" id="expenseEditorCard">
+<div class="section-head compact-head"><div><h2 id="expenseEditorTitle">Nova despesa</h2></div></div>
+<form class="form-grid finance-form" id="expenseForm">
+<input name="id" type="hidden"/>
+<label class="full">Descricao<input name="description" required="" type="text"/></label>
+<label class="full">Fornecedor<input name="supplier" type="text"/></label>
+<label>Categoria<select name="category"><option value="utilidades">Utilidades</option><option value="aluguel">Aluguel</option><option value="limpeza">Limpeza</option><option value="manutencao">Manutencao</option><option value="equipamentos">Equipamentos</option><option value="salarios">Salarios</option><option value="impostos">Impostos</option><option value="marketing">Marketing</option><option value="outros">Outros</option></select></label>
+<label>Centro de custo<select name="costCenter"><option value="geral">Geral</option><option value="musculacao">Musculacao</option><option value="natacao">Natacao</option><option value="lutas">Lutas</option><option value="aulas">Aulas coletivas</option><option value="administrativo">Administrativo</option></select></label>
+<label>Valor<input min="0" name="amount" required="" step="0.01" type="number"/></label>
+<label>Vencimento<input name="dueDate" required="" type="date"/></label>
+<label>Status<select name="status"><option value="pendente">Pendente</option><option value="pago">Pago</option><option value="vencido">Vencido</option></select></label>
+<label>Forma<select name="method"><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select></label>
+<label>Recorrencia<select name="recurring"><option value="nao">Nao recorrente</option><option value="mensal">Mensal</option><option value="anual">Anual</option></select></label>
+<label class="full">Documento/nota<input name="document" type="text"/></label>
+<label class="full">Observacoes<textarea name="notes" rows="2"></textarea></label>
+<div class="form-actions full finance-dual-actions"><button class="ghost-button" id="clearExpenseButton" type="button">Cancelar</button><button class="primary-button" type="submit">Salvar despesa</button></div>
+</form>
+</aside>
+</section>
+</section>
+<section class="finance-panel finance-report-panel" data-finance-panel="reports" hidden="">
+<header class="dashboard-card finance-module-head report-module-head">
+<div><h2>Relatorios</h2></div>
+<div class="finance-module-actions"><button class="ghost-button" id="exportFinanceCsvButton" type="button">Exportar CSV</button><button class="primary-button" id="printFinanceReportButton" type="button">Imprimir / PDF</button></div>
+</header>
+<article class="dashboard-card report-filter-card">
+<div class="report-filters report-filters-final">
+<label>Data inicial<input id="reportStartDate" type="date"/></label>
+<label>Data final<input id="reportEndDate" type="date"/></label>
+<label class="report-student-filter">Aluno<select id="reportStudentFilter"><option value="todos">Todos os alunos</option></select></label>
+<label>Tipo<select id="reportTypeFilter"><option value="todos">Entradas e saidas</option><option value="entrada">Entradas</option><option value="saida">Saidas</option></select></label>
+<label>Forma<select id="reportMethodFilter"><option value="todos">Todas</option><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select></label>
+<label>Centro de custo<select id="reportCostCenterFilter"><option value="todos">Todos</option><option value="geral">Geral</option><option value="musculacao">Musculacao</option><option value="natacao">Natacao</option><option value="lutas">Lutas</option><option value="aulas">Aulas coletivas</option><option value="administrativo">Administrativo</option></select></label>
+<button class="primary-button" id="applyReportFiltersButton" type="button">Atualizar</button>
+</div>
+</article>
+<section class="report-metric-grid" id="reportMetricGrid"></section>
+<article class="dashboard-card report-reconciliation-card" id="reportReconciliationCard"></article>
+<section class="report-chart-grid">
+<article class="dashboard-card report-chart-card"><div class="section-head"><div><h2>Resultado por categoria</h2></div></div><div class="report-bar-list" id="reportCategoryChart"></div></article>
+<article class="dashboard-card report-chart-card"><div class="section-head"><div><h2>Formas de pagamento</h2></div></div><div class="report-bar-list" id="reportMethodChart"></div></article>
+</section>
+<article class="dashboard-card student-report-card" hidden="" id="printableStudentFinanceReport">
+<div class="print-report-header"><div><strong>Pro Fitness Academia</strong><span>Relatorio financeiro individual</span></div><span id="studentReportPeriodLabel"></span></div>
+<div class="student-report-identification" id="studentReportIdentification"></div>
+<section class="student-report-metrics" id="studentReportMetricGrid"></section>
+<div class="section-head"><div><h2>Historico de mensalidades</h2></div><span class="result-count" id="studentReportResultCount">0 registros</span></div>
+<div class="student-report-payment-table" id="studentReportPaymentTable"></div>
+</article>
+<article class="dashboard-card report-table-card" id="printableFinanceReport">
+<div class="print-report-header"><div><strong>Pro Fitness Academia</strong><span id="reportDocumentTitle">Relatorio financeiro geral</span></div><span id="reportPeriodLabel"></span></div>
+<div class="print-report-summary" id="reportPrintSummary"></div>
+<div class="section-head"><div><h2 id="reportMovementTitle">Movimentacoes do periodo</h2></div><span class="result-count" id="reportResultCount">0 registros</span></div>
+<div class="report-movement-table" id="reportMovementTable"></div>
+</article>
+</section>
+</section>
+</div>
+<dialog class="payment-dialog" id="paymentDialog">
+<form class="payment-dialog-form" id="paymentForm">
+<header class="payment-dialog-header">
+<div>
+<span class="payment-dialog-kicker">Mensalidade</span>
+<h2 id="paymentEditorTitle">Receber mensalidade</h2>
+</div>
+<button aria-label="Fechar" class="dialog-close-button" id="closePaymentDialogButton" type="button">×</button>
+</header>
+<div class="payment-editor-context" hidden="" id="paymentEditorContext"></div>
+<input name="id" type="hidden"/>
+<div class="payment-dialog-grid">
+<label class="full">Aluno<select id="financeStudentSelect" name="studentId" required=""></select></label>
+<label>Competencia<input name="reference" required="" type="month"/></label>
+<label>Vencimento<input name="dueDate" required="" type="date"/></label>
+<label>Valor previsto<input min="0" name="amount" required="" step="0.01" type="number"/></label>
+<label>Status<select name="status"><option value="pago">Pago</option><option value="parcial">Parcial</option><option value="pendente">Pendente</option><option value="vencido">Vencido</option><option value="cancelado">Cancelado</option></select></label>
+<label>Forma de pagamento<select name="method"><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="boleto">Boleto</option><option value="dinheiro">Dinheiro</option><option value="transferencia">Transferencia</option></select></label>
+<label>Data do pagamento<input name="paidAt" type="date"/></label>
+<label>Valor pago<input min="0" name="paidAmount" step="0.01" type="number"/></label>
+<label>Responsavel pelo lancamento<input name="recordedBy" required="" type="text"/></label>
+</div>
+<div class="payment-total-preview"><span>Valor calculado</span><strong id="paymentNetPreview">R$ 0,00</strong></div>
+<details class="payment-more-options">
+<summary>Desconto, multa e observacao</summary>
+<div class="payment-dialog-grid payment-extra-grid">
+<label>Desconto<input min="0" name="discount" step="0.01" type="number" value="0"/></label>
+<label>Multa/acrescimo<input min="0" name="fine" step="0.01" type="number" value="0"/></label>
+<label class="full">Observacoes<textarea name="notes" rows="3"></textarea></label>
+</div>
+</details>
+<footer class="payment-dialog-actions">
+<button class="ghost-button" hidden="" id="paymentReceiptButton" type="button">Comprovante</button>
+<button class="ghost-button" id="cancelPaymentDialogButton" type="button">Cancelar</button>
+<button class="primary-button" id="paymentSubmitButton" type="submit">Confirmar recebimento</button>
+</footer>
+</form>
+</dialog>
+<dialog class="receipt-dialog" id="receiptDialog">
+<section class="payment-receipt" id="printablePaymentReceipt">
+<header class="receipt-header">
+<div class="receipt-brand"><span class="receipt-brand-mark">PF</span><div><strong>PRO FITNESS</strong><small>ACADEMIA</small></div></div>
+<div class="receipt-heading"><span>Comprovante de pagamento</span><strong id="receiptNumber">—</strong></div>
+</header>
+<div class="receipt-student" id="receiptStudent"></div>
+<div class="receipt-grid" id="receiptDetails"></div>
+<div class="receipt-total"><span>Valor recebido</span><strong id="receiptPaidAmount">R$ 0,00</strong></div>
+<div class="receipt-note" id="receiptNote"></div>
+<footer class="receipt-document-footer"><span>Pagamento registrado no sistema Pro Fitness.</span><span id="receiptIssuedAt"></span></footer>
+</section>
+<footer class="receipt-dialog-actions">
+<button class="ghost-button" id="closeReceiptDialogButton" type="button">Fechar</button>
+<button class="primary-button" id="printReceiptButton" type="button">Imprimir / PDF</button>
+</footer>
+</dialog>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="assets/js/app-config.js"></script>
+<script src="assets/js/shared-data.js?v=20260711-final-fases"></script>
+<script src="assets/js/finance-core.js?v=20260711-financeiro-fase2"></script>
+<script src="assets/js/painel.js?v=20260711-final-fases2"></script>
+</body>
 </html>

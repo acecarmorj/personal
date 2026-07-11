@@ -24,12 +24,17 @@
 - `exportAll`: devolve um snapshot completo do banco.
 - `importAll`: grava um snapshot completo recebido do frontend.
 - `upsert` e `delete`: mantem CRUD por recurso.
+- `upsert` compara `updatedAt` e recusa sobrescrita quando a planilha ja possui uma versao mais nova.
 
 ## Como usar no sistema
 
 - O painel desktop tem os botoes `Preparar Sheets` e `Sincronizar Sheets`.
 - Quando `apiBaseUrl` estiver configurada, app e painel tentam carregar o snapshot remoto ao abrir.
 - Quando houver mudancas locais, o sistema tenta sincronizar automaticamente.
+- O painel do professor salva primeiro no tablet e envia os registros alterados por uma fila local.
+- Se a internet falhar, as pendencias permanecem no aparelho e sao reenviadas automaticamente.
+- O indicador de pendencia do tablet pode ser acionado para tentar o envio manualmente e preserva a ultima mensagem de erro.
+- O painel administrativo e o app do aluno tambem usam atualizacao por registro nas operacoes comuns, reduzindo o risco de sobrescrever alteracoes de outro aparelho.
 
 ## Observacao importante
 
@@ -37,4 +42,5 @@
   pelo editor aberto em `Extensoes > Apps Script`, pois o Web App nao recebe o contexto da planilha ativa.
 - Se uma versao anterior criou outra planilha, execute novamente `setupProFitnessSpreadsheet()` dentro da
   planilha correta e publique uma nova versao do Web App.
+- Depois de substituir `api.gs` por uma versao nova, execute `setupProFitnessSpreadsheet()` novamente e publique uma nova versao do Web App para acrescentar colunas e codigo sem apagar registros.
 - Se estiver abrindo os arquivos HTML diretamente do disco e houver bloqueio de requisicoes do navegador, rode o frontend por um servidor local simples.
