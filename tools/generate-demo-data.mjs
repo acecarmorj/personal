@@ -125,6 +125,7 @@ const workouts = students.flatMap((student, studentIndex) => ["A", "B"].map((div
     const exercise = exercises[(base + itemIndex) % exercises.length];
     return {
       id: `ITEM-${pad(studentIndex + 1)}-${division}-${itemIndex + 1}`,
+      exerciseId: exercise.id,
       name: exercise.name,
       sets: itemIndex === 0 ? "4" : "3",
       reps: itemIndex % 2 ? "12" : "10",
@@ -433,6 +434,63 @@ students.forEach((student, studentIndex) => {
   }
 });
 
+const workoutSessions = [];
+const exerciseSets = [];
+checkins.filter((checkin) => checkin.type === "workout").forEach((checkin, sessionIndex) => {
+  const workout = workouts.find((item) => item.id === checkin.workoutId);
+  if (!workout) return;
+  const sessionId = `SES-DEMO-${String(sessionIndex + 1).padStart(4, "0")}`;
+  const startedAt = timestamp(checkin.date, checkin.time || "18:30");
+  const durationMinutes = 62 + (sessionIndex % 31);
+  const endedAt = new Date(new Date(startedAt).getTime() + durationMinutes * 60000).toISOString();
+  let completedSets = 0;
+  workout.exerciseItems.forEach((item, exerciseIndex) => {
+    const setCount = Math.max(1, Number.parseInt(item.sets, 10) || 3);
+    const targetReps = Number.parseInt(item.reps, 10) || 10;
+    const targetLoad = Number.parseFloat(item.load) || 0;
+    for (let setNumber = 1; setNumber <= setCount; setNumber += 1) {
+      completedSets += 1;
+      exerciseSets.push({
+        id: `SER-DEMO-${String(sessionIndex + 1).padStart(4, "0")}-${exerciseIndex + 1}-${setNumber}`,
+        sessionId,
+        studentId: checkin.studentId,
+        workoutId: workout.id,
+        exerciseItemId: item.id,
+        exerciseId: item.exerciseId || "",
+        exerciseName: item.name,
+        setNumber,
+        targetReps: item.reps,
+        actualReps: Math.max(1, targetReps - ((sessionIndex + setNumber) % 3 === 0 ? 1 : 0)),
+        targetLoad: item.load,
+        actualLoad: Math.max(0, targetLoad + (sessionIndex % 4) * 2),
+        status: "concluida",
+        completedAt: new Date(new Date(startedAt).getTime() + completedSets * 180000).toISOString(),
+        notes: "",
+        createdAt: startedAt,
+        ...metadata(sessionIndex + exerciseIndex + setNumber, endedAt)
+      });
+    }
+  });
+  workoutSessions.push({
+    id: sessionId,
+    studentId: checkin.studentId,
+    workoutId: workout.id,
+    workoutTitle: workout.title,
+    division: workout.division,
+    startedAt,
+    endedAt,
+    durationMinutes,
+    status: "concluida",
+    difficulty: checkin.difficulty || "moderada",
+    pain: checkin.pain || "nenhuma",
+    notes: checkin.notes || "",
+    totalSets: completedSets,
+    completedSets,
+    createdAt: startedAt,
+    ...metadata(sessionIndex, endedAt)
+  });
+});
+
 const staffTimeEntries = [];
 professors.forEach(([staffId, staffName], professorIndex) => {
   let cursor = dateFrom("2026-05-01");
@@ -506,10 +564,14 @@ const config = [{
   supportPhone: "(22) 98823-3216",
   apiBaseUrl: "https://script.google.com/macros/s/AKfycbxv5kc71SaSMhe10SQR0kqQQO11aFNInVAJFmH1zTif5SqefNDnZ1F60xBN_VrU0lFGIw/exec",
   lastSnapshotAt: new Date().toISOString(),
-  schemaVersion: 2,
+  schemaVersion: 3,
   plans: planCatalog,
   modalities: ["Musculacao", "Natacao", "Hidroginastica", "Karate", "Jiu-jitsu", "Ballet", "Zumba", "Funcional"],
   costCenters: ["geral", "musculacao", "natacao", "lutas", "aulas", "administrativo"],
+  paymentAlertDays: [7, 3, 0],
+  paymentGraceDays: 0,
+  blockAccessOnOverdue: true,
+  whatsappNumber: "5522988233216",
   ...metadata(1)
 }];
 
@@ -537,6 +599,8 @@ const snapshot = {
   expenses,
   cashClosings,
   checkins,
+  workoutSessions,
+  exerciseSets,
   users,
   staffTimeEntries,
   config,
@@ -548,11 +612,11 @@ const defaultBackupDir = path.resolve(process.cwd(), "..", "PersonalPro-backups"
 const outputFile = outputIndex >= 0 ? process.argv[outputIndex + 1] : path.join(defaultBackupDir, "demo-50-alunos.json");
 const absoluteOutput = path.resolve(process.cwd(), outputFile);
 fs.mkdirSync(path.dirname(absoluteOutput), { recursive: true });
-fs.writeFileSync(absoluteOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 7, generatedAt: new Date().toISOString(), demo: true, snapshot }, null, 2)}
+fs.writeFileSync(absoluteOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 8, generatedAt: new Date().toISOString(), demo: true, snapshot }, null, 2)}
 `, "utf8");
 const emptyOutput = path.join(path.dirname(absoluteOutput), "base-limpa-pro-fitness.json");
 const emptySnapshot = Object.fromEntries(Object.keys(snapshot).map((key) => [key, []]));
-fs.writeFileSync(emptyOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 7, generatedAt: new Date().toISOString(), clean: true, snapshot: emptySnapshot }, null, 2)}
+fs.writeFileSync(emptyOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 8, generatedAt: new Date().toISOString(), clean: true, snapshot: emptySnapshot }, null, 2)}
 `, "utf8");
 
 const currentOverdue = payments.filter((payment) => payment.reference === "2026-07" && payment.status === "vencido").length;
@@ -567,5 +631,7 @@ console.log(JSON.stringify({
   currentOverdue,
   currentDefaultRate: `${((currentOverdue / students.length) * 100).toFixed(1)}%`,
   checkins: checkins.length,
+  workoutSessions: workoutSessions.length,
+  exerciseSets: exerciseSets.length,
   staffTimeEntries: staffTimeEntries.length
 }, null, 2));

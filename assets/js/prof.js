@@ -871,6 +871,7 @@
     const source = item && typeof item === "object" ? item : { name: item };
     return {
       id: source.id || `${workout?.id || "TR"}-EX-${index + 1}`,
+      exerciseId: source.exerciseId || "",
       name: String(source.name || source.exercise || "").trim(),
       sets: String(source.sets ?? workout?.sets ?? "").trim(),
       reps: String(source.reps ?? workout?.reps ?? "").trim(),
@@ -966,6 +967,7 @@
   function createExerciseDraft(item) {
     return {
       id: item?.id || Store.uid("EXI"),
+      exerciseId: item?.exerciseId || "",
       name: String(item?.name || ""),
       sets: String(item?.sets || ""),
       reps: String(item?.reps || ""),
@@ -1111,9 +1113,13 @@
       return;
     }
     const title = form.elements.title.value.trim();
+    const exerciseCatalogByName = new Map((state.exercises || []).map((exercise) => [String(exercise.name || "").trim().toLocaleLowerCase("pt-BR"), exercise.id]));
     const exerciseItems = workoutExerciseDraft
       .map(createExerciseDraft)
-      .map((item) => ({ ...item, name: item.name.trim(), sets: item.sets.trim(), reps: item.reps.trim(), load: item.load.trim(), rest: item.rest.trim(), notes: item.notes.trim() }))
+      .map((item) => {
+        const name = item.name.trim();
+        return { ...item, exerciseId: item.exerciseId || exerciseCatalogByName.get(name.toLocaleLowerCase("pt-BR")) || "", name, sets: item.sets.trim(), reps: item.reps.trim(), load: item.load.trim(), rest: item.rest.trim(), notes: item.notes.trim() };
+      })
       .filter((item) => item.name);
     if (!title) {
       form.elements.title.focus();

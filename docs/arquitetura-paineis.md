@@ -19,7 +19,11 @@
 
 ## Aplicativo do aluno (`index.html`)
 
-- Consulta individual, treino, agenda e QR de acesso.
+- Uso prioritario em celular.
+- QR de acesso, ficha prescrita, execucao serie por serie, agenda, frequencia, permanencia, evolucao e mensalidades individuais.
+- O aluno nao edita a ficha do professor e nao cria presenca manual; entrada e saida vem dos check-ins da academia.
+- Sessoes e series sao salvas primeiro no celular e enviadas por uma fila offline persistente.
+- A sessao local possui versao para migracao futura ao login com usuario e senha.
 - Nao substitui os paineis administrativo e profissional.
 
 ## Dados compartilhados
@@ -35,7 +39,7 @@
 - `updatedAt` protege contra sobrescrita por versao antiga.
 - Exclusoes tambem transportam a versao conhecida e sao bloqueadas quando o registro remoto mudou.
 - `presenceSource` registra a origem da presenca; `source` registra a origem tecnica da sincronizacao.
-- Falhas permanecem em fila local no notebook ou tablet.
+- Falhas permanecem em fila local no notebook, tablet ou celular do aluno.
 - `importAll` e exclusivo para snapshots completos; `importPartial` nao altera colecoes ausentes.
 
 ## Estrutura do pacote

@@ -2,243 +2,195 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f2c500" />
+    <meta name="description" content="Aplicativo do aluno da Pro Fitness Academia de Carmo-RJ." />
     <title>Pro Fitness | App do Aluno</title>
-    <meta name="theme-color" content="#f4c928" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="assets/css/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/style.css?v=20260711-aluno-v1" />
   </head>
   <body>
-    <div class="student-shell">
-      <header class="mobile-header">
-        <div class="brand-lockup">
-          <span class="brand-mark">PF</span>
-          <div>
-            <strong>Pro Fitness</strong>
-            <p>Academia &bull; Carmo-RJ</p>
-          </div>
-        </div>
-        <figure class="mobile-academy-visual">
-          <img src="assets/images/pro-fitness-fachada.png" alt="Fachada estilizada da Pro Fitness Academia" />
-          <figcaption>Treino, saude e movimento em Carmo-RJ</figcaption>
-        </figure>
-        <div class="header-links">
-          <button class="ghost-button" id="restoreDemoButton">Restaurar demo</button>
-        </div>
-      </header>
-
-      <main class="student-main">
-        <section id="onboardingView" class="view-section">
-          <article class="hero-panel">
+    <div class="student-app-shell">
+      <section class="enrollment-view" id="onboardingView">
+        <div class="enrollment-visual">
+          <img src="assets/images/pro-fitness-fachada.png" alt="Fachada da Pro Fitness Academia" />
+          <div class="enrollment-shade"></div>
+          <div class="enrollment-brand">
+            <span class="brand-symbol">PF</span>
             <div>
-              <p class="eyebrow">Bem-vindo a Pro Fitness</p>
-              <h1>Seu acesso e seu treino na palma da mao.</h1>
-              <p>
-                Na primeira visita a academia, o aluno toca em
-                <strong>Fazer minha matricula</strong> e segue o fluxo com QR Code
-                ou codigo manual. Nada abre automaticamente ao entrar no app.
-              </p>
+              <strong>PRO FITNESS</strong>
+              <small>Academia &bull; Carmo-RJ</small>
             </div>
-            <div class="hero-mini-cards">
-              <article class="mini-card">
-                <span>1</span>
-                <strong>Ler QR</strong>
-                <p>Use a camera para abrir a matricula.</p>
-              </article>
-              <article class="mini-card">
-                <span>2</span>
-                <strong>Confirmar dados</strong>
-                <p>Finalize seu cadastro em poucos campos.</p>
-              </article>
-              <article class="mini-card">
-                <span>3</span>
-                <strong>Liberar acesso</strong>
-                <p>Receba o QR para a roleta conforme o painel.</p>
-              </article>
-            </div>
-          </article>
-
-          <div class="stack-grid">
-            <article class="app-card">
-              <div class="section-title">
-                <div>
-                  <p class="eyebrow">Entrada</p>
-                  <h2>Comecar matricula</h2>
-                </div>
-              </div>
-              <p class="helper-text">
-                No primeiro acesso, o aluno escolhe iniciar a matricula. Depois disso,
-                aparecem as opcoes para ler o QR ou informar o codigo.
-              </p>
-              <div class="action-row">
-                <button class="primary-button" id="openEnrollmentButton">Fazer minha matricula</button>
-              </div>
-              <div id="enrollmentStartActions" hidden>
-                <p class="helper-note">
-                  Esse QR inicial funciona uma unica vez, apenas para a primeira matricula do aluno.
-                </p>
-                <div class="action-row">
-                  <button class="primary-button" id="startScanButton">Ler QR de matricula</button>
-                  <button class="ghost-button" id="stopScanButton" hidden>Fechar camera</button>
-                </div>
-                <form id="manualEnrollmentForm" class="compact-form">
-                  <label>
-                    Codigo de matricula
-                    <input type="text" name="enrollmentCode" placeholder="MAT-LUCAS02 ou payload do QR" required />
-                  </label>
-                  <button type="submit" class="primary-button">Validar codigo</button>
-                </form>
-                <p class="helper-note" id="onboardingHint">
-                  Dica de teste: abra o painel, selecione um aluno pendente e use o QR ou o codigo de matricula exibido la.
-                </p>
-              </div>
-            </article>
-
-            <article class="app-card" id="enrollmentCard" hidden>
-              <div class="section-title">
-                <div>
-                  <p class="eyebrow">Confirmacao</p>
-                  <h2>Finalizar matricula</h2>
-                </div>
-              </div>
-              <form id="enrollmentForm" class="compact-form">
-                <input type="hidden" name="studentId" />
-                <label>
-                  Nome
-                  <input type="text" name="name" required />
-                </label>
-                <label>
-                  Telefone
-                  <input type="tel" name="phone" required />
-                </label>
-                <label>
-                  E-mail
-                  <input type="email" name="email" required />
-                </label>
-                <label>
-                  Data de nascimento
-                  <input type="date" name="birthDate" required />
-                </label>
-                <label>
-                  Objetivo
-                  <input type="text" name="goal" required />
-                </label>
-                <label class="checkbox-row">
-                  <input type="checkbox" name="acceptTerms" required />
-                  <span>Confirmo meus dados e autorizo o uso deste celular para acesso.</span>
-                </label>
-                <div class="action-row">
-                  <button type="submit" class="primary-button">Concluir matricula</button>
-                  <button type="button" class="ghost-button" id="cancelEnrollmentButton">Cancelar</button>
-                </div>
-              </form>
-            </article>
           </div>
-        </section>
-
-        <section id="studentView" class="view-section" hidden>
-          <article class="hero-panel status-hero" id="studentHero"></article>
-
-          <nav class="student-nav">
-            <button class="nav-pill active" data-screen="home">Inicio</button>
-            <button class="nav-pill" data-screen="access">Acesso</button>
-            <button class="nav-pill" data-screen="workouts">Treinos</button>
-            <button class="nav-pill" data-screen="agenda">Agenda</button>
-            <button class="nav-pill" data-screen="profile">Perfil</button>
-          </nav>
-
-          <section class="student-screen active" id="homeScreen">
-            <div class="stack-grid">
-              <article class="app-card">
-                <div class="section-title">
-                  <div>
-                    <p class="eyebrow">Resumo do dia</p>
-                    <h2>Seu painel rapido</h2>
-                  </div>
-                </div>
-                <div class="summary-grid" id="homeSummary"></div>
-              </article>
-
-              <article class="app-card" id="homeAlerts"></article>
-            </div>
-          </section>
-
-          <section class="student-screen" id="accessScreen">
-            <article class="app-card access-card">
-              <div class="section-title">
-                <div>
-                  <p class="eyebrow">Acesso na academia</p>
-                  <h2>QR Code da roleta</h2>
-                </div>
-                <button class="ghost-button" id="refreshGateQrButton">Atualizar QR</button>
-              </div>
-              <div class="qr-layout">
-                <div class="qr-box" id="gateQrContainer"></div>
-                <div class="qr-details" id="gateAccessDetails"></div>
-              </div>
-            </article>
-          </section>
-
-          <section class="student-screen" id="workoutsScreen">
-            <article class="app-card">
-              <div class="section-title">
-                <div>
-                  <p class="eyebrow">Rotina</p>
-                  <h2>Treinos ativos</h2>
-                </div>
-              </div>
-              <div class="card-stack" id="workoutCards"></div>
-            </article>
-          </section>
-
-          <section class="student-screen" id="agendaScreen">
-            <article class="app-card">
-              <div class="section-title">
-                <div>
-                  <p class="eyebrow">Compromissos</p>
-                  <h2>Agenda e presencas</h2>
-                </div>
-              </div>
-              <div class="card-stack" id="scheduleCards"></div>
-            </article>
-          </section>
-
-          <section class="student-screen" id="profileScreen">
-            <div class="stack-grid">
-              <article class="app-card" id="profileCard"></article>
-              <article class="app-card" id="financeCard"></article>
-            </div>
-          </section>
-        </section>
-      </main>
-    </div>
-
-    <div class="scanner-modal" id="scannerModal" hidden>
-      <div class="scanner-card">
-        <div class="section-title">
-          <div>
-            <p class="eyebrow">Camera</p>
-            <h2>Leia o QR de matricula</h2>
+          <div class="enrollment-copy">
+            <p>Seu treino, sua rotina</p>
+            <h1>Movimento que acompanha voce.</h1>
           </div>
-          <button class="ghost-button" id="closeScannerButton">Fechar</button>
         </div>
-        <video id="scannerVideo" autoplay playsinline muted></video>
-        <p class="helper-note" id="scannerHint">
-          Se a camera nao abrir ou o navegador nao suportar leitura nativa, use o campo manual.
-        </p>
-      </div>
+
+        <div class="enrollment-panel">
+          <div id="enrollmentWelcome">
+            <span class="section-kicker">PRIMEIRO ACESSO</span>
+            <h2>Ative seu aplicativo</h2>
+            <p>Na academia, use o codigo ou QR entregue pela equipe para concluir sua matricula uma unica vez.</p>
+            <button class="primary-action full" id="openEnrollmentButton" type="button">Fazer minha matricula</button>
+            <button class="text-action full" id="futureLoginButton" type="button">Ja sou aluno</button>
+          </div>
+
+          <div id="enrollmentStartActions" hidden>
+            <button class="back-action" id="backEnrollmentButton" type="button">Voltar</button>
+            <span class="section-kicker">ATIVACAO</span>
+            <h2>Leia ou informe o codigo</h2>
+            <p>O codigo de matricula e de uso unico.</p>
+            <button class="primary-action full" id="startScanButton" type="button">Ler QR de matricula</button>
+            <button class="secondary-action full" id="stopScanButton" type="button" hidden>Fechar camera</button>
+            <div class="form-separator"><span>ou</span></div>
+            <form id="manualEnrollmentForm" class="student-form">
+              <label for="enrollmentCode">Codigo de matricula</label>
+              <input id="enrollmentCode" type="text" name="enrollmentCode" placeholder="Ex.: MAT-ABC123" autocomplete="off" required />
+              <button class="secondary-action full" type="submit">Continuar</button>
+            </form>
+            <p class="form-feedback" id="onboardingHint"></p>
+          </div>
+
+          <div id="enrollmentCard" hidden>
+            <button class="back-action" id="cancelEnrollmentButton" type="button">Voltar</button>
+            <span class="section-kicker">CONFIRMACAO</span>
+            <h2>Confira seus dados</h2>
+            <form id="enrollmentForm" class="student-form form-grid">
+              <input type="hidden" name="studentId" />
+              <label>Nome<input type="text" name="name" required /></label>
+              <label>Telefone<input type="tel" name="phone" required /></label>
+              <label>E-mail<input type="email" name="email" required /></label>
+              <label>Data de nascimento<input type="date" name="birthDate" required /></label>
+              <label class="wide">Objetivo<input type="text" name="goal" required /></label>
+              <label class="consent-row wide"><input type="checkbox" name="acceptTerms" required /><span>Confirmo que os dados estao corretos.</span></label>
+              <button class="primary-action full wide" type="submit">Concluir matricula</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="student-view" id="studentView" hidden>
+        <header class="app-topbar">
+          <div class="compact-brand">
+            <span class="brand-symbol small">PF</span>
+            <div><strong>PRO FITNESS</strong><small>Carmo-RJ</small></div>
+          </div>
+          <div class="topbar-actions">
+            <button class="sync-chip" id="studentSyncButton" type="button" aria-label="Sincronizar dados">
+              <i id="studentSyncDot"></i><span id="studentSyncText">Dados locais</span>
+            </button>
+            <button class="profile-trigger" id="openProfileButton" type="button" aria-label="Abrir perfil"><span id="studentInitials">PF</span></button>
+          </div>
+        </header>
+
+        <main class="app-content">
+          <section class="app-screen active" id="homeScreen" data-screen-panel="home">
+            <div class="welcome-row">
+              <div><p id="homeGreeting">Ola</p><h1 id="homeStudentName">Aluno</h1></div>
+              <span id="homeDateLabel"></span>
+            </div>
+            <article class="access-pass" id="homeAccessPass">
+              <div class="access-copy"><span>ACESSO A ACADEMIA</span><strong id="homeAccessTitle">Verificando acesso</strong><p id="homeAccessReason">Aguarde a sincronizacao.</p><button id="openGateQrButton" type="button">Abrir meu QR</button></div>
+              <div class="access-pass-mark"><i></i><b>PF</b></div>
+            </article>
+            <section class="today-grid" id="homeSummary"></section>
+            <article class="feature-card workout-next-card" id="homeWorkoutCard"></article>
+            <article class="feature-card schedule-next-card" id="homeScheduleCard"></article>
+            <article class="notice-card" id="homePaymentAlert" hidden></article>
+          </section>
+
+          <section class="app-screen" id="workoutsScreen" data-screen-panel="workouts">
+            <div class="screen-heading"><div><span class="section-kicker">MINHA ROTINA</span><h1>Treinos</h1></div><span class="screen-counter" id="workoutCount">0 ativos</span></div>
+            <article class="active-session-card" id="activeSessionCard" hidden></article>
+            <div class="segmented-filter" id="workoutDivisionFilter"></div>
+            <div class="content-stack" id="workoutCards"></div>
+          </section>
+
+          <section class="app-screen" id="agendaScreen" data-screen-panel="agenda">
+            <div class="screen-heading"><div><span class="section-kicker">SUA SEMANA</span><h1>Agenda</h1></div><button class="icon-action" id="agendaTodayButton" type="button">Hoje</button></div>
+            <div class="week-strip" id="agendaWeekStrip"></div>
+            <div class="content-stack" id="scheduleCards"></div>
+            <div class="section-heading"><div><span class="section-kicker">FREQUENCIA</span><h2>Permanencia</h2></div></div>
+            <section class="metric-grid compact" id="presenceSummary"></section>
+            <div class="history-list" id="presenceHistory"></div>
+          </section>
+
+          <section class="app-screen" id="evolutionScreen" data-screen-panel="evolution">
+            <div class="screen-heading"><div><span class="section-kicker">SEU PROGRESSO</span><h1>Evolucao</h1></div><select id="evolutionPeriod" aria-label="Periodo"><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="90">90 dias</option></select></div>
+            <section class="metric-grid" id="evolutionMetricGrid"></section>
+            <article class="chart-card"><div class="section-heading"><div><span class="section-kicker">CONSISTENCIA</span><h2>Treinos por semana</h2></div></div><div class="bar-chart" id="workoutConsistencyChart"></div></article>
+            <article class="feature-card"><div class="section-heading"><div><span class="section-kicker">CARGAS E SERIES</span><h2>Por exercicio</h2></div></div><div class="exercise-progress-list" id="exerciseProgressList"></div></article>
+          </section>
+
+          <section class="app-screen" id="paymentsScreen" data-screen-panel="payments">
+            <div class="screen-heading"><div><span class="section-kicker">SUA CONTA</span><h1>Mensalidade</h1></div></div>
+            <article class="payment-status-card" id="paymentHero"></article>
+            <article class="notice-card" id="paymentAlertCard" hidden></article>
+            <div class="section-heading"><div><span class="section-kicker">HISTORICO</span><h2>Ultimas mensalidades</h2></div></div>
+            <div class="history-list payment-history" id="paymentHistory"></div>
+            <a class="whatsapp-action" id="paymentWhatsappButton" href="#" target="_blank" rel="noopener">Falar com a academia</a>
+          </section>
+        </main>
+
+        <nav class="bottom-navigation" aria-label="Navegacao principal">
+          <button class="bottom-nav-item active" data-screen="home" type="button"><span class="nav-glyph home-glyph"></span><small>Inicio</small></button>
+          <button class="bottom-nav-item" data-screen="workouts" type="button"><span class="nav-glyph workout-glyph"></span><small>Treino</small></button>
+          <button class="bottom-nav-item" data-screen="agenda" type="button"><span class="nav-glyph agenda-glyph"></span><small>Agenda</small></button>
+          <button class="bottom-nav-item" data-screen="evolution" type="button"><span class="nav-glyph evolution-glyph"></span><small>Evolucao</small></button>
+          <button class="bottom-nav-item" data-screen="payments" type="button"><span class="nav-glyph payment-glyph"></span><small>Mensalidade</small></button>
+        </nav>
+      </section>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <dialog class="student-dialog qr-dialog" id="gateQrDialog">
+      <button class="dialog-close" data-close-dialog="gateQrDialog" type="button" aria-label="Fechar">&times;</button>
+      <span class="section-kicker">ACESSO</span><h2>Meu QR Code</h2>
+      <div class="qr-display" id="gateQrContainer"></div>
+      <div id="gateAccessDetails"></div>
+      <button class="secondary-action full" id="refreshGateQrButton" type="button">Atualizar QR</button>
+    </dialog>
+
+    <dialog class="student-dialog profile-dialog" id="profileDialog">
+      <button class="dialog-close" data-close-dialog="profileDialog" type="button" aria-label="Fechar">&times;</button>
+      <div id="profileCard"></div>
+      <button class="danger-text-action full" id="logoutButton" type="button">Sair deste celular</button>
+    </dialog>
+
+    <dialog class="student-dialog scanner-dialog" id="scannerModal">
+      <button class="dialog-close" id="closeScannerButton" type="button" aria-label="Fechar">&times;</button>
+      <span class="section-kicker">MATRICULA</span><h2>Aponte para o QR</h2>
+      <video id="scannerVideo" autoplay playsinline muted></video>
+      <p id="scannerHint">Mantenha o codigo dentro da area da camera.</p>
+    </dialog>
+
+    <dialog class="workout-dialog" id="workoutSessionDialog">
+      <header class="session-header"><button class="session-back" id="closeWorkoutSessionButton" type="button">Sair</button><div><span id="sessionDivisionLabel">TREINO</span><strong id="sessionTitle">Seu treino</strong></div><time id="sessionTimer">00:00</time></header>
+      <div class="session-progress"><i id="sessionProgressBar"></i></div>
+      <main class="session-content" id="sessionExerciseList"></main>
+      <footer class="session-footer"><span id="sessionSetCounter">0 de 0 series</span><button class="primary-action" id="finishWorkoutButton" type="button">Finalizar treino</button></footer>
+    </dialog>
+
+    <dialog class="student-dialog finish-dialog" id="finishWorkoutDialog">
+      <button class="dialog-close" data-close-dialog="finishWorkoutDialog" type="button" aria-label="Fechar">&times;</button>
+      <span class="section-kicker">CONCLUSAO</span><h2>Como foi o treino?</h2>
+      <form id="finishWorkoutForm" class="student-form">
+        <label>Dificuldade<select name="difficulty" required><option value="leve">Leve</option><option value="moderada" selected>Moderada</option><option value="alta">Alta</option></select></label>
+        <label>Dor ou desconforto<select name="pain" required><option value="nenhuma" selected>Nenhuma</option><option value="leve">Leve</option><option value="moderada">Moderada</option><option value="forte">Forte</option></select></label>
+        <label>Observacoes<textarea name="notes" rows="3" placeholder="Opcional"></textarea></label>
+        <button class="primary-action full" type="submit">Confirmar e finalizar</button>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="assets/js/app-config.js"></script>
-    <script src="assets/js/shared-data.js?v=20260711-schema2-sync2"></script>
-    <script src="assets/js/app.js?v=20260711-professor-fase5-final"></script>
+    <script src="assets/js/finance-core.js?v=20260711-financeiro-fase2"></script>
+    <script src="assets/js/shared-data.js?v=20260711-schema3-aluno"></script>
+    <script src="assets/js/app.js?v=20260711-aluno-v1"></script>
   </body>
 </html>

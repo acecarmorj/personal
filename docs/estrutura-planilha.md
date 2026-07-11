@@ -4,7 +4,7 @@ A fonte oficial da API e `apps-script/api.gs`. Depois de substituir a API, execu
 
 ## Versao da estrutura
 
-- `schemaVersion`: **2**
+- `schemaVersion`: **3**
 - A versao fica registrada nas propriedades do Apps Script e na aba `Config`.
 - Requisicoes comuns nao reformatam todas as abas. A preparacao completa ocorre no `setup` ou quando a versao da estrutura precisa ser migrada.
 
@@ -21,7 +21,7 @@ Todas as abas operacionais usam `updatedAt`, `updatedBy`, `source` e `deviceId` 
 ### `Treinos`
 `id`, `studentId`, `title`, `division`, `muscleGroup`, `exercises`, `exerciseItems`, `sets`, `reps`, `load`, `rest`, `status`, `notes`, `createdAt`, `updatedAt`, `updatedBy`, `source`, `deviceId`
 
-`exerciseItems` guarda cada exercicio em JSON com `id`, `name`, `sets`, `reps`, `load`, `rest` e `notes`. `exercises` preserva os nomes para compatibilidade.
+`exerciseItems` guarda cada exercicio em JSON com `id`, `exerciseId`, `name`, `sets`, `reps`, `load`, `rest` e `notes`. `exerciseId` vincula o item ao catalogo e `exercises` preserva os nomes para compatibilidade.
 
 ### `Exercicios`
 `id`, `name`, `muscleGroup`, `equipment`, `videoUrl`, `notes`, `updatedAt`, `updatedBy`, `source`, `deviceId`
@@ -52,6 +52,16 @@ Todas as abas operacionais usam `updatedAt`, `updatedBy`, `source` e `deviceId` 
 - A migracao do esquema 2 converte a primeira coluna antiga chamada `source` em `presenceSource` e preserva uma unica coluna `source` tecnica.
 - `type = access` representa entrada e saida da academia; `type = workout` representa registro de treino.
 
+### `SessoesTreino`
+`id`, `studentId`, `workoutId`, `workoutTitle`, `division`, `startedAt`, `endedAt`, `durationMinutes`, `status`, `difficulty`, `pain`, `notes`, `totalSets`, `completedSets`, `createdAt`, `updatedAt`, `updatedBy`, `source`, `deviceId`
+
+Uma linha representa uma execucao completa ou em andamento da ficha do professor.
+
+### `SeriesRealizadas`
+`id`, `sessionId`, `studentId`, `workoutId`, `exerciseItemId`, `exerciseId`, `exerciseName`, `setNumber`, `targetReps`, `actualReps`, `targetLoad`, `actualLoad`, `status`, `completedAt`, `notes`, `createdAt`, `updatedAt`, `updatedBy`, `source`, `deviceId`
+
+Cada linha representa uma serie prevista ou concluida e permite calcular volume, carga e aderencia sem alterar a prescricao original.
+
 ### `Usuarios`
 `id`, `name`, `email`, `passwordHash`, `role`, `status`, `lastLogin`, `updatedAt`, `updatedBy`, `source`, `deviceId`
 
@@ -59,9 +69,9 @@ Todas as abas operacionais usam `updatedAt`, `updatedBy`, `source` e `deviceId` 
 `id`, `staffId`, `staffName`, `date`, `clockIn`, `clockOut`, `durationMinutes`, `status`, `source`, `deviceId`, `notes`, `createdAt`, `updatedAt`, `updatedBy`
 
 ### `Config`
-`id`, `appName`, `timezone`, `currency`, `logoUrl`, `supportPhone`, `apiBaseUrl`, `lastSnapshotAt`, `schemaVersion`, `plans`, `modalities`, `costCenters`, `updatedAt`, `updatedBy`, `source`, `deviceId`
+`id`, `appName`, `timezone`, `currency`, `logoUrl`, `supportPhone`, `whatsappNumber`, `apiBaseUrl`, `lastSnapshotAt`, `schemaVersion`, `plans`, `modalities`, `costCenters`, `paymentAlertDays`, `paymentGraceDays`, `blockAccessOnOverdue`, `updatedAt`, `updatedBy`, `source`, `deviceId`
 
-`plans`, `modalities` e `costCenters` sao arrays em JSON. A atualizacao de `lastSnapshotAt` preserva todos os catalogos e metadados existentes.
+`plans`, `modalities`, `costCenters` e `paymentAlertDays` sao arrays em JSON. As regras de mensalidade definem avisos, tolerancia e bloqueio do QR do aluno.
 
 ### `Log`
 `timestamp`, `action`, `resource`, `recordId`, `changedFields`, `actor`, `source`, `deviceId`, `result`, `message`
@@ -86,4 +96,4 @@ Administracao, financeiro, configuracoes, estatisticas e ponto. Dados profission
 Cadastro operacional do aluno, ficha profissional, treinos, avaliacoes, agenda, presencas, ponto do professor e recebimento da mensalidade do aluno selecionado.
 
 ### `index.html`
-Aplicativo individual do aluno.
+Aplicativo individual mobile-first com QR, ficha prescrita, execucao de series, agenda, frequencia, permanencia, evolucao, mensalidades e fila offline propria. Usuario e senha ficam reservados para uma etapa posterior.

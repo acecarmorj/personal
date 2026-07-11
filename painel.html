@@ -699,6 +699,7 @@ Motivo do bloqueio ou observacao
 <section class="settings-grid">
 <article class="dashboard-card settings-card"><div class="section-head"><div><h2>Planos</h2></div></div><form class="settings-inline-form" id="planCatalogForm"><label>Nome<input name="name" required type="text"/></label><label>Valor mensal<input min="0" name="monthlyFee" step="0.01" type="number"/></label><button class="primary-button" type="submit">Adicionar plano</button></form><div class="settings-list" id="planCatalogList"></div></article>
 <article class="dashboard-card settings-card"><div class="section-head"><div><h2>Modalidades</h2></div></div><form class="settings-inline-form" id="modalityCatalogForm"><label>Nome<input name="name" required type="text"/></label><button class="primary-button" type="submit">Adicionar modalidade</button></form><div class="settings-list" id="modalityCatalogList"></div></article>
+<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Regras do app do aluno</h2><p>Avisos e bloqueio da mensalidade.</p></div></div><form class="settings-inline-form" id="paymentRulesForm"><label>Dias de aviso<input name="paymentAlertDays" placeholder="7, 3, 0" required type="text"/></label><label>Dias de tolerancia<input min="0" name="paymentGraceDays" required type="number"/></label><label>WhatsApp<input name="whatsappNumber" placeholder="5522988233216" type="text"/></label><label class="checkbox-row"><input name="blockAccessOnOverdue" type="checkbox"/><span>Bloquear acesso apos a tolerancia</span></label><button class="primary-button" type="submit">Salvar regras</button></form></article>
 <article class="dashboard-card settings-card staff-settings-card"><div class="section-head"><div><h2>Professores</h2><p>Os nomes cadastrados ficam disponiveis no ponto do tablet.</p></div></div><form class="settings-inline-form staff-inline-form" id="staffCatalogForm"><label>Nome<input name="name" required type="text"/></label><label>E-mail<input name="email" type="email"/></label><button class="primary-button" type="submit">Adicionar professor</button></form><div class="settings-list" id="staffCatalogList"></div></article>
 </section>
 <article class="dashboard-card admin-quality-card"><div class="section-head"><div><h2>Qualidade cadastral</h2></div></div><div class="admin-quality-grid" id="adminQualityGrid"></div></article>
@@ -1026,8 +1027,8 @@ Motivo do bloqueio ou observacao
 </dialog>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="assets/js/app-config.js"></script>
-<script src="assets/js/shared-data.js?v=20260711-schema2-sync2"></script>
+<script src="assets/js/shared-data.js?v=20260711-schema3-aluno"></script>
 <script src="assets/js/finance-core.js?v=20260711-financeiro-fase2"></script>
-<script src="assets/js/painel.js?v=20260711-schema2-sync2"></script>
+<script src="assets/js/painel.js?v=20260711-schema3-aluno"></script>
 </body>
 </html>

@@ -14,7 +14,7 @@
 2. Acesse `Extensoes > Apps Script` nessa propria planilha.
 3. Substitua o codigo pelo conteudo de `apps-script/api.gs`.
 4. Execute `setupProFitnessSpreadsheet()` e autorize o acesso.
-5. Confirme que a resposta informa `schemaVersion: 2`.
+5. Confirme que a resposta informa `schemaVersion: 3`.
 6. Publique uma **nova versao** do Web App.
 7. Confirme ou atualize a URL em `assets/js/app-config.js`.
 8. Teste `?action=health` e `?action=exportAll` antes de usar o sistema.
@@ -47,6 +47,13 @@
 - Salva e trabalha offline.
 - Reenvia automaticamente ao recuperar a conexao.
 
+### Celular do aluno
+
+- Sincroniza somente aluno, sessoes, series e check-ins alterados pelo aplicativo.
+- Consolida mudancas repetidas da mesma serie antes do envio.
+- Nao atualiza a base remota enquanto existir alteracao local pendente.
+- O botao de status permite repetir o envio manualmente.
+
 ### Conflitos
 
 - A API compara `updatedAt`.
@@ -64,6 +71,7 @@
 6. Desligar a internet, fazer uma alteracao e confirmar a pendencia.
 7. Restaurar a internet e verificar o envio sem duplicacao.
 8. Tentar excluir offline um registro alterado em outro dispositivo e confirmar que a exclusao fica pendente.
+9. Iniciar um treino no aluno, concluir uma serie e confirmar as linhas em `SessoesTreino` e `SeriesRealizadas`.
 
 ## Testes automatizados
 

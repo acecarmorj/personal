@@ -111,6 +111,7 @@ const globalStudentSearch = document.getElementById("globalStudentSearch");
 const globalStudentSearchList = document.getElementById("globalStudentSearchList");
 const planCatalogForm = document.getElementById("planCatalogForm");
 const modalityCatalogForm = document.getElementById("modalityCatalogForm");
+const paymentRulesForm = document.getElementById("paymentRulesForm");
 const staffCatalogForm = document.getElementById("staffCatalogForm");
 const staffReportStartDate = document.getElementById("staffReportStartDate");
 const staffReportEndDate = document.getElementById("staffReportEndDate");
@@ -1794,6 +1795,7 @@ function getWorkoutExerciseItems(workout) {
     return workout.exerciseItems
       .map((item, index) => ({
         id: item.id || `${workout.id || "TR"}-EX-${index + 1}`,
+        exerciseId: item.exerciseId || "",
         name: String(item.name || item.exercise || "").trim(),
         sets: String(item.sets || "").trim(),
         reps: String(item.reps || "").trim(),
@@ -1805,6 +1807,7 @@ function getWorkoutExerciseItems(workout) {
   }
   return getExercises(workout).map((name, index) => ({
     id: `${workout.id || "TR"}-EX-${index + 1}`,
+    exerciseId: "",
     name,
     sets: workout.sets || "",
     reps: workout.reps || "",
@@ -3276,7 +3279,11 @@ function getAdminConfig() {
     ...current,
     plans: parseCatalog(current.plans, studentPlans),
     modalities: parseCatalog(current.modalities, Object.values(WEEKLY_CATEGORY_LABELS).filter((name) => name !== "Outra atividade")),
-    costCenters: parseCatalog(current.costCenters, Object.keys(COST_CENTER_LABELS))
+    costCenters: parseCatalog(current.costCenters, Object.keys(COST_CENTER_LABELS)),
+    paymentAlertDays: parseCatalog(current.paymentAlertDays, [7, 3, 0]),
+    paymentGraceDays: Math.max(0, safeNumber(current.paymentGraceDays)),
+    blockAccessOnOverdue: current.blockAccessOnOverdue !== false && current.blockAccessOnOverdue !== "false",
+    whatsappNumber: String(current.whatsappNumber || current.supportPhone || "5522988233216").replace(/\D/g, "")
   };
 }
 
@@ -3302,6 +3309,10 @@ function renderSettings() {
   document.getElementById("staffCatalogList").innerHTML = professors.length
     ? professors.map((professor) => `<article class="settings-list-item"><div><strong>${escapeHtml(professor.name)}</strong><span>${escapeHtml(professor.email || "Sem e-mail")}</span></div><button class="ghost-button small-button" data-delete-staff="${escapeHtml(professor.id)}" type="button">Remover</button></article>`).join("")
     : '<div class="empty-state">Nenhum professor cadastrado.</div>';
+  paymentRulesForm.elements.paymentAlertDays.value = config.paymentAlertDays.join(", ");
+  paymentRulesForm.elements.paymentGraceDays.value = config.paymentGraceDays;
+  paymentRulesForm.elements.whatsappNumber.value = config.whatsappNumber;
+  paymentRulesForm.elements.blockAccessOnOverdue.checked = config.blockAccessOnOverdue;
 
   const checks = [
     ["Sem telefone", panelState.students.filter((student) => !student.phone).length],
@@ -3329,7 +3340,7 @@ function downloadTextFile(content, filename, type) {
 function downloadDataBackup() {
   const backup = {
     app: "Pro Fitness Academia",
-    schemaVersion: 7,
+    schemaVersion: 8,
     exportedAt: new Date().toISOString(),
     snapshot: Store.clone(panelState)
   };
@@ -3379,7 +3390,7 @@ function getDataAudit() {
       ["Alunos", students.length],
       ["Registros relacionados", relatedCollections.reduce((sum, key) => sum + (panelState[key] || []).length, 0)],
       ["Pendencias", issues.length],
-      ["Versao do backup", "7"]
+      ["Versao do backup", "8"]
     ]
   };
 }
@@ -3562,6 +3573,25 @@ function handleModalityCatalogSave(event) {
   config.modalities.push(name);
   event.currentTarget.reset();
   saveAdminConfig(config, "modality-created", `Modalidade ${name} adicionada nas configuracoes.`);
+}
+
+function handlePaymentRulesSave(event) {
+  event.preventDefault();
+  const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  const alertDays = String(payload.paymentAlertDays || "")
+    .split(/[;,\s]+/)
+    .map(Number)
+    .filter((item) => Number.isFinite(item) && item >= 0);
+  if (!alertDays.length) {
+    window.alert("Informe ao menos um dia de aviso.");
+    return;
+  }
+  const config = getAdminConfig();
+  config.paymentAlertDays = [...new Set(alertDays)].sort((left, right) => right - left);
+  config.paymentGraceDays = Math.max(0, safeNumber(payload.paymentGraceDays));
+  config.blockAccessOnOverdue = event.currentTarget.elements.blockAccessOnOverdue.checked;
+  config.whatsappNumber = String(payload.whatsappNumber || "").replace(/\D/g, "");
+  saveAdminConfig(config, "student-app-payment-rules-updated", "Regras de aviso e bloqueio do aplicativo do aluno atualizadas.");
 }
 
 function getStaffUsers(includeInactive) {
@@ -3901,6 +3931,7 @@ function handleWorkoutSave(event) {
       }))
     : exerciseNames.map((name, index) => ({
         id: existingItems[index]?.id || Store.uid("EXI"),
+        exerciseId: existingItems[index]?.exerciseId || panelState.exercises.find((exercise) => String(exercise.name || "").trim().toLocaleLowerCase("pt-BR") === name.toLocaleLowerCase("pt-BR"))?.id || "",
         name,
         sets: payload.sets.trim(),
         reps: payload.reps.trim(),
@@ -4565,6 +4596,7 @@ function attachPanelEvents() {
   weeklyScheduleForm.addEventListener("submit", handleWeeklyScheduleSave);
   planCatalogForm.addEventListener("submit", handlePlanCatalogSave);
   modalityCatalogForm.addEventListener("submit", handleModalityCatalogSave);
+  paymentRulesForm.addEventListener("submit", handlePaymentRulesSave);
   staffCatalogForm.addEventListener("submit", handleStaffCatalogSave);
   assessmentForm.elements.weight.addEventListener("input", updateImcPreview);
   assessmentForm.elements.height.addEventListener("input", updateImcPreview);

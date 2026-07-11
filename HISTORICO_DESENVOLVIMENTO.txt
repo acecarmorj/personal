@@ -1370,3 +1370,41 @@ ATUALIZACAO - 2026-07-11 - CORRECOES DE RESTAURACAO, CONFLITOS E ENTREGA
 - Workflow `Publish PersonalPro` numero `29157388633` concluido com sucesso e implantado no GitHub Pages.
 - Verificacao publica confirmou HTTP 200 em `index.html`, `painel.html` e `prof.html`, todos apontando para a versao de cache `20260711-schema2-sync2`.
 - Verificacao final conjunta confirmou frontend publicado, API publica ativa em `schemaVersion: 2` e planilha correta vinculada.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-11 - NOVO APLICATIVO MOBILE DO ALUNO
+======================================================================
+- Criado backup externo em `D:\PersonalPro-backups\antes-app-aluno-20260711-122014` antes de qualquer alteracao.
+- `index.html` e `assets/css/style.css` foram reconstruidos como aplicativo mobile-first nas cores preto, amarelo e cinza da Pro Fitness.
+- Criada navegacao inferior com Inicio, Treino, Agenda, Evolucao e Mensalidade, mantendo perfil no cabecalho e QR em destaque.
+- Removidos da tela inicial do aluno os textos extensos de demonstracao e o botao de restaurar demo.
+- Mantida a matricula unica por QR ou codigo manual; usuario e senha continuam reservados para etapa posterior.
+- A sessao local do aluno passou a registrar `authVersion`, metodo de ativacao e data para permitir migracao futura ao login.
+- A ficha criada pelo professor passou a ser exibida com divisao, exercicios, series, repeticoes, carga, intervalo e observacoes sem permitir edicao da prescricao.
+- Criado fluxo de iniciar, retomar e finalizar treino com cronometro, carga real, repeticoes reais, confirmacao por serie, dificuldade, dor e observacoes.
+- Criadas as colecoes `workoutSessions` e `exerciseSets` no armazenamento e as abas `SessoesTreino` e `SeriesRealizadas` na API.
+- `exerciseId` passou a ser preservado no professor e no painel, vinculando cada item ao catalogo de exercicios para estatisticas consistentes.
+- Agenda do aluno combina compromissos individuais e aulas semanais incluidas no plano contratado.
+- Presenca e permanencia usam exclusivamente check-ins de entrada e saida da academia; o aluno nao pode criar presenca manual.
+- Permanencias invalidas ou superiores a 16 horas nao entram nas estatisticas.
+- Evolucao possui filtros de 7, 30 e 90 dias, treinos, series, duracao, aproveitamento, grafico semanal e maior carga por exercicio.
+- Criada area individual de mensalidades com valor, saldo, vencimento, pagamento, historico, alertas e contato por WhatsApp.
+- Config recebeu `paymentAlertDays`, `paymentGraceDays`, `blockAccessOnOverdue` e `whatsappNumber`.
+- Painel administrativo recebeu formulario para alterar dias de aviso, tolerancia, WhatsApp e bloqueio automatico do aluno.
+- Criada fila offline persistente exclusiva do aluno para `students`, `workoutSessions`, `exerciseSets` e `checkins`.
+- A fila salva primeiro no celular, consolida mudancas por registro, reenvia ao recuperar internet e nao permite leitura remota sobre pendencias.
+- Corrigida a API para resolver recursos compostos sem diferenciar maiusculas e minusculas, incluindo `staffTimeEntries`, `cashClosings`, `workoutSessions` e `exerciseSets`.
+- API preparada como `schemaVersion: 3` e backup administrativo elevado para `schemaVersion: 8`.
+- Gerador ficticio atualizado para produzir 200 sessoes e 3.200 series, preservando 50 alunos, 6 professores e 10 por cento de inadimplencia atual.
+- Backups antigos sem sessoes e series continuam aceitos pelo cliente; a migracao adiciona as novas colecoes vazias.
+- Atualizados `index.html`, `assets/css/style.css`, `assets/js/app.js`, `assets/js/shared-data.js`, `assets/js/prof.js`, `assets/js/painel.js`, `painel.html`, `apps-script/api.gs`, `api.txt`, testes, gerador e documentacao.
+- Validacao estatica confirmou sintaxe de todos os JavaScripts, API, IDs, CSS, fila do aluno, backups antigos, regras de acesso e igualdade entre `api.gs` e `api.txt`.
+- Servidor local respondeu HTTP 200 para aluno, painel, professor, CSS e JavaScripts ativos; automacao visual integrada de navegador nao estava disponivel nesta sessao.
+- Snapshot remoto anterior ao esquema 3 salvo externamente em `D:\PersonalPro-backups\antes-schema3-remoto-20260711-125449.json`.
+- API enviada pelo Clasp, criada como versao imutavel 9 e reimplantada na URL publica existente.
+- `setup` remoto confirmou `schemaVersion: 3`, criou `SessoesTreino` e `SeriesRealizadas` e acrescentou as regras financeiras na Config.
+- Base ficticia atualizada importada com 50 alunos, 150 pagamentos, 200 sessoes e 3.200 series; o primeiro aluno possui 4 sessoes e 64 series para demonstracao.
+- Conferencia remota confirmou 16 recursos, 5 inadimplentes atuais, avisos 7/3/0, bloqueio ativo e WhatsApp configurado.
+- Teste incremental remoto criou e removeu uma sessao e uma serie temporarias com sucesso; nenhum registro operacional de teste permaneceu.
+- Nesta entrada, validacao final do pacote e publicacao do frontend no GitHub ainda estao pendentes.

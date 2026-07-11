@@ -5,7 +5,8 @@
   const API_PLACEHOLDER = "COLE_A_URL_DO_WEB_APP_AQUI";
   const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
   const SYNC_DEVICE_KEY = "profitness-sync-device-v1";
-  const SNAPSHOT_RESOURCES = ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "exercises", "users", "staffTimeEntries", "config", "log"];
+  const SNAPSHOT_RESOURCES = ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "workoutSessions", "exerciseSets", "exercises", "users", "staffTimeEntries", "config", "log"];
+  const LEGACY_OPTIONAL_RESOURCES = ["workoutSessions", "exerciseSets"];
 
   function dateToSaoPauloISO(date) {
     return new Intl.DateTimeFormat("en-CA", {
@@ -319,6 +320,59 @@
       updatedBy: checkin.updatedBy || "",
       source: hasExplicitPresenceSource ? checkin.source || "" : checkin.syncSource || "",
       deviceId: checkin.deviceId || ""
+    };
+  }
+
+  function createWorkoutSessionRecord(overrides) {
+    const session = overrides || {};
+    const startedAt = session.startedAt || new Date().toISOString();
+    return {
+      id: session.id || uid("SES"),
+      studentId: session.studentId || "",
+      workoutId: session.workoutId || "",
+      workoutTitle: session.workoutTitle || "Treino",
+      division: session.division || "",
+      startedAt,
+      endedAt: session.endedAt || "",
+      durationMinutes: Number(session.durationMinutes || 0),
+      status: session.status || "em_andamento",
+      difficulty: session.difficulty || "",
+      pain: session.pain || "",
+      notes: session.notes || "",
+      totalSets: Number(session.totalSets || 0),
+      completedSets: Number(session.completedSets || 0),
+      createdAt: session.createdAt || startedAt,
+      updatedAt: session.updatedAt || session.endedAt || startedAt,
+      updatedBy: session.updatedBy || "",
+      source: session.source || "",
+      deviceId: session.deviceId || ""
+    };
+  }
+
+  function createExerciseSetRecord(overrides) {
+    const exerciseSet = overrides || {};
+    const createdAt = exerciseSet.createdAt || new Date().toISOString();
+    return {
+      id: exerciseSet.id || uid("SER"),
+      sessionId: exerciseSet.sessionId || "",
+      studentId: exerciseSet.studentId || "",
+      workoutId: exerciseSet.workoutId || "",
+      exerciseItemId: exerciseSet.exerciseItemId || "",
+      exerciseId: exerciseSet.exerciseId || "",
+      exerciseName: exerciseSet.exerciseName || "Exercicio",
+      setNumber: Number(exerciseSet.setNumber || 1),
+      targetReps: exerciseSet.targetReps || "",
+      actualReps: Number(exerciseSet.actualReps || 0),
+      targetLoad: exerciseSet.targetLoad || "",
+      actualLoad: Number(exerciseSet.actualLoad || 0),
+      status: exerciseSet.status || "pendente",
+      completedAt: exerciseSet.completedAt || "",
+      notes: exerciseSet.notes || "",
+      createdAt,
+      updatedAt: exerciseSet.updatedAt || exerciseSet.completedAt || createdAt,
+      updatedBy: exerciseSet.updatedBy || "",
+      source: exerciseSet.source || "",
+      deviceId: exerciseSet.deviceId || ""
     };
   }
 
@@ -806,6 +860,8 @@
           notes: "Desconforto leve no ombro."
         }
       ],
+      workoutSessions: [],
+      exerciseSets: [],
       exercises: [
         { id: "EX-001", name: "Supino reto", muscleGroup: "Peito", equipment: "Barra" },
         { id: "EX-002", name: "Prancha", muscleGroup: "Core", equipment: "Solo" }
@@ -817,7 +873,18 @@
       ],
       staffTimeEntries: [],
       config: [
-        { id: "CFG-001", timezone: "America/Sao_Paulo", currency: "BRL", appName: "Pro Fitness Academia", supportPhone: "(22) 98823-3216", schemaVersion: 2 }
+        {
+          id: "CFG-001",
+          timezone: "America/Sao_Paulo",
+          currency: "BRL",
+          appName: "Pro Fitness Academia",
+          supportPhone: "(22) 98823-3216",
+          whatsappNumber: "5522988233216",
+          paymentAlertDays: [7, 3, 0],
+          paymentGraceDays: 0,
+          blockAccessOnOverdue: true,
+          schemaVersion: 3
+        }
       ],
       log: []
     };
@@ -840,6 +907,8 @@
       expenses: Array.isArray(data.expenses) ? data.expenses.map(createExpenseRecord) : base.expenses,
       cashClosings: Array.isArray(data.cashClosings) ? data.cashClosings.map(createCashClosingRecord) : base.cashClosings,
       checkins: Array.isArray(data.checkins) ? data.checkins.map(createCheckinRecord) : base.checkins.map(createCheckinRecord),
+      workoutSessions: safeArray(data.workoutSessions).map(createWorkoutSessionRecord),
+      exerciseSets: safeArray(data.exerciseSets).map(createExerciseSetRecord),
       exercises: Array.isArray(data.exercises) ? data.exercises : base.exercises,
       users: Array.isArray(data.users) ? data.users : base.users,
       staffTimeEntries: safeArray(data.staffTimeEntries).map(createStaffTimeEntryRecord),
@@ -1026,7 +1095,7 @@
   }
 
   function validateCompleteSnapshot(snapshot) {
-    const missing = SNAPSHOT_RESOURCES.filter((resource) => !Array.isArray(snapshot?.[resource]));
+    const missing = SNAPSHOT_RESOURCES.filter((resource) => !LEGACY_OPTIONAL_RESOURCES.includes(resource) && !Array.isArray(snapshot?.[resource]));
     if (missing.length) {
       const error = new Error(`Backup incompleto. Colecoes ausentes: ${missing.join(", ")}.`);
       error.code = "INCOMPLETE_SNAPSHOT";
@@ -1146,7 +1215,12 @@
   }
 
   function saveStudentSession(studentId) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ studentId: studentId }));
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      studentId: studentId,
+      authVersion: 1,
+      method: "enrollment-device",
+      authenticatedAt: new Date().toISOString()
+    }));
   }
 
   function clearStudentSession() {
@@ -1186,6 +1260,18 @@
       data.checkins.filter((checkin) => checkin.studentId === studentId),
       "date"
     );
+  }
+
+  function getStudentWorkoutSessions(data, studentId) {
+    return clone(safeArray(data.workoutSessions))
+      .filter((session) => session.studentId === studentId)
+      .sort((left, right) => String(right.startedAt || "").localeCompare(String(left.startedAt || "")));
+  }
+
+  function getWorkoutSessionSets(data, sessionId) {
+    return clone(safeArray(data.exerciseSets))
+      .filter((exerciseSet) => exerciseSet.sessionId === sessionId)
+      .sort((left, right) => Number(left.setNumber || 0) - Number(right.setNumber || 0));
   }
 
   function getStudentSchedule(data, studentId) {
@@ -1229,6 +1315,9 @@
 
     const payment = getCurrentPayment(data, studentId);
     const today = todayISO();
+    const config = safeArray(data.config)[0] || {};
+    const paymentGraceDays = Math.max(0, Number(config.paymentGraceDays || 0));
+    const blockAccessOnOverdue = config.blockAccessOnOverdue !== false && config.blockAccessOnOverdue !== "false";
 
     if (student.status !== "ativo") {
       return {
@@ -1280,13 +1369,27 @@
       };
     }
 
-    if (payment.status === "vencido" || (["pendente", "parcial"].includes(payment.status) && payment.dueDate && payment.dueDate < today)) {
+    const graceLimit = payment.dueDate ? parseDateInput(payment.dueDate) : null;
+    if (graceLimit) graceLimit.setDate(graceLimit.getDate() + paymentGraceDays);
+    const unpaidStatus = ["vencido", "pendente", "parcial"].includes(payment.status);
+    const overdueAfterGrace = unpaidStatus && (graceLimit ? parseDateInput(today).getTime() > graceLimit.getTime() : payment.status === "vencido");
+    if (overdueAfterGrace && blockAccessOnOverdue) {
       return {
         status: "bloqueado",
         label: "Acesso bloqueado",
         reason: `Mensalidade em atraso desde ${formatDate(payment.dueDate)}.`,
         payment: payment,
         allowsGate: false
+      };
+    }
+
+    if (overdueAfterGrace) {
+      return {
+        status: "aviso",
+        label: "Mensalidade vencida",
+        reason: `Mensalidade em atraso desde ${formatDate(payment.dueDate)}. O acesso permanece liberado pela regra atual da academia.`,
+        payment: payment,
+        allowsGate: true
       };
     }
 
@@ -1419,10 +1522,12 @@
     createCode: createCode,
     createCashClosingRecord: createCashClosingRecord,
     createCheckinRecord: createCheckinRecord,
+    createExerciseSetRecord: createExerciseSetRecord,
     createExpenseRecord: createExpenseRecord,
     createMovementRecord: createMovementRecord,
     createPaymentRecord: createPaymentRecord,
     createStudentRecord: createStudentRecord,
+    createWorkoutSessionRecord: createWorkoutSessionRecord,
     currency: currency,
     currentMonth: currentMonth,
     deleteRemoteRecord: deleteRemoteRecord,
@@ -1439,7 +1544,9 @@
     getStudentCheckins: getStudentCheckins,
     getStudentPayments: getStudentPayments,
     getStudentSchedule: getStudentSchedule,
+    getStudentWorkoutSessions: getStudentWorkoutSessions,
     getStudentWorkouts: getStudentWorkouts,
+    getWorkoutSessionSets: getWorkoutSessionSets,
     getApiBaseUrl: getApiBaseUrl,
     getRuntimeConfig: getRuntimeConfig,
     hydrateFromRemoteIfConfigured: hydrateFromRemoteIfConfigured,

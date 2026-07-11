@@ -32,9 +32,9 @@ assert.equal(apiCheck.status, 0, `apps-script/api.gs: ${apiCheck.stderr}`);
 assert.equal(hash("api.txt"), hash("apps-script/api.gs"), "api.txt deve ser identico a apps-script/api.gs");
 
 const apiContext = { Date, JSON, Object, Array, String, Number, Math, Set, Map };
-vm.runInNewContext(`${apiSource}\nthis.__apiTest = { SHEETS, CURRENT_SCHEMA_VERSION, buildConfigSnapshotMetadata, validateCompleteSnapshot, normalizePartialSnapshot, hasDeleteConflict };`, apiContext);
+vm.runInNewContext(`${apiSource}\nthis.__apiTest = { SHEETS, CURRENT_SCHEMA_VERSION, buildConfigSnapshotMetadata, validateCompleteSnapshot, normalizePartialSnapshot, hasDeleteConflict, resolveResourceName };`, apiContext);
 const api = apiContext.__apiTest;
-assert.equal(api.CURRENT_SCHEMA_VERSION, 2, "schemaVersion da API deve ser 2");
+assert.equal(api.CURRENT_SCHEMA_VERSION, 3, "schemaVersion da API deve ser 3");
 
 for (const [resource, definition] of Object.entries(api.SHEETS)) {
   const headers = [...definition.headers];
@@ -43,7 +43,11 @@ for (const [resource, definition] of Object.entries(api.SHEETS)) {
 assert.equal(api.SHEETS.checkins.headers.filter((header) => header === "source").length, 1, "Checkins deve ter uma unica coluna source");
 assert.ok(api.SHEETS.checkins.headers.includes("presenceSource"), "Checkins deve possuir presenceSource");
 assert.ok(api.SHEETS.config.headers.includes("schemaVersion"), "Config deve registrar schemaVersion");
+assert.ok(api.SHEETS.workoutSessions, "API deve possuir SessoesTreino");
+assert.ok(api.SHEETS.exerciseSets, "API deve possuir SeriesRealizadas");
 assert.ok(!api.SHEETS.log.headers.includes("payload"), "Log remoto nao deve armazenar payload completo");
+assert.equal(api.resolveResourceName("staffTimeEntries"), "staffTimeEntries", "API deve resolver recursos compostos");
+assert.equal(api.resolveResourceName("WORKOUTSESSIONS"), "workoutSessions", "API deve resolver novos recursos sem diferenciar caixa");
 
 const originalConfig = {
   id: "CFG-TEST",
@@ -62,7 +66,7 @@ const metadataConfig = JSON.parse(JSON.stringify(api.buildConfigSnapshotMetadata
 assert.deepEqual(metadataConfig.plans, originalConfig.plans, "Atualizacao de metadados deve preservar planos");
 assert.deepEqual(metadataConfig.modalities, originalConfig.modalities, "Atualizacao de metadados deve preservar modalidades");
 assert.deepEqual(metadataConfig.costCenters, originalConfig.costCenters, "Atualizacao de metadados deve preservar centros de custo");
-assert.equal(metadataConfig.schemaVersion, 2);
+assert.equal(metadataConfig.schemaVersion, 3);
 
 const completeApiSnapshot = Object.fromEntries(Object.keys(api.SHEETS).map((resource) => [resource, []]));
 assert.equal(api.validateCompleteSnapshot(completeApiSnapshot), undefined);
@@ -116,11 +120,32 @@ const sharedContext = {
 };
 vm.runInNewContext(read("assets/js/shared-data.js"), sharedContext);
 const Store = sharedContext.window.ProFitnessStore;
-const emptyCollections = ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "exercises", "users", "staffTimeEntries", "config", "log"];
+const emptyCollections = ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "workoutSessions", "exerciseSets", "exercises", "users", "staffTimeEntries", "config", "log"];
 const cleanSnapshot = Object.fromEntries(emptyCollections.map((key) => [key, []]));
 const migratedClean = Store.migrateData(cleanSnapshot);
 for (const key of emptyCollections) assert.equal(migratedClean[key].length, 0, `Backup limpo deve manter ${key} vazio`);
 assert.equal(Store.validateCompleteSnapshot(cleanSnapshot), true);
+const legacyCompleteSnapshot = { ...cleanSnapshot };
+delete legacyCompleteSnapshot.workoutSessions;
+delete legacyCompleteSnapshot.exerciseSets;
+assert.equal(Store.validateCompleteSnapshot(legacyCompleteSnapshot), true, "Backup anterior deve continuar restauravel sem sessoes e series");
+assert.equal(Store.migrateData(legacyCompleteSnapshot).workoutSessions.length, 0);
+assert.equal(Store.migrateData(legacyCompleteSnapshot).exerciseSets.length, 0);
+const workoutSession = JSON.parse(JSON.stringify(Store.createWorkoutSessionRecord({ studentId: "ALU-1", workoutId: "TR-1", startedAt: "2026-07-11T10:00:00.000Z" })));
+assert.equal(workoutSession.status, "em_andamento");
+assert.equal(workoutSession.studentId, "ALU-1");
+const exerciseSet = JSON.parse(JSON.stringify(Store.createExerciseSetRecord({ sessionId: workoutSession.id, exerciseName: "Supino", setNumber: 2, actualReps: 10, actualLoad: 30 })));
+assert.equal(exerciseSet.setNumber, 2);
+assert.equal(exerciseSet.actualLoad, 30);
+const overdueAccessSnapshot = Store.migrateData({
+  ...cleanSnapshot,
+  students: [{ id: "ALU-ACCESS", name: "Aluno", status: "ativo", enrollmentStatus: "ativo", appAccessPolicy: "auto" }],
+  payments: [{ id: "PG-ACCESS", studentId: "ALU-ACCESS", reference: Store.currentMonth(), dueDate: "2026-07-01", status: "vencido", amount: 89.9 }],
+  config: [{ id: "CONFIG-001", blockAccessOnOverdue: false, paymentGraceDays: 0 }]
+});
+assert.equal(Store.getAccessState(overdueAccessSnapshot, "ALU-ACCESS").allowsGate, true, "Config deve permitir acesso com mensalidade vencida quando bloqueio automatico estiver desligado");
+overdueAccessSnapshot.config[0].blockAccessOnOverdue = true;
+assert.equal(Store.getAccessState(overdueAccessSnapshot, "ALU-ACCESS").allowsGate, false, "Config deve bloquear atraso quando regra estiver ativa");
 const deleteBefore = { ...cleanSnapshot, students: [{ id: "ALU-DEL", updatedAt: "2026-07-11T10:00:00.000Z" }] };
 const deleteOperations = JSON.parse(JSON.stringify(Store.buildRemoteRecordOperations(deleteBefore, cleanSnapshot, ["students"])));
 assert.equal(deleteOperations.length, 1);
@@ -157,6 +182,9 @@ for (const cssFile of ["assets/css/style.css", "assets/css/painel.css", "assets/
 
 const panelHtml = read("painel.html");
 const panelJs = read("assets/js/painel.js");
+const studentJs = read("assets/js/app.js");
+const studentHtml = read("index.html");
+const professorJs = read("assets/js/prof.js");
 const professorHtml = read("prof.html");
 assert.match(panelHtml, /Resumo administrativo/, "Painel administrativo deve possuir resumo de consulta");
 assert.doesNotMatch(panelHtml, /id="newStudentButton"/, "Painel administrativo nao deve cadastrar aluno");
@@ -166,6 +194,7 @@ assert.match(panelHtml, /id="staffTimePrintableReport"/, "Painel administrativo 
 assert.doesNotMatch(professorHtml, /Caixa diario|Despesas da academia|Relatorios e resultados/, "Painel do professor nao deve expor modulos financeiros administrativos");
 assert.match(panelHtml, /id="adminSyncStatus"/, "Painel deve mostrar status de sincronizacao");
 assert.match(panelHtml, /id="adminPendingSyncButton"/, "Painel deve permitir reenviar pendencias");
+assert.match(panelHtml, /id="paymentRulesForm"/, "Painel deve configurar alertas e bloqueio do aluno");
 assert.match(panelJs, /ADMIN_SYNC_QUEUE_KEY/, "Painel deve possuir fila persistente");
 assert.match(panelJs, /ADMIN_PENDING_SNAPSHOT_KEY/, "Painel deve preservar restauracao integral pendente");
 assert.match(panelJs, /flushAdminSyncQueue/, "Painel deve reenviar a fila");
@@ -180,6 +209,17 @@ const pushSnapshotBlock = read("assets/js/shared-data.js").slice(
   read("assets/js/shared-data.js").indexOf("async function pushRemotePartialSnapshot")
 );
 assert.doesNotMatch(pushSnapshotBlock, /saveData\(/, "Envio remoto de snapshot nao deve sobrescrever alteracoes locais feitas durante a requisicao");
+assert.match(studentJs, /STUDENT_SYNC_QUEUE_KEY/, "App do aluno deve possuir fila offline persistente");
+assert.match(studentJs, /flushStudentSyncQueue/, "App do aluno deve reenviar pendencias");
+assert.match(studentJs, /workoutSessions.*exerciseSets.*checkins/s, "Fila do aluno deve sincronizar sessoes, series e treinos");
+assert.doesNotMatch(studentJs, /catch\(\(\) => null\)/, "App do aluno nao deve ignorar falhas de sincronizacao");
+assert.doesNotMatch(studentJs, /syncSnapshotChanges/, "App do aluno deve usar fila incremental propria");
+for (const screen of ["home", "workouts", "agenda", "evolution", "payments"]) {
+  assert.match(studentHtml, new RegExp(`data-screen="${screen}"`), `App do aluno deve possuir navegacao ${screen}`);
+}
+assert.match(studentHtml, /id="workoutSessionDialog"/, "App deve possuir execucao de treino em tela dedicada");
+assert.doesNotMatch(studentHtml, /id="restoreDemoButton"/, "App publicado nao deve expor restauracao de demonstracao");
+assert.match(professorJs, /exerciseId/, "Professor deve preservar vinculo com catalogo de exercicios");
 
 if (packageMode) {
   const allowedRootFiles = new Set(["index.html", "painel.html", "prof.html", "api.txt", "HISTORICO_DESENVOLVIMENTO.txt"]);
@@ -193,7 +233,7 @@ if (packageMode) {
 }
 assert.match(read("HISTORICO_DESENVOLVIMENTO.txt"), /ULTIMA ATUALIZACAO: 11\/07\/2026/);
 assert.match(read("docs/estrutura-planilha.md"), /presenceSource/);
-assert.match(read("docs/sheets-api-setup.md"), /importPartial/);
+assert.match(read("docs/sheets-api-setup.md"), /schemaVersion: 3/);
 const demoTool = read("tools/generate-demo-data.mjs");
 assert.match(demoTool, /PersonalPro-backups/, "Gerador deve salvar backups fora do projeto por padrao");
 assert.doesNotMatch(demoTool, /payload:\s*JSON\.stringify/, "Gerador nao deve recriar payload integral no log");

@@ -22,11 +22,11 @@
 
 const SPREADSHEET_ID_PROPERTY = "PROFITNESS_SPREADSHEET_ID";
 const SCHEMA_VERSION_PROPERTY = "PROFITNESS_SCHEMA_VERSION";
-const CURRENT_SCHEMA_VERSION = 2;
+const CURRENT_SCHEMA_VERSION = 3;
 const TEXT_HEADERS = [
-  "id", "studentId", "workoutId", "teacherId", "paymentId", "expenseId", "staffId", "recordId", "deviceId",
+  "id", "studentId", "workoutId", "sessionId", "exerciseItemId", "exerciseId", "teacherId", "paymentId", "expenseId", "staffId", "recordId", "deviceId",
   "phone", "birthDate", "date", "time", "startTime", "endTime", "reference", "dueDate", "paidAt", "closedAt",
-  "checkedInAt", "checkedOutAt", "clockIn", "clockOut", "createdAt", "updatedAt", "lastLogin", "lastSnapshotAt",
+  "checkedInAt", "checkedOutAt", "clockIn", "clockOut", "startedAt", "endedAt", "completedAt", "createdAt", "updatedAt", "lastLogin", "lastSnapshotAt",
   "enrollmentToken", "enrollmentCompletedAt", "gateCode", "lastGateSyncAt", "reversedAt", "voidedAt", "timestamp", "presenceSource"
 ];
 
@@ -138,6 +138,14 @@ const SHEETS = {
       "deviceId"
     ]
   },
+  workoutSessions: {
+    sheetName: "SessoesTreino",
+    headers: ["id", "studentId", "workoutId", "workoutTitle", "division", "startedAt", "endedAt", "durationMinutes", "status", "difficulty", "pain", "notes", "totalSets", "completedSets", "createdAt", "updatedAt", "updatedBy", "source", "deviceId"]
+  },
+  exerciseSets: {
+    sheetName: "SeriesRealizadas",
+    headers: ["id", "sessionId", "studentId", "workoutId", "exerciseItemId", "exerciseId", "exerciseName", "setNumber", "targetReps", "actualReps", "targetLoad", "actualLoad", "status", "completedAt", "notes", "createdAt", "updatedAt", "updatedBy", "source", "deviceId"]
+  },
   users: {
     sheetName: "Usuarios",
     headers: ["id", "name", "email", "passwordHash", "role", "status", "lastLogin", "updatedAt", "updatedBy", "source", "deviceId"]
@@ -148,7 +156,7 @@ const SHEETS = {
   },
   config: {
     sheetName: "Config",
-    headers: ["id", "appName", "timezone", "currency", "logoUrl", "supportPhone", "apiBaseUrl", "lastSnapshotAt", "schemaVersion", "plans", "modalities", "costCenters", "updatedAt", "updatedBy", "source", "deviceId"]
+    headers: ["id", "appName", "timezone", "currency", "logoUrl", "supportPhone", "whatsappNumber", "apiBaseUrl", "lastSnapshotAt", "schemaVersion", "plans", "modalities", "costCenters", "paymentAlertDays", "paymentGraceDays", "blockAccessOnOverdue", "updatedAt", "updatedBy", "source", "deviceId"]
   },
   log: {
     sheetName: "Log",
@@ -159,7 +167,7 @@ const SHEETS = {
 function doGet(e) {
   const params = e && e.parameter ? e.parameter : {};
   const action = (params.action || "").toLowerCase();
-  const resource = (params.resource || "").toLowerCase();
+  const resource = resolveResourceName(params.resource || "");
   const id = params.id || "";
 
   try {
@@ -261,7 +269,7 @@ function doPost(e) {
       });
     }
 
-    const resource = (body.resource || "").toLowerCase();
+    const resource = resolveResourceName(body.resource || "");
     const data = body.data || {};
     validateResource(resource);
 
@@ -476,12 +484,16 @@ function seedConfigSheet(spreadsheet) {
     currency: "BRL",
     logoUrl: "",
     supportPhone: "(22) 98823-3216",
+    whatsappNumber: "5522988233216",
     apiBaseUrl: "",
     lastSnapshotAt: "",
     schemaVersion: CURRENT_SCHEMA_VERSION,
     plans: [],
     modalities: [],
     costCenters: [],
+    paymentAlertDays: [7, 3, 0],
+    paymentGraceDays: 0,
+    blockAccessOnOverdue: true,
     updatedAt: new Date().toISOString(),
     updatedBy: "setup",
     source: "api",
@@ -538,6 +550,13 @@ function validateResource(resource) {
     error.code = "INVALID_RESOURCE";
     throw error;
   }
+}
+
+function resolveResourceName(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) return "";
+  const resolved = Object.keys(SHEETS).find((resource) => resource.toLowerCase() === normalized);
+  return resolved || normalized;
 }
 
 function exportAllData(setup) {
