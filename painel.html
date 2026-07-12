@@ -9,17 +9,25 @@
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="assets/css/painel.css?v=20260711-admin-compact1" rel="stylesheet"/>
+<link href="assets/css/painel.css?v=20260712-final-v4" rel="stylesheet"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 </head>
 <body>
-<div class="environment-badge" data-environment-badge hidden></div>
-<section class="admin-auth-view" id="adminAuthView"><div class="admin-auth-card" id="adminLoginCard"><span class="brand-mark">PF</span><p class="eyebrow">ADMINISTRACAO</p><h1>Acesso ao painel</h1><p>Entre com seu usuario administrativo para consultar a operacao da Pro Fitness.</p><form id="adminLoginForm" class="admin-auth-form"><label>Usuario ou e-mail<input name="login" autocomplete="username" required/></label><label>Senha<input type="password" name="password" autocomplete="current-password" required/></label><button class="primary-button" type="submit">Entrar</button></form><p id="adminLoginFeedback" class="admin-auth-feedback" aria-live="polite"></p></div><div class="admin-auth-card" id="adminPasswordChangeCard" hidden><span class="brand-mark">PF</span><p class="eyebrow">PRIMEIRO ACESSO</p><h1>Crie uma nova senha</h1><p>Substitua a senha temporaria antes de abrir o painel.</p><form id="adminPasswordChangeForm" class="admin-auth-form"><label>Senha temporaria<input type="password" name="currentPassword" required/></label><label>Nova senha<input type="password" name="newPassword" minlength="8" required/></label><label>Confirmar senha<input type="password" name="confirmPassword" minlength="8" required/></label><button class="primary-button" type="submit">Salvar nova senha</button></form><button class="ghost-button" id="cancelAdminPasswordChange" type="button">Cancelar</button><p id="adminPasswordChangeFeedback" class="admin-auth-feedback" aria-live="polite"></p></div></section>
-<div class="dashboard-shell" id="adminAppShell" hidden>
-<header class="admin-header photo-only-header">
-<figure class="academy-visual">
-<img alt="Fachada da Pro Fitness Academia" src="assets/images/pro-fitness-fachada.png"/>
-</figure>
+<div class="environment-badge" data-environment-badge="" hidden=""></div>
+<section class="admin-auth-view" id="adminAuthView">
+<div class="admin-auth-shell">
+<header aria-label="Pro Fitness Academia" class="admin-auth-brand auth-brand-header official-banner-header">
+<img alt="Fachada e logotipo oficial da Pro Fitness Academia" class="official-header-banner" src="assets/images/pro-fitness-header-oficial.jpg"/>
+<span class="header-role-label">ADMINISTRACAO</span>
+</header>
+<div class="admin-auth-card" id="adminLoginCard"><h1>Administracao</h1><form class="admin-auth-form" id="adminLoginForm"><label>Usuario ou e-mail<input autocomplete="username" name="login" required=""/></label><label>Senha<input autocomplete="current-password" name="password" required="" type="password"/></label><button class="primary-button" type="submit">Entrar</button></form><p aria-live="polite" class="admin-auth-feedback" id="adminLoginFeedback"></p></div>
+<div class="admin-auth-card" hidden="" id="adminPasswordChangeCard"><h1>Criar nova senha</h1><p class="password-rule">Minimo de 8 caracteres, com letra e numero.</p><form class="admin-auth-form" id="adminPasswordChangeForm"><label>Senha temporaria<input name="currentPassword" required="" type="password"/></label><label>Nova senha<input minlength="8" name="newPassword" required="" type="password"/></label><label>Confirmar senha<input minlength="8" name="confirmPassword" required="" type="password"/></label><button class="primary-button" type="submit">Salvar nova senha</button></form><button class="ghost-button" id="cancelAdminPasswordChange" type="button">Cancelar</button><p aria-live="polite" class="admin-auth-feedback" id="adminPasswordChangeFeedback"></p></div>
+</div>
+</section>
+<div class="dashboard-shell" hidden="" id="adminAppShell">
+<header aria-label="Pro Fitness Academia" class="admin-header photo-only-header hybrid-app-header official-banner-header">
+<img alt="Fachada e logotipo oficial da Pro Fitness Academia" class="official-header-banner" src="assets/images/pro-fitness-header-fino.jpg"/>
+<span class="header-role-label">ADMINISTRACAO</span>
 </header>
 <div class="admin-session-bar"><div><span>Sessao</span><strong id="adminCurrentUser">-</strong></div><button class="ghost-button" id="adminLogoutButton" type="button">Sair</button></div>
 <div class="panel-navigation-shell">
@@ -53,10 +61,10 @@
 </div>
 </details>
 </div>
-<div class="admin-sync-status" id="adminSyncStatus" aria-live="polite">
+<div aria-live="polite" class="admin-sync-status" id="adminSyncStatus">
 <span class="admin-sync-dot" id="adminConnectionDot"></span>
 <strong id="adminConnectionText">Dados deste computador</strong>
-<button class="admin-sync-pending" hidden id="adminPendingSyncButton" type="button">0 pendencias</button>
+<button class="admin-sync-pending" hidden="" id="adminPendingSyncButton" type="button">0 pendencias</button>
 <span id="adminLastSyncText">Ainda nao sincronizado</span>
 <button class="ghost-button admin-sync-now" id="retryAdminSyncButton" type="button">Sincronizar</button>
 </div>
@@ -67,7 +75,7 @@
 <h2 id="overviewDate">Hoje na Pro Fitness</h2>
 </div>
 <div class="overview-lead-actions">
-<button class="primary-button" id="openStudentsOverviewButton" type="button">Alunos</button>
+<button class="primary-button" id="openStudentsOverviewButton" type="button">Matricular novo aluno</button>
 </div>
 </article>
 <section class="overview-grid" id="metricGrid"></section>
@@ -137,7 +145,6 @@
 </label>
 <div class="operation-command-actions">
 <span class="result-count" id="studentRosterCount">0 alunos</span>
-
 </div>
 </article>
 <section class="workspace-grid">
@@ -169,10 +176,8 @@
 </div>
 <div aria-label="Acoes rapidas do aluno" class="student-quick-actions admin-finance-only-actions">
 <button class="primary-button" data-quick-action="payment" type="button">Receber mensalidade</button>
-
-
-
-
+<button class="ghost-button" hidden="" id="generateStudentAccessButton" type="button">Gerar acesso</button>
+<button class="ghost-button access-unlock-button" hidden="" id="unlockStudentAccessButton" type="button">Desbloquear acesso</button>
 </div>
 </div>
 <div class="student-presence-summary" id="studentPresenceSummary"></div>
@@ -192,108 +197,7 @@
 <div class="admin-student-data-grid" id="adminStudentSummary"></div>
 <div class="admin-stat-grid" id="adminOperationalStats"></div>
 </section>
-<section class="sub-card module-card student-form-card" hidden="">
-<form class="student-form-layout" id="studentForm">
-<input name="id" type="hidden"/>
-<div class="student-form-sections">
-<section aria-labelledby="personalDataTitle" class="student-form-section">
-<div class="student-form-section-head">
-<h3 id="personalDataTitle">Dados pessoais</h3>
-</div>
-<div class="form-grid student-form-grid">
-<label class="full">
-Nome
-<input name="name" required="" type="text"/>
-</label>
-<label>
-Telefone
-<input name="phone" required="" type="tel"/>
-</label>
-<label>
-E-mail
-<input name="email" required="" type="email"/>
-</label>
-<label>
-Data de nascimento
-<input name="birthDate" type="date"/>
-</label>
-<label>
-Objetivo
-<input name="goal" placeholder="Ex.: hipertrofia" type="text"/>
-</label>
-<label class="full">
-Observacoes gerais
-<textarea name="notes" rows="3"></textarea>
-</label>
-</div>
-</section>
-<section aria-labelledby="planDataTitle" class="student-form-section">
-<div class="student-form-section-head">
-<h3 id="planDataTitle">Plano</h3>
-</div>
-<div class="form-grid student-form-grid">
-<label class="full">
-Plano
-<input name="plan" placeholder="Ex.: 3x por semana" type="text"/>
-</label>
-<label>
-Valor mensal
-<input min="0" name="monthlyFee" placeholder="0,00" step="0.01" type="number"/>
-</label>
-<label>
-Status do aluno
-<select name="status">
-<option value="ativo">Ativo</option>
-<option value="pausado">Pausado</option>
-<option value="inativo">Inativo</option>
-</select>
-</label>
-</div>
-</section>
-<section aria-labelledby="healthDataTitle" class="student-form-section">
-<div class="student-form-section-head">
-<h3 id="healthDataTitle">Saude e restricoes</h3>
-</div>
-<div class="form-grid student-form-grid">
-<label class="full">
-Restricoes fisicas
-<textarea name="restrictions" placeholder="Lesoes, dores, limitacoes e cuidados importantes." rows="5"></textarea>
-</label>
-</div>
-</section>
-<section aria-labelledby="accessDataTitle" class="student-form-section">
-<div class="student-form-section-head">
-<h3 id="accessDataTitle">Acesso ao aplicativo</h3>
-</div>
-<div class="form-grid student-form-grid">
-<label>
-Status da matricula
-<select name="enrollmentStatus">
-<option value="pendente">Pendente</option>
-<option value="ativo">Ativo</option>
-</select>
-</label>
-<label>
-Politica de acesso
-<select name="appAccessPolicy">
-<option value="auto">Automatico pelas regras do sistema</option>
-<option value="liberado">Liberado manualmente</option>
-<option value="bloqueado">Bloqueado manualmente</option>
-</select>
-</label>
-<label class="full">
-Motivo do bloqueio ou observacao
-<textarea name="accessBlockReason" rows="3"></textarea>
-</label>
-</div>
-</section>
-</div>
-<div class="student-form-savebar">
-<span id="studentFormSaveStatus">Ficha do aluno</span>
-<button class="primary-button" type="submit">Salvar aluno</button>
-</div>
-</form>
-</section>
+
 <section class="sub-card module-card student-financial-history-card">
 <div class="section-head compact-head">
 <div>
@@ -590,7 +494,7 @@ Motivo do bloqueio ou observacao
 </label>
 <label>
                 Modalidade
-                <select name="category" required="">
+                <select id="weeklyCategorySelect" name="category" required="">
 <option value="natacao">Natacao</option>
 <option value="hidroginastica">Hidroginastica</option>
 <option value="karate">Karate</option>
@@ -701,11 +605,11 @@ Motivo do bloqueio ou observacao
 <section class="main-section settings-section" data-main-panel="settings" hidden="" id="settingsSection">
 <header class="dashboard-card settings-head"><div><h2>Configuracoes</h2></div></header>
 <section class="settings-grid">
-<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Planos</h2></div></div><form class="settings-inline-form" id="planCatalogForm"><label>Nome<input name="name" required type="text"/></label><label>Valor mensal<input min="0" name="monthlyFee" step="0.01" type="number"/></label><button class="primary-button" type="submit">Adicionar</button></form><div class="settings-list" id="planCatalogList"></div></article>
-<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Modalidades</h2></div></div><form class="settings-inline-form" id="modalityCatalogForm"><label>Nome<input name="name" required type="text"/></label><button class="primary-button" type="submit">Adicionar</button></form><div class="settings-list" id="modalityCatalogList"></div></article>
-<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Regras do aluno</h2></div></div><form class="settings-inline-form" id="paymentRulesForm"><label>Dias de aviso<input name="paymentAlertDays" placeholder="7, 3, 0" required type="text"/></label><label>Dias de tolerancia<input min="0" name="paymentGraceDays" required type="number"/></label><label>WhatsApp<input name="whatsappNumber" placeholder="5522988233216" type="text"/></label><label class="checkbox-row"><input name="blockAccessOnOverdue" type="checkbox"/><span>Bloquear acesso apos a tolerancia</span></label><button class="primary-button" type="submit">Salvar</button></form></article>
-<article class="dashboard-card settings-card staff-settings-card"><div class="section-head"><div><h2>Professores</h2></div></div><form class="settings-inline-form staff-inline-form" id="staffCatalogForm"><label>Nome<input name="name" required type="text"/></label><label>E-mail<input name="email" type="email"/></label><button class="primary-button" type="submit">Adicionar</button></form><div class="settings-list" id="staffCatalogList"></div></article>
-<article class="dashboard-card settings-card account-settings-card"><div class="section-head"><div><h2>Usuarios e acessos</h2></div><button class="ghost-button" id="refreshAccountsButton" type="button">Atualizar</button></div><form class="settings-inline-form account-inline-form" id="accountForm"><label>Perfil<select name="role"><option value="student">Aluno</option><option value="professor">Professor</option><option value="admin">Administrador</option></select></label><label>ID do cadastro<input name="personId" required/></label><label>Login / matricula<input name="login" required/></label><label>E-mail<input name="email" type="email"/></label><button class="primary-button" type="submit">Gerar acesso</button></form><div class="settings-list account-list" id="accountList"><p>Carregue as contas para gerenciar acessos.</p></div></article>
+<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Planos</h2></div></div><form class="settings-inline-form" id="planCatalogForm"><label>Nome<input name="name" required="" type="text"/></label><label>Valor mensal<input min="0" name="monthlyFee" step="0.01" type="number"/></label><button class="primary-button" type="submit">Adicionar</button></form><div class="settings-list" id="planCatalogList"></div></article>
+<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Modalidades</h2></div></div><form class="settings-inline-form" id="modalityCatalogForm"><label>Nome<input name="name" required="" type="text"/></label><label>Valor mensal<input min="0" name="monthlyFee" step="0.01" type="number"/></label><button class="primary-button" type="submit">Adicionar</button></form><div class="settings-list" id="modalityCatalogList"></div></article>
+<article class="dashboard-card settings-card"><div class="section-head"><div><h2>Regras do aluno</h2></div></div><form class="settings-inline-form" id="paymentRulesForm"><label>Dias de aviso<input name="paymentAlertDays" placeholder="7, 3, 0" required="" type="text"/></label><label>Dias de tolerancia<input min="0" name="paymentGraceDays" required="" type="number"/></label><label>WhatsApp<input name="whatsappNumber" placeholder="5522988233216" type="text"/></label><label class="checkbox-row"><input name="blockAccessOnOverdue" type="checkbox"/><span>Bloquear acesso apos a tolerancia</span></label><button class="primary-button" type="submit">Salvar</button></form></article>
+<article class="dashboard-card settings-card staff-settings-card"><div class="section-head"><div><h2>Professores</h2></div></div><form class="settings-inline-form staff-inline-form" id="staffCatalogForm"><label>Nome<input name="name" required="" type="text"/></label><label>E-mail<input name="email" type="email"/></label><button class="primary-button" type="submit">Adicionar</button></form><div class="settings-list" id="staffCatalogList"></div></article>
+<article class="dashboard-card settings-card account-settings-card"><div class="section-head"><div><h2>Usuarios e acessos</h2></div><button class="ghost-button" id="refreshAccountsButton" type="button">Atualizar</button></div><form class="settings-inline-form account-inline-form" id="accountForm"><label>Perfil<select name="role"><option value="professor">Professor</option><option value="admin">Administrador</option></select></label><label>ID do cadastro<input name="personId" required=""/></label><label>Login / e-mail<input name="login" required=""/></label><label>E-mail<input name="email" type="email"/></label><button class="primary-button" type="submit">Criar conta da equipe</button></form><div class="settings-list account-list" id="accountList"><p>Carregue as contas para gerenciar acessos e redefinir senhas.</p></div></article>
 <article class="dashboard-card settings-card security-settings-card"><div class="section-head"><div><h2>Sessoes ativas</h2></div><button class="ghost-button" id="refreshSessionsButton" type="button">Atualizar</button></div><div class="settings-list security-list" id="sessionList"><p>Carregue as sessoes para consultar os aparelhos conectados.</p></div></article>
 <article class="dashboard-card settings-card security-settings-card"><div class="section-head"><div><h2>Tentativas de login</h2></div><button class="ghost-button" id="refreshLoginAttemptsButton" type="button">Atualizar</button></div><div class="settings-list security-list" id="loginAttemptList"><p>Carregue as tentativas para consultar o historico recente.</p></div></article>
 </section>
@@ -714,8 +618,8 @@ Motivo do bloqueio ou observacao
 <div class="section-head"><div><h2>Dados e backup</h2></div></div>
 <div class="data-tools-actions">
 <button class="primary-button" id="downloadDataBackupButton" type="button">Baixar backup JSON</button>
-<label class="ghost-button file-action" for="restoreDataBackupInput">Restaurar backup<input accept="application/json,.json" hidden id="restoreDataBackupInput" type="file"/></label>
-<label class="ghost-button file-action" for="importStudentsCsvInput">Importar alunos CSV<input accept="text/csv,.csv" hidden id="importStudentsCsvInput" type="file"/></label>
+<label class="ghost-button file-action" for="restoreDataBackupInput">Restaurar backup<input accept="application/json,.json" hidden="" id="restoreDataBackupInput" type="file"/></label>
+<label class="ghost-button file-action" for="importStudentsCsvInput">Importar alunos CSV<input accept="text/csv,.csv" hidden="" id="importStudentsCsvInput" type="file"/></label>
 <button class="ghost-button" id="runDataAuditButton" type="button">Executar auditoria</button>
 </div>
 <div class="data-audit-grid" id="dataAuditGrid"></div>
@@ -976,6 +880,7 @@ Motivo do bloqueio ou observacao
 </article>
 </section>
 </section>
+<footer class="developer-credit">Desenvolvido por <strong>@almir.lk</strong></footer>
 </div>
 <dialog class="payment-dialog" id="paymentDialog">
 <form class="payment-dialog-form" id="paymentForm">
@@ -1032,13 +937,129 @@ Motivo do bloqueio ou observacao
 <button class="primary-button" id="printReceiptButton" type="button">Imprimir / PDF</button>
 </footer>
 </dialog>
-<dialog class="gate-simulator-dialog" id="gateSimulatorDialog"><section><header><div><p class="eyebrow">DEMONSTRACAO</p><h2>Leitor de acesso simulado</h2><p>Leia o QR do celular ou cole o conteudo para testar as regras sem uma catraca fisica.</p></div><button class="ghost-button" id="closeGateSimulatorButton" type="button">Fechar</button></header><video id="gateSimulatorVideo" playsinline muted hidden></video><form id="gateSimulatorForm"><label>Conteudo do QR<textarea id="gateSimulatorPayload" name="payload" rows="5" required></textarea></label><div><button class="ghost-button" id="startGateSimulatorCamera" type="button">Usar camera</button><button class="primary-button" type="submit">Validar acesso</button></div></form><article class="gate-simulator-result" id="gateSimulatorResult"><strong>Aguardando leitura</strong><p>O resultado aparecera aqui.</p></article></section></dialog>
-<script src="assets/vendor/qrcode.min.js"></script>
-<script src="assets/js/app-config.js"></script>
-<script src="assets/js/demo-data.js?v=20260711-auth9"></script>
-<script src="assets/js/shared-data.js?v=20260711-auth9"></script>
-<script src="assets/js/finance-core.js?v=20260711-auth9"></script>
-<script src="assets/js/painel.js?v=20260711-admin-compact1"></script>
-<script src="assets/js/pwa.js"></script>
+<dialog class="gate-simulator-dialog" id="gateSimulatorDialog"><section><header><div><p class="eyebrow">DEMONSTRACAO</p><h2>Leitor de acesso simulado</h2><p>Leia o QR do celular ou cole o conteudo para testar as regras sem uma catraca fisica.</p></div><button class="ghost-button" id="closeGateSimulatorButton" type="button">Fechar</button></header><video hidden="" id="gateSimulatorVideo" muted="" playsinline=""></video><form id="gateSimulatorForm"><label>Conteudo do QR<textarea id="gateSimulatorPayload" name="payload" required="" rows="5"></textarea></label><div><button class="ghost-button" id="startGateSimulatorCamera" type="button">Usar camera</button><button class="primary-button" type="submit">Validar acesso</button></div></form><article class="gate-simulator-result" id="gateSimulatorResult"><strong>Aguardando leitura</strong><p>O resultado aparecera aqui.</p></article></section></dialog>
+<section aria-modal="true" class="sub-card module-card student-form-card admin-enrollment-modal" hidden="" id="studentEnrollmentModal" role="dialog">
+<form class="student-form-layout" id="studentForm">
+<input name="id" type="hidden"/>
+<div class="student-form-sections">
+<section aria-labelledby="personalDataTitle" class="student-form-section">
+<div class="student-form-section-head">
+<h3 id="personalDataTitle">Matrícula e dados pessoais</h3>
+<button aria-label="Fechar cadastro" class="modal-close-button" id="closeStudentEnrollmentButton" type="button">×</button>
+</div>
+<div class="form-grid student-form-grid">
+<label>
+Número de matrícula
+<input inputmode="numeric" name="enrollmentNumber" placeholder="Ex.: 000123" required="" type="text"/>
+</label>
+<label>
+CPF
+<input inputmode="numeric" name="cpf" placeholder="Somente números" type="text"/>
+</label>
+<label class="full">
+Nome
+<input name="name" required="" type="text"/>
+</label>
+<label>
+Telefone
+<input name="phone" required="" type="tel"/>
+</label>
+<label>
+E-mail
+<input name="email" required="" type="email"/>
+</label>
+<label>
+Data de nascimento
+<input name="birthDate" type="date"/>
+</label>
+<label>
+Objetivo
+<input name="goal" placeholder="Ex.: hipertrofia" type="text"/>
+</label>
+<label class="full">
+Observacoes gerais
+<textarea name="notes" rows="3"></textarea>
+</label>
+</div>
+</section>
+<section aria-labelledby="planDataTitle" class="student-form-section enrollment-plan-section">
+<div class="student-form-section-head">
+<h3 id="planDataTitle">Plano e mensalidade</h3>
+</div>
+<div class="enrollment-offerings" id="enrollmentOfferings"></div>
+<input name="selectedModalities" type="hidden"/>
+<input name="plan" type="hidden"/>
+<input name="baseMonthlyFee" type="hidden"/>
+<div class="enrollment-discount-panel">
+<strong>Desconto do plano</strong>
+<div class="enrollment-discount-options">
+<label><input checked="" name="planDiscountType" type="radio" value="individual"/><span>Individual</span><small>Sem desconto</small></label>
+<label><input name="planDiscountType" type="radio" value="casal"/><span>Casal</span><small>10% de desconto</small></label>
+<label><input name="planDiscountType" type="radio" value="familia"/><span>Família</span><small>15% de desconto</small></label>
+<label><input name="planDiscountType" type="radio" value="personalizado"/><span>Outro</span><small>Desconto personalizado</small></label>
+</div>
+<label class="custom-discount-field" hidden="" id="customDiscountField">Desconto personalizado (%)<input max="100" min="0" name="customDiscountPercent" step="0.01" type="number" value="0"/></label>
+</div>
+<div class="enrollment-price-summary">
+<div><span>Subtotal</span><strong id="enrollmentSubtotal">R$ 0,00</strong></div>
+<div><span>Desconto</span><strong id="enrollmentDiscountValue">R$ 0,00</strong></div>
+<div class="final"><span>Mensalidade final</span><strong id="enrollmentFinalValue">R$ 0,00</strong></div>
+</div>
+<div class="form-grid student-form-grid compact-status-grid">
+<label>
+Valor mensal final
+<input min="0" name="monthlyFee" placeholder="0,00" readonly="" step="0.01" type="number"/>
+</label>
+<label>
+Status do aluno
+<select name="status">
+<option value="ativo">Ativo</option>
+<option value="pausado">Pausado</option>
+<option value="inativo">Inativo</option>
+</select>
+</label>
+</div>
+</section>
+<section aria-labelledby="healthDataTitle" class="student-form-section" hidden="">
+<div class="student-form-section-head">
+<h3 id="healthDataTitle">Saude e restricoes</h3>
+</div>
+<div class="form-grid student-form-grid">
+<label class="full">
+Restricoes fisicas
+<textarea name="restrictions" placeholder="Lesoes, dores, limitacoes e cuidados importantes." rows="5"></textarea>
+</label>
+</div>
+</section>
+<section aria-labelledby="accessDataTitle" class="student-form-section enrollment-access-section">
+<div class="student-form-section-head">
+<h3 id="accessDataTitle">Acesso do aluno</h3>
+</div>
+<input name="enrollmentStatus" type="hidden" value="pendente"/>
+<input name="appAccessPolicy" type="hidden" value="auto"/>
+<input name="accessBlockReason" type="hidden" value=""/>
+<label class="generate-access-option"><input checked="" name="generateAccess" type="checkbox" value="sim"/><span><strong>Gerar acesso agora</strong><small>A matrícula será o usuário. A senha temporária aparecerá uma única vez após salvar.</small></span></label>
+<div class="access-login-preview"><span>Usuário do aluno</span><strong id="accessLoginPreview">Informe a matrícula</strong></div>
+</section>
+</div>
+<div class="student-form-savebar">
+<span id="studentFormSaveStatus">Nova matrícula</span>
+<button class="primary-button" type="submit">Matricular aluno</button>
+</div>
+</form>
+<section class="student-access-result" hidden="" id="studentAccessResult">
+<h3>Matrícula concluída</h3>
+<p>Entregue estas credenciais ao aluno. A senha temporária será exibida somente nesta tela.</p>
+<div class="student-credential-card"><span>Matrícula / usuário</span><strong id="createdStudentLogin">-</strong></div>
+<div class="student-credential-card password"><span>Senha temporária</span><strong id="createdStudentPassword">-</strong></div>
+<div class="student-credential-actions"><button class="ghost-button" id="copyStudentCredentialsButton" type="button">Copiar credenciais</button><button class="primary-button" id="finishStudentEnrollmentButton" type="button">Concluir</button></div>
+</section>
+</section><script src="assets/vendor/qrcode.min.js"></script>
+<script src="assets/js/app-config.js?v=20260712-final-v4"></script>
+<script src="assets/js/demo-data.js?v=20260712-final-v4"></script>
+<script src="assets/js/shared-data.js?v=20260712-final-v4"></script>
+<script src="assets/js/finance-core.js?v=20260712-final-v4"></script>
+<script src="assets/js/painel.js?v=20260712-final-v4"></script>
+<script src="assets/js/pwa.js?v=20260712-final-v4"></script>
 </body>
 </html>

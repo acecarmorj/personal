@@ -84,6 +84,14 @@
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
+  function formatNumber(value, digits) {
+    const parsed = safeNumber(value);
+    return parsed.toLocaleString("pt-BR", {
+      minimumFractionDigits: digits ?? 0,
+      maximumFractionDigits: digits ?? 1
+    });
+  }
+
   function loadProfessorSyncQueue() {
     try {
       const parsed = JSON.parse(localStorage.getItem(professorAccountKey(PROFESSOR_SYNC_QUEUE_PREFIX)) || "[]");
@@ -196,11 +204,13 @@
 
     const pending = getProfessorPendingCount();
     pendingText.hidden = pending === 0;
-    pendingText.textContent = pending === 1 ? "1 alteração aguardando envio" : `${pending} alterações aguardando envio`;
+    pendingText.textContent = pending === 1 ? "1 pendência" : `${pending} pendências`;
     pendingText.title = loadProfessorSyncQueue()[0]?.lastError || "Toque para tentar enviar novamente";
-    lastSyncText.textContent = formatProfessorLastSync();
 
     const resolvedMode = mode || (Store.isLocalDemoSession(authSession) ? "local" : pending ? "pending" : navigator.onLine === false ? "offline" : "online");
+    const showLastSync = pending > 0 || ["pending", "offline", "error"].includes(resolvedMode);
+    lastSyncText.hidden = !showLastSync;
+    lastSyncText.textContent = showLastSync ? formatProfessorLastSync() : "";
     connectionDot.className = `connection-dot ${resolvedMode}`;
     document.body.classList.toggle("prof-syncing", resolvedMode === "syncing");
 
@@ -742,6 +752,7 @@
     form.elements.fine.value = fine;
     form.elements.notes.value = payment?.notes || "";
 
+    document.getElementById("profPaymentTitle").textContent = `Receber mensalidade — ${student.name}`;
     document.getElementById("profPaymentStudentDisplay").value = student.name;
     document.getElementById("profPaymentStudentName").textContent = student.name;
     document.getElementById("profPaymentStudentPlan").textContent = student.plan || "Plano não informado";
@@ -1091,7 +1102,7 @@
     if (!workoutExerciseDraft.length) {
       workoutExerciseDraft = [createExerciseDraft()];
     }
-    document.getElementById("profWorkoutDialogTitle").textContent = workout ? "Editar treino" : "Novo treino";
+    document.getElementById("profWorkoutDialogTitle").textContent = `${workout ? "Editar treino" : "Novo treino"} — ${student.name}`;
     document.getElementById("profWorkoutStudentName").textContent = student.name;
     renderExerciseCatalog();
     renderExerciseEditor();
@@ -1326,7 +1337,7 @@
       form.elements[name].value = assessment?.[name] ?? "";
     });
     updateProfessorAssessmentImc();
-    document.getElementById("profAssessmentDialogTitle").textContent = assessment ? "Editar avaliação" : "Nova avaliação";
+    document.getElementById("profAssessmentDialogTitle").textContent = `${assessment ? "Editar avaliação" : "Nova avaliação"} — ${student.name}`;
     document.getElementById("profAssessmentStudentName").textContent = student.name;
     const dialog = document.getElementById("profAssessmentDialog");
     if (!dialog.open) {
@@ -1468,9 +1479,10 @@
     form.elements.type.value = scheduleItem?.type || "presencial";
     form.elements.status.value = forceRemchedule ? "remarcada" : scheduleItem?.status || "marcada";
     form.elements.notes.value = scheduleItem?.notes || "";
-    document.getElementById("profScheduleDialogTitle").textContent = forceRemchedule
+    const scheduleTitle = forceRemchedule
       ? "Remarcar atendimento"
       : scheduleItem ? "Editar agendamento" : "Novo agendamento";
+    document.getElementById("profScheduleDialogTitle").textContent = `${scheduleTitle} — ${student.name}`;
     document.getElementById("profScheduleStudentName").textContent = student.name;
     const dialog = document.getElementById("profScheduleDialog");
     if (!dialog.open) {

@@ -9,34 +9,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/style.css?v=20260711-auth9" />
+    <link rel="stylesheet" href="assets/css/style.css?v=20260712-final-v4" />
     <link rel="manifest" href="manifest.webmanifest" />
   </head>
 <body>
     <div class="environment-badge" data-environment-badge hidden></div>
     <div class="student-app-shell">
       <section class="enrollment-view" id="onboardingView">
-        <div class="enrollment-visual">
-          <img src="assets/images/pro-fitness-fachada.png" alt="Fachada da Pro Fitness Academia" />
-          <div class="enrollment-shade"></div>
-          <div class="enrollment-brand">
-            <span class="brand-symbol">PF</span>
-            <div>
-              <strong>PRO FITNESS</strong>
-              <small>Academia &bull; Carmo-RJ</small>
-            </div>
-          </div>
-          <div class="enrollment-copy">
-            <p>Seu treino, sua rotina</p>
-            <h1>Movimento que acompanha voce.</h1>
-          </div>
-        </div>
+        <header class="enrollment-visual auth-brand-header official-banner-header" aria-label="Pro Fitness Academia">
+          <img class="official-header-banner" src="assets/images/pro-fitness-header-oficial.jpg" alt="Fachada e logotipo oficial da Pro Fitness Academia" />
+          <span class="header-role-label">ALUNO</span>
+        </header>
 
         <div class="enrollment-panel">
           <div id="enrollmentWelcome">
-            <span class="section-kicker">AREA DO ALUNO</span>
-            <h2>Entre no seu aplicativo</h2>
-            <p>Use o numero de matricula informado pela Pro Fitness e sua senha.</p>
+            <h2>Aluno</h2>
             <form id="studentLoginForm" class="student-form login-form">
               <label for="studentLogin">Matricula</label>
               <input id="studentLogin" inputmode="numeric" name="login" autocomplete="username" placeholder="Ex.: 000123" required />
@@ -49,9 +36,8 @@
           </div>
 
           <div id="passwordChangeCard" hidden>
-            <span class="section-kicker">PRIMEIRO ACESSO</span>
-            <h2>Crie sua senha definitiva</h2>
-            <p>A senha temporaria deve ser alterada antes de acessar seus dados.</p>
+            <h2>Criar nova senha</h2>
+            <p class="password-rule">Minimo de 8 caracteres, com letra e numero.</p>
             <form id="studentPasswordChangeForm" class="student-form login-form">
               <label>Senha temporaria<input type="password" name="currentPassword" autocomplete="current-password" required /></label>
               <label>Nova senha<input type="password" name="newPassword" autocomplete="new-password" minlength="8" required /></label>
@@ -65,11 +51,11 @@
       </section>
 
       <section class="student-view" id="studentView" hidden>
+        <header class="student-photo-header official-banner-header" aria-label="Pro Fitness Academia">
+          <img class="official-header-banner" src="assets/images/pro-fitness-header-fino.jpg" alt="Fachada e logotipo oficial da Pro Fitness Academia" />
+          <span class="header-role-label">ALUNO</span>
+        </header>
         <header class="app-topbar">
-          <div class="compact-brand">
-            <span class="brand-symbol small">PF</span>
-            <div><strong>PRO FITNESS</strong><small>Carmo-RJ</small></div>
-          </div>
           <div class="topbar-actions">
             <button class="sync-chip" id="studentSyncButton" type="button" aria-label="Sincronizar dados">
               <i id="studentSyncDot"></i><span id="studentSyncText">Dados locais</span>
@@ -95,37 +81,38 @@
           </section>
 
           <section class="app-screen" id="workoutsScreen" data-screen-panel="workouts">
-            <div class="screen-heading"><div><span class="section-kicker">MINHA ROTINA</span><h1>Treinos</h1></div><span class="screen-counter" id="workoutCount">0 ativos</span></div>
+            <div class="screen-heading"><h1>Treinos</h1><span class="screen-counter" id="workoutCount">0 ativos</span></div>
             <article class="active-session-card" id="activeSessionCard" hidden></article>
             <div class="segmented-filter" id="workoutDivisionFilter"></div>
             <div class="content-stack" id="workoutCards"></div>
           </section>
 
           <section class="app-screen" id="agendaScreen" data-screen-panel="agenda">
-            <div class="screen-heading"><div><span class="section-kicker">SUA SEMANA</span><h1>Agenda</h1></div><button class="icon-action" id="agendaTodayButton" type="button">Hoje</button></div>
+            <div class="screen-heading"><h1>Agenda</h1><button class="icon-action" id="agendaTodayButton" type="button">Hoje</button></div>
             <div class="week-strip" id="agendaWeekStrip"></div>
             <div class="content-stack" id="scheduleCards"></div>
-            <div class="section-heading"><div><span class="section-kicker">FREQUENCIA</span><h2>Permanencia</h2></div></div>
+            <div class="section-heading"><h2>Presencas</h2></div>
             <section class="metric-grid compact" id="presenceSummary"></section>
             <div class="history-list" id="presenceHistory"></div>
           </section>
 
           <section class="app-screen" id="evolutionScreen" data-screen-panel="evolution">
-            <div class="screen-heading"><div><span class="section-kicker">SEU PROGRESSO</span><h1>Evolucao</h1></div><select id="evolutionPeriod" aria-label="Periodo"><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="90">90 dias</option></select></div>
+            <div class="screen-heading"><h1>Evolucao</h1><select id="evolutionPeriod" aria-label="Periodo"><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="90">90 dias</option></select></div>
             <section class="metric-grid" id="evolutionMetricGrid"></section>
-            <article class="feature-card physical-evolution-card"><div class="section-heading"><div><span class="section-kicker">AVALIACAO FISICA</span><h2>Medidas e composicao</h2></div></div><div class="physical-evolution-grid" id="physicalEvolutionGrid"></div><div class="history-list" id="physicalEvolutionHistory"></div></article>
-            <article class="chart-card"><div class="section-heading"><div><span class="section-kicker">CONSISTENCIA</span><h2>Treinos por semana</h2></div></div><div class="bar-chart" id="workoutConsistencyChart"></div></article>
-            <article class="feature-card"><div class="section-heading"><div><span class="section-kicker">CARGAS E SERIES</span><h2>Por exercicio</h2></div></div><div class="exercise-progress-list" id="exerciseProgressList"></div></article>
+            <article class="feature-card physical-evolution-card"><div class="section-heading"><h2>Avaliacao fisica</h2></div><div class="physical-evolution-grid" id="physicalEvolutionGrid"></div><div class="history-list" id="physicalEvolutionHistory"></div></article>
+            <article class="chart-card"><div class="section-heading"><h2>Treinos por semana</h2></div><div class="bar-chart" id="workoutConsistencyChart"></div></article>
+            <article class="feature-card"><div class="section-heading"><h2>Cargas por exercicio</h2></div><div class="exercise-progress-list" id="exerciseProgressList"></div></article>
           </section>
 
           <section class="app-screen" id="paymentsScreen" data-screen-panel="payments">
-            <div class="screen-heading"><div><span class="section-kicker">SUA CONTA</span><h1>Mensalidade</h1></div></div>
+            <div class="screen-heading"><h1>Mensalidade</h1></div>
             <article class="payment-status-card" id="paymentHero"></article>
             <article class="notice-card" id="paymentAlertCard" hidden></article>
-            <div class="section-heading"><div><span class="section-kicker">HISTORICO</span><h2>Ultimas mensalidades</h2></div></div>
+            <div class="section-heading"><h2>Historico</h2></div>
             <div class="history-list payment-history" id="paymentHistory"></div>
             <a class="whatsapp-action" id="paymentWhatsappButton" href="#" target="_blank" rel="noopener">Falar com a academia</a>
           </section>
+          <footer class="developer-credit">Desenvolvido por <strong>@almir.lk</strong></footer>
         </main>
 
         <nav class="bottom-navigation" aria-label="Navegacao principal">
@@ -140,7 +127,7 @@
 
     <dialog class="student-dialog qr-dialog" id="gateQrDialog">
       <button class="dialog-close" data-close-dialog="gateQrDialog" type="button" aria-label="Fechar">&times;</button>
-      <span class="section-kicker">ACESSO</span><h2>Meu QR Code</h2>
+      <h2>Meu QR Code</h2>
       <div class="qr-display" id="gateQrContainer"></div>
       <div id="gateAccessDetails"></div>
       <button class="secondary-action full" id="refreshGateQrButton" type="button">Atualizar QR</button>
@@ -180,11 +167,11 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="assets/vendor/qrcode.min.js"></script>
-    <script src="assets/js/app-config.js"></script>
-<script src="assets/js/demo-data.js?v=20260711-auth9"></script>
-    <script src="assets/js/finance-core.js?v=20260711-auth9"></script>
-    <script src="assets/js/shared-data.js?v=20260711-auth9"></script>
-    <script src="assets/js/app.js?v=20260711-auth9"></script>
-    <script src="assets/js/pwa.js"></script>
+    <script src="assets/js/app-config.js?v=20260712-final-v4"></script>
+<script src="assets/js/demo-data.js?v=20260712-final-v4"></script>
+    <script src="assets/js/finance-core.js?v=20260712-final-v4"></script>
+    <script src="assets/js/shared-data.js?v=20260712-final-v4"></script>
+    <script src="assets/js/app.js?v=20260712-final-v4"></script>
+    <script src="assets/js/pwa.js?v=20260712-final-v4"></script>
   </body>
 </html>

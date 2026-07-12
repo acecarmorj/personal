@@ -606,9 +606,18 @@ const config = [{
   supportPhone: "(22) 98823-3216",
   apiBaseUrl: "https://script.google.com/macros/s/AKfycbxv5kc71SaSMhe10SQR0kqQQO11aFNInVAJFmH1zTif5SqefNDnZ1F60xBN_VrU0lFGIw/exec",
   lastSnapshotAt: new Date().toISOString(),
-  schemaVersion: 6,
+  schemaVersion: 8,
   plans: planCatalog,
-  modalities: ["Musculacao", "Natacao", "Hidroginastica", "Karate", "Jiu-jitsu", "Ballet", "Zumba", "Funcional"],
+  modalities: [
+    { id: "MOD-MUSCULACAO", name: "Musculacao", monthlyFee: 60 },
+    { id: "MOD-NATACAO", name: "Natacao", monthlyFee: 40 },
+    { id: "MOD-HIDROGINASTICA", name: "Hidroginastica", monthlyFee: 40 },
+    { id: "MOD-KARATE", name: "Karate", monthlyFee: 45 },
+    { id: "MOD-JIU-JITSU", name: "Jiu-jitsu", monthlyFee: 50 },
+    { id: "MOD-BALLET", name: "Ballet", monthlyFee: 45 },
+    { id: "MOD-ZUMBA", name: "Zumba", monthlyFee: 35 },
+    { id: "MOD-FUNCIONAL", name: "Funcional", monthlyFee: 45 }
+  ],
   costCenters: ["geral", "musculacao", "natacao", "lutas", "aulas", "administrativo"],
   paymentAlertDays: [7, 3, 0],
   paymentGraceDays: 0,
@@ -654,11 +663,11 @@ const defaultBackupDir = path.resolve(process.cwd(), "..", "PersonalPro-backups"
 const outputFile = outputIndex >= 0 ? process.argv[outputIndex + 1] : path.join(defaultBackupDir, "demo-50-alunos.json");
 const absoluteOutput = path.resolve(process.cwd(), outputFile);
 fs.mkdirSync(path.dirname(absoluteOutput), { recursive: true });
-fs.writeFileSync(absoluteOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 9, generatedAt: new Date().toISOString(), demo: true, snapshot }, null, 2)}
+fs.writeFileSync(absoluteOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 10, generatedAt: new Date().toISOString(), demo: true, snapshot }, null, 2)}
 `, "utf8");
 const emptyOutput = path.join(path.dirname(absoluteOutput), "base-limpa-pro-fitness.json");
 const emptySnapshot = Object.fromEntries(Object.keys(snapshot).map((key) => [key, []]));
-fs.writeFileSync(emptyOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 9, generatedAt: new Date().toISOString(), clean: true, snapshot: emptySnapshot }, null, 2)}
+fs.writeFileSync(emptyOutput, `${JSON.stringify({ app: "Pro Fitness Academia", schemaVersion: 10, generatedAt: new Date().toISOString(), clean: true, snapshot: emptySnapshot }, null, 2)}
 `, "utf8");
 
 const currentOverdue = payments.filter((payment) => payment.reference === "2026-07" && payment.status === "vencido").length;

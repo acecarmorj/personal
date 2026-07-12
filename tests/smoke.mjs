@@ -49,7 +49,7 @@ const apiContext = {
 };
 vm.runInNewContext(`${apiSource}\nthis.__apiTest = { SHEETS, CURRENT_SCHEMA_VERSION, getSnapshotResourceNames, buildConfigSnapshotMetadata, validateCompleteSnapshot, normalizePartialSnapshot, hasDeleteConflict, resolveResourceName, derivePasswordCredential, constantTimeEqual, getSessionPolicy, sanitizeSession, getAccountPermissions, hasPermission, authorizeGenericOperation, normalizeLogin };`, apiContext);
 const api = apiContext.__apiTest;
-assert.equal(api.CURRENT_SCHEMA_VERSION, 7, "schemaVersion da API deve ser 7");
+assert.equal(api.CURRENT_SCHEMA_VERSION, 8, "schemaVersion da API deve ser 8");
 
 for (const [resource, definition] of Object.entries(api.SHEETS)) {
   const headers = [...definition.headers];
@@ -119,7 +119,7 @@ const metadataConfig = JSON.parse(JSON.stringify(api.buildConfigSnapshotMetadata
 assert.deepEqual(metadataConfig.plans, originalConfig.plans, "Atualizacao de metadados deve preservar planos");
 assert.deepEqual(metadataConfig.modalities, originalConfig.modalities, "Atualizacao de metadados deve preservar modalidades");
 assert.deepEqual(metadataConfig.costCenters, originalConfig.costCenters, "Atualizacao de metadados deve preservar centros de custo");
-assert.equal(metadataConfig.schemaVersion, 7);
+assert.equal(metadataConfig.schemaVersion, 8);
 
 const completeApiSnapshot = Object.fromEntries(api.getSnapshotResourceNames().map((resource) => [resource, []]));
 assert.equal(api.validateCompleteSnapshot(completeApiSnapshot), undefined);
@@ -193,6 +193,7 @@ const sharedContext = {
 };
 vm.runInNewContext(read("assets/js/shared-data.js"), sharedContext);
 const Store = sharedContext.window.ProFitnessStore;
+assert.equal(typeof Store.persistLocalDemoStudent, "function", "Store deve exportar persistencia de aluno demonstrativo");
 const emptyCollections = ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "workoutSessions", "exerciseSets", "exercises", "users", "staffTimeEntries", "config", "log"];
 const cleanSnapshot = Object.fromEntries(emptyCollections.map((key) => [key, []]));
 const migratedClean = Store.migrateData(cleanSnapshot);
@@ -317,6 +318,12 @@ assert.match(professorJs, /exerciseId/, "Professor deve preservar vinculo com ca
 assert.match(professorHtml, /data-student-module="resultados"/, "Professor deve analisar treinos realizados");
 assert.match(professorJs, /renderProfessorTrainingResults/, "Professor deve ver sessoes, series, carga, dor e dificuldade");
 assert.match(studentHtml, /id="physicalEvolutionGrid"/, "Aluno deve acompanhar evolucao das avaliacoes fisicas");
+for (const redundant of ["MINHA ROTINA", "SUA SEMANA", "SEU PROGRESSO", "SUA CONTA", "ULTIMAS MENSALIDADES"]) {
+  assert.doesNotMatch(studentHtml.toUpperCase(), new RegExp(redundant), `App do aluno nao deve repetir o subtitulo ${redundant}`);
+}
+assert.match(studentHtml, /<h2>Presencas<\/h2>/, "Agenda do aluno deve usar o titulo direto Presencas");
+assert.match(studentHtml, /<h2>Avaliacao fisica<\/h2>/, "Evolucao deve usar o titulo direto Avaliacao fisica");
+assert.match(studentHtml, /<h2>Cargas por exercicio<\/h2>/, "Evolucao deve usar o titulo direto Cargas por exercicio");
 assert.match(studentHtml, /manifest\.webmanifest/, "App do aluno deve ser instalavel");
 assert.doesNotMatch(studentHtml + panelHtml, /cdnjs\.cloudflare\.com\/ajax\/libs\/qrcodejs/, "QR Code nao deve depender de CDN");
 assert.ok(exists("assets/vendor/qrcode.min.js"), "Biblioteca de QR deve estar no projeto");
@@ -324,6 +331,13 @@ assert.ok(exists("manifest.webmanifest"), "PWA deve possuir manifesto");
 assert.ok(exists("sw.js"), "PWA deve possuir service worker");
 assert.doesNotMatch(read("sw.js"), /apiBaseUrl|script\.google\.com/, "Service worker nao deve armazenar respostas autenticadas da API");
 assert.doesNotMatch(read("assets/css/style.css"), /font-size:\s*0\.49rem/, "Interface mobile nao deve usar fonte de 0.49rem");
+assert.match(read("assets/css/style.css"), /#onboardingView\[hidden\]/, "Login do aluno deve desaparecer depois da autenticacao");
+assert.match(read("assets/css/style.css"), /#studentView\[hidden\]/, "Aplicativo do aluno deve permanecer oculto antes da autenticacao");
+assert.match(read("assets/css/prof.css"), /#profAuthView\[hidden\]/, "Login do professor deve desaparecer depois da autenticacao");
+assert.match(read("assets/css/prof.css"), /#profLockView\[hidden\]/, "Bloqueio do tablet deve alternar sem sobrepor telas");
+assert.match(read("assets/css/prof.css"), /#profAppShell\[hidden\]/, "Aplicativo do professor deve permanecer oculto sem sessao");
+assert.match(professorJs, /function formatNumber\(/, "Resultados do professor devem formatar cargas sem erro de execucao");
+assert.match(read("assets/js/app-config.js"), /environmentLabel:\s*"Demonstracao"/, "Selo demo deve usar rotulo curto");
 
 assert.match(read("assets/js/shared-data.js"), /function loginDemoLocal/, "Store deve oferecer login demonstrativo local");
 assert.match(read("assets/js/shared-data.js"), /clearAuthenticatedLocalData/, "Sessao invalida deve limpar dados locais");
@@ -333,13 +347,42 @@ assert.match(studentJs + professorJs + panelJs, /setFormBusy/, "Logins devem blo
 assert.match(read("assets/js/shared-data.js"), /LOCAL_DEMO_ACCOUNTS/, "Credenciais demo devem ser limitadas ao ambiente demo");
 assert.doesNotMatch(professorHtml, /profDemoLoginButton|Acessar como professor demonstrativo/, "Login do professor nao deve exibir botao de demonstracao");
 assert.doesNotMatch(panelHtml, /adminDemoLoginButton|Acessar demonstracao administrativa/, "Login administrativo nao deve exibir botao de demonstracao");
-assert.match(read("assets/js/shared-data.js"), /LOCAL_DEMO_ACCOUNTS\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
+assert.match(read("assets/js/shared-data.js"), /getLocalDemoAccounts\(\)\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
 assert.match(read("assets/js/shared-data.js"), /localDemoRuntimeSnapshot/, "Base demonstrativa grande deve permanecer somente em memoria");
 assert.doesNotMatch(read("assets/js/shared-data.js"), /localStorage\.setItem\(LOCAL_DEMO_MASTER_KEY/, "Base demonstrativa completa nao deve ser duplicada no localStorage");
-assert.match(read("sw.js"), /profitness-shell-2026-07-auth9/, "Service worker deve invalidar o cache da versao com erro de cota");
+assert.match(read("sw.js"), /profitness-shell-20260712-final-v4/, "Service worker deve invalidar o cache da versao final validada");
+
+assert.match(panelHtml, /Matricular novo aluno/, "Painel deve oferecer matricula administrativa direta");
+assert.match(panelHtml, /unlockStudentAccessButton/, "Ficha administrativa deve oferecer desbloqueio de acesso");
+assert.match(panelJs, /function unlockSelectedStudentAccess/, "Desbloqueio administrativo deve estar implementado");
+assert.match(panelJs, /duplicateEnrollment/, "Matricula administrativa deve impedir numero duplicado");
+assert.ok(exists("assets/images/pro-fitness-header-oficial.jpg"), "Cabecalho oficial aprovado deve estar no pacote");
+assert.ok(exists("assets/images/pro-fitness-header-fino.jpg"), "Cabecalho fino deve estar no pacote");
+assert.match(panelHtml, /enrollmentOfferings/, "Matricula deve listar planos e modalidades configurados");
+assert.match(panelHtml, /planDiscountType/, "Matricula deve oferecer desconto casal, familia e personalizado");
+assert.match(panelHtml, /generateAccess/, "Matricula deve gerar acesso na mesma tela");
+assert.match(panelJs, /createAccountRemote/, "Matricula deve criar a conta do aluno");
+assert.match(panelHtml, /id="generateStudentAccessButton"/, "Ficha administrativa deve permitir recuperar a geracao de acesso");
+assert.match(panelJs, /function openSelectedStudentAccess/, "Recuperacao posterior do acesso deve estar implementada");
+assert.match(panelJs, /!existingStudent\?\.accountId && studentForm\.elements\.generateAccess\.checked/, "Nova tentativa deve gerar acesso para cadastro salvo sem conta");
+assert.match(apiSource, /action: "reuseAccount"/, "API deve reutilizar com seguranca a conta da mesma pessoa");
+assert.match(read("assets/js/shared-data.js"), /reused: true/, "Demonstracao deve permitir nova tentativa idempotente para a mesma pessoa");
+assert.match(panelJs, /baseMonthlyFee/, "Matricula deve calcular subtotal antes do desconto");
+assert.match(read("assets/js/shared-data.js"), /persistLocalDemoStudent/, "Aluno criado na demo deve permanecer disponivel entre os paineis");
 assert.match(studentHtml, /assets\/js\/demo-data\.js/, "Aluno deve carregar a base demo incorporada");
 assert.match(professorHtml, /assets\/js\/demo-data\.js/, "Professor deve carregar a base demo incorporada");
 assert.match(panelHtml, /assets\/js\/demo-data\.js/, "Administrador deve carregar a base demo incorporada");
+
+for (const html of [studentHtml, professorHtml, panelHtml]) {
+  assert.match(html, /assets\/images\/pro-fitness-header-oficial\.jpg/, "Todos os logins devem usar o cabecalho oficial");
+  assert.match(html, /assets\/images\/pro-fitness-header-fino\.jpg/, "Todos os modulos internos devem usar o mesmo cabecalho fino");
+  assert.match(html, /Desenvolvido por <strong>@almir\.lk<\/strong>/, "Todos os modulos devem exibir o credito do desenvolvedor");
+}
+for (const cssFile of ["assets/css/style.css", "assets/css/prof.css", "assets/css/painel.css"]) {
+  const css = read(cssFile);
+  assert.match(css, /\.developer-credit\s*\{/, `${cssFile} deve estilizar o credito`);
+  assert.doesNotMatch(css.match(/\.developer-credit\s*\{[^}]+\}/s)?.[0] || "", /display:\s*none|visibility:\s*hidden|font-size:\s*0\.[0-5]rem/, `${cssFile} deve manter o credito legivel`);
+}
 
 class QuotaStorage {
   constructor(limit) {
@@ -418,6 +461,61 @@ await validateDemoLoginWithSmallStorage("index.html", "000001", "student");
 await validateDemoLoginWithSmallStorage("prof.html", "prof.rafael", "professor");
 await validateDemoLoginWithSmallStorage("painel.html", "admin.demo", "admin");
 
+// Uma matricula criada no painel deve abrir no app do aluno com a senha gerada.
+{
+  const localStorage = new QuotaStorage(256 * 1024);
+  const buildStore = (pageName) => {
+    const runtimeWindow = {
+      PROFITNESS_CONFIG: { environment: "demo", allowDemoReset: true },
+      location: { pathname: `/${pageName}` },
+      setTimeout,
+      clearTimeout
+    };
+    const context = {
+      window: runtimeWindow, localStorage,
+      navigator: { platform: "Teste", userAgent: "PersonalPro smoke" },
+      AbortController, Array, Boolean, Date, Intl, JSON, Map, Math, Number, Object, Promise, Set, String,
+      clearTimeout, console, setTimeout
+    };
+    vm.runInNewContext(read("assets/js/demo-data.js"), context);
+    vm.runInNewContext(read("assets/js/shared-data.js"), context);
+    return runtimeWindow.ProFitnessStore;
+  };
+  const adminStore = buildStore("painel.html");
+  await adminStore.loginRemote("admin.demo", "Demo1234");
+  const student = adminStore.createStudentRecord({ id: "ALU-SMOKE-LOGIN", enrollmentNumber: "009999", name: "Aluno Integracao", status: "ativo" });
+  adminStore.persistLocalDemoStudent(student);
+  const credentials = await adminStore.createAccountRemote({ personType: "student", personId: student.id, login: student.enrollmentNumber, role: "student", active: true });
+  const retry = await adminStore.createAccountRemote({ personType: "student", personId: student.id, login: student.enrollmentNumber, role: "student", active: true });
+  assert.equal(retry.reused, true, "Nova tentativa deve reutilizar a conta demonstrativa da mesma matricula");
+
+  const studentStore = buildStore("index.html");
+  await studentStore.loginRemote(student.enrollmentNumber, credentials.temporaryPassword);
+  const bootstrap = await studentStore.fetchStudentBootstrap();
+  assert.equal(bootstrap.student.id, student.id, "App do aluno deve abrir o cadastro criado no painel");
+}
+
+// As credenciais demonstrativas devem tolerar espacos acidentais e nao chamar a API remota.
+{
+  const localStorage = new QuotaStorage(256 * 1024);
+  const runtimeWindow = {
+    PROFITNESS_CONFIG: { environment: "demo", allowDemoReset: true },
+    location: { pathname: "/prof.html" },
+    setTimeout,
+    clearTimeout
+  };
+  const context = {
+    window: runtimeWindow, localStorage,
+    navigator: { platform: "Teste", userAgent: "PersonalPro smoke" },
+    AbortController, Array, Boolean, Date, Intl, JSON, Map, Math, Number, Object, Promise, Set, String,
+    clearTimeout, console, setTimeout
+  };
+  vm.runInNewContext(read("assets/js/demo-data.js"), context);
+  vm.runInNewContext(read("assets/js/shared-data.js"), context);
+  const session = await runtimeWindow.ProFitnessStore.loginRemote("  PROF.RAFAEL  ", "  Demo1234  ");
+  assert.equal(session.account.role, "professor", "Login demonstrativo do professor deve ser local e tolerar espacos acidentais");
+}
+
 if (packageMode) {
   const allowedRootFiles = new Set(["index.html", "painel.html", "prof.html", "api.txt", "HISTORICO_DESENVOLVIMENTO.txt", "manifest.webmanifest", "sw.js"]);
   const allowedRootDirectories = new Set([".github", "apps-script", "assets", "docs", "tests", "tools"]);
@@ -428,9 +526,9 @@ if (packageMode) {
   assert.equal(exists(".git"), false, "ZIP final nao deve conter .git");
   assert.equal(exists("backups"), false, "ZIP final nao deve conter backups");
 }
-assert.match(read("HISTORICO_DESENVOLVIMENTO.txt"), /ULTIMA ATUALIZACAO: 11\/07\/2026/);
+assert.match(read("HISTORICO_DESENVOLVIMENTO.txt"), /ULTIMA ATUALIZACAO: 12\/07\/2026/);
 assert.match(read("docs/estrutura-planilha.md"), /presenceSource/);
-assert.match(read("docs/sheets-api-setup.md"), /schemaVersion: 7/);
+assert.match(read("docs/sheets-api-setup.md"), /schemaVersion: 8/);
 const demoTool = read("tools/generate-demo-data.mjs");
 assert.match(demoTool, /PersonalPro-backups/, "Gerador deve salvar backups fora do projeto por padrao");
 assert.doesNotMatch(demoTool, /payload:\s*JSON\.stringify/, "Gerador nao deve recriar payload integral no log");

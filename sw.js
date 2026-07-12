@@ -1,4 +1,4 @@
-const CACHE_NAME = "profitness-shell-2026-07-auth9";
+const CACHE_NAME = "profitness-shell-20260712-final-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -18,6 +18,9 @@ const APP_SHELL = [
   "./assets/js/pwa.js",
   "./assets/vendor/qrcode.min.js",
   "./assets/images/pro-fitness-fachada.png",
+  "./assets/images/pro-fitness-header-oficial.jpg",
+  "./assets/images/pro-fitness-header-fino.jpg",
+  "./assets/images/pro-fitness-logo-oficial.jpg",
   "./assets/images/pf-app-icon.svg"
 ];
 
@@ -32,18 +35,27 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
+
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.includes("/macros/s/")) return;
-  if (request.mode === "navigate") {
-    event.respondWith(fetch(request).then((response) => {
-      const copy = response.clone();
-      caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-      return response;
-    }).catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html"))));
+
+  const networkFirst = () => fetch(request, { cache: "no-store" }).then((response) => {
+    if (response.ok) {
+      caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
+    }
+    return response;
+  }).catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html")));
+
+  if (request.mode === "navigate" || /\.(?:js|css|html|json|webmanifest)$/i.test(url.pathname)) {
+    event.respondWith(networkFirst());
     return;
   }
-  event.respondWith(caches.match(request).then((cached) => cached || fetch(request).then((response) => {
-    if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
-    return response;
-  })));
+
+  event.respondWith(caches.match(request).then((cached) => {
+    const update = fetch(request).then((response) => {
+      if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
+      return response;
+    }).catch(() => cached);
+    return cached || update;
+  }));
 });

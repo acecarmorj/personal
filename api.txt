@@ -16,7 +16,7 @@
 const SPREADSHEET_ID_PROPERTY = "PROFITNESS_SPREADSHEET_ID";
 const SCHEMA_VERSION_PROPERTY = "PROFITNESS_SCHEMA_VERSION";
 const AUTH_PEPPER_PROPERTY = "PROFITNESS_AUTH_PEPPER";
-const CURRENT_SCHEMA_VERSION = 7;
+const CURRENT_SCHEMA_VERSION = 8;
 const AUTH_RESOURCE_NAMES = ["accounts", "sessions", "gateTokens", "accessAttempts", "loginAttempts"];
 const PASSWORD_ALGORITHM = "PBKDF2-HMAC-SHA256";
 const PASSWORD_VERSION = 1;
@@ -24,7 +24,7 @@ const PASSWORD_ITERATIONS = 120000;
 const ROLE_PERMISSIONS = {
   student: ["student.self.read", "student.self.write", "gate.request"],
   professor: ["students.read", "students.write", "professional.read", "professional.write", "payments.receive", "staff.presence", "gate.validate"],
-  admin: ["students.read", "professional.read", "payments.receive", "finance.manage", "users.manage", "backups.manage", "reports.read", "staff.presence.read", "settings.manage", "gate.validate"]
+  admin: ["students.read", "students.write", "professional.read", "payments.receive", "finance.manage", "users.manage", "backups.manage", "reports.read", "staff.presence.read", "settings.manage", "gate.validate"]
 };
 const TEXT_HEADERS = [
   "id", "studentId", "workoutId", "sessionId", "accountId", "personId", "exerciseItemId", "exerciseId", "teacherId", "paymentId", "expenseId", "staffId", "recordId", "deviceId",
@@ -50,6 +50,10 @@ const SHEETS = {
       "restrictions",
       "status",
       "plan",
+      "selectedModalities",
+      "baseMonthlyFee",
+      "planDiscountType",
+      "planDiscountPercent",
       "monthlyFee",
       "notes",
       "createdAt",
@@ -1137,7 +1141,13 @@ function createManagedAccount(payload, actor) {
     error.code = "INVALID_ACCOUNT";
     throw error;
   }
-  if (findAccountByLogin(login)) {
+  const existingAccount = findAccountByLogin(login);
+  if (existingAccount && String(existingAccount.personId || "") === String(payload.personId || "") && String(existingAccount.role || "") === role) {
+    linkAccountToPerson(existingAccount);
+    appendLog(buildAuditLogEntry({ action: "reuseAccount", resource: "accounts", recordId: existingAccount.id, actor: actor.id, result: "success", message: "Conta existente vinculada novamente ao cadastro." }));
+    return { account: sanitizeAccount(existingAccount), temporaryPassword: "", reused: true };
+  }
+  if (existingAccount) {
     const error = new Error("Este login ou e-mail ja esta em uso.");
     error.code = "DUPLICATE_LOGIN";
     throw error;

@@ -1,7 +1,7 @@
 PRO FITNESS ACADEMIA - HISTORICO DE DESENVOLVIMENTO
 =====================================================
 
-ULTIMA ATUALIZACAO: 11/07/2026
+ULTIMA ATUALIZACAO: 12/07/2026
 
 ATENCAO OBRIGATORIA PARA QUALQUER IA OU DESENVOLVEDOR
 -----------------------------------------------------
@@ -1311,7 +1311,7 @@ ATUALIZACAO - 2026-07-11 - BASE FICTICIA PARA DEMONSTRACAO
 - importAll agora exige todas as colecoes do snapshot e bloqueia restauracoes incompletas antes de apagar qualquer aba.
 - Criado importPartial para substituir somente as colecoes explicitamente enviadas.
 - A restauracao de backup no notebook passou a validar a estrutura e mostrar data, alunos, pagamentos, treinos, avaliacoes, movimentacoes e despesas antes da confirmacao.
-- O backup administrativo passou para schemaVersion 7.
+- O backup administrativo passou para schemaVersion 8.
 - Criada fila persistente de sincronizacao no notebook, com salvamento local antes do envio, consolidacao por registro, reenvio automatico, tentativa ao recuperar internet e tentativa manual.
 - Adicionado status visivel no notebook: sincronizando, sincronizado, pendente, offline, API indisponivel e dados locais.
 - Removidas falhas silenciosas de sincronizacao do painel administrativo.
@@ -1707,7 +1707,7 @@ API E QR
 
 CACHE E DOCUMENTACAO
 - Cache do PWA e versoes dos arquivos elevados de auth7 para auth8.
-- Documentacao atualizada para schemaVersion 7, TentativasLogin e novas regras de sessao.
+- Documentacao atualizada para schemaVersion 8, TentativasLogin e novas regras de sessao.
 - Testes automatizados ampliados para cobrir os itens acima.
 
 
@@ -1721,7 +1721,7 @@ ATUALIZACAO - 11/07/2026 - API PUBLICA MIGRADA PARA SCHEMA 7
 - Endpoint de manutencao de uso unico foi removido imediatamente depois da migracao e nao integra o codigo final.
 - Manifesto passou a declarar `executionApi` com acesso `MYSELF`, restrito a conta proprietaria para futuras manutencoes.
 - API final criada e reimplantada como versao imutavel 18, descricao `Pro Fitness v18 - schema 7 final protegido`.
-- Health publico final confirmou `ok: true`, ambiente `demo`, `schemaVersion: 7` e planilha configurada.
+- Health publico final confirmou `ok: true`, ambiente `demo`, `schemaVersion: 8` e planilha configurada.
 - Tentativa de reutilizar a acao temporaria recebeu `AUTH_REQUIRED`, confirmando sua remocao.
 - `apps-script/api.gs` e `api.txt` permanecem byte a byte identicos.
 - Smoke tests do repositorio e do pacote limpo concluidos com sucesso apos a reimplantacao.
@@ -1758,3 +1758,210 @@ ATUALIZACAO LOCAL - 11/07/2026 - PAINEL ADMINISTRATIVO COMPACTO
 - Testes atualizados para exigir os seis rotulos curtos e a grade de navegacao em uma linha.
 - Smoke tests do repositorio e do pacote limpo concluidos com sucesso.
 - Servidor local iniciado em `http://127.0.0.1:4173/painel` e confirmou HTTP 200 com os seis modulos compactos.
+
+
+======================================================================
+ATUALIZACAO - 12/07/2026 - ETAPA 1: CABECALHOS E LOGINS COMPACTOS
+======================================================================
+VERSAO-BASE
+- Alteracoes executadas exclusivamente sobre o PersonalPro(21).zip.
+
+LOGO E CABECALHO
+- Incorporada ao projeto uma versao vetorial local do logotipo oficial apresentado pelo usuario, com simbolo amarelo e a escrita PRO FITNESS em branco/amarelo sobre fundo escuro.
+- Criado assets/images/pro-fitness-logo.svg para uso consistente e offline.
+- Criado assets/images/pro-fitness-cabecalho.jpg, recorte largo da fotografia que mostra o predio e a fachada sem reduzir a imagem a uma faixa da parede.
+- Cabeçalhos passam a usar composicao hibrida: fotografia de um lado e logotipo oficial do outro.
+- Aplicado nos logins de aluno, professor e administrador e nos cabeçalhos internos de professor e administracao.
+- Novas imagens adicionadas ao cache do PWA.
+
+LIMPEZA DOS LOGINS
+- Aluno: mantidos apenas identificacao do perfil, matricula, senha, acao de entrar e mensagens necessarias.
+- Professor: mantidos apenas identificacao do perfil, usuario, senha, acao de entrar e mensagens necessarias.
+- Administracao: mantidos apenas identificacao do perfil, usuario/e-mail, senha, acao de entrar e mensagens necessarias.
+- Primeiro acesso simplificado para titulo, tres campos, regra minima da senha e botoes necessarios.
+- Tela de bloqueio do tablet simplificada, sem paragrafo explicativo.
+- Areas de feedback vazias nao reservam mais espaco visual.
+
+REGRA PERMANENTE
+- Toda nova alteracao deve continuar sendo registrada neste HISTORICO_DESENVOLVIMENTO.txt antes da entrega.
+
+======================================================================
+ATUALIZACAO - 2026-07-12 - ETAPA 2: PAINEL DO PROFESSOR COMPACTO
+======================================================================
+- Unificadas as barras de professor conectado e sincronizacao em uma unica barra operacional.
+- A ultima sincronizacao agora aparece somente quando ha erro, modo offline ou pendencias.
+- Removido o rotulo redundante "Buscar aluno"; o campo de pesquisa permanece autoexplicativo.
+- Indicadores e cartoes da tela inicial ficaram mais baixos e com melhor distribuicao.
+- A tela de presenca do professor foi simplificada: removidos seletor autenticado e textos repetitivos.
+- O historico de ponto passou a usar somente o titulo "Registros recentes".
+- Removido o marcador redundante "ALUNO" da ficha e ocultado o texto "Somente visualizacao".
+- Cabecalhos de treino, avaliacao, agenda e recebimento agora unem acao e nome do aluno em uma unica linha.
+- Corrigida repeticao do rotulo de restricoes fisicas na ficha.
+- Mantidas todas as funcoes e IDs necessarios ao JavaScript.
+- Nenhum ZIP foi entregue nesta etapa; a entrega ficara para o final da Etapa 4.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-12 - ETAPA 3: APP DO ALUNO COMPACTO
+======================================================================
+- Removidos subtitulos repetitivos das telas Treinos, Agenda, Evolucao, Mensalidade e Meu QR Code.
+- Treinos passou a exibir somente o titulo e a quantidade de treinos ativos.
+- Agenda passou a exibir somente o titulo, a acao Hoje e a secao Presencas.
+- Evolucao foi simplificada para os titulos Avaliacao fisica, Treinos por semana e Cargas por exercicio.
+- Mensalidade passou a usar somente os titulos Mensalidade e Historico.
+- Meu QR Code deixou de repetir o marcador Acesso.
+- Reduzidos espacos verticais, margens e paddings entre secoes, mantendo botoes, alertas e controles confortaveis para toque.
+- Fontes principais permaneceram legiveis; nenhuma mensagem de erro, bloqueio, sincronizacao ou seguranca foi removida.
+- Cache do aplicativo atualizado para `20260712-aluno-compact1` e service worker para `profitness-shell-2026-07-aluno-compact1`.
+- Nenhum ZIP foi entregue nesta etapa; a entrega continua reservada para o final da Etapa 4.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-12 - ETAPA 4: VALIDACAO GERAL E ENTREGA FINAL
+======================================================================
+ESCOPO DE DISPOSITIVOS
+- `painel.html` validado prioritariamente em notebook/computador, incluindo 1366 x 768 e 1920 x 1080.
+- `index.html` validado como aplicativo do aluno em celular, incluindo 390 x 844 e 360 x 800.
+- `prof.html` validado prioritariamente em tablet de 1340 x 800 e tambem em celular de 390 x 844.
+
+CORRECOES ENCONTRADAS DURANTE A VALIDACAO
+- Corrigida a sobreposicao entre a tela de login e o aplicativo do aluno depois da autenticacao.
+- Corrigida a sobreposicao entre login, bloqueio e aplicativo do professor.
+- Adicionadas regras especificas para que atributos `hidden` prevalecam sobre os layouts compactos com `display: flex/grid !important`.
+- Corrigido erro de execucao `formatNumber is not defined` ao abrir resultados de treino no painel do professor.
+- Eliminada rolagem horizontal residual de 4 pixels nos filtros de treino e na faixa semanal em celulares de 360 pixels.
+- Selo do ambiente reduzido para `Demonstracao` e reposicionado para nao cobrir logo, sincronizacao ou perfil.
+- Cache e versoes dos arquivos atualizados para `20260712-etapa4-final1`.
+
+VALIDACOES REALIZADAS
+- Login do aluno, professor e administrador testados com as credenciais demonstrativas digitadas.
+- Primeiro acesso e criacao de nova senha revisados visualmente.
+- Aplicativo do aluno testado nas telas Inicio, Treinos, Agenda, Evolucao e Mensalidade.
+- Painel do professor testado em Inicio, Alunos, Agenda, Presenca, ficha do aluno e todas as abas internas.
+- Bloqueio do tablet confirmado sem manter o aplicativo visivel por baixo.
+- Painel administrativo testado nos seis modulos, mantendo a navegacao em uma unica linha no notebook.
+- Nenhuma interface apresentou rolagem horizontal do documento nos tamanhos principais.
+- Controles principais permaneceram com altura adequada para toque ou clique.
+- JavaScripts, API, IDs dos HTMLs, chaves CSS, PWA e estrutura do pacote validados pelos smoke tests.
+- `api.txt` permaneceu identico a `apps-script/api.gs`.
+- Pacote final validado sem `.git`, backups, copias antigas ou arquivos temporarios.
+
+REGRA PERMANENTE
+- O painel administrativo deve continuar sendo desenhado para notebook/computador.
+- O aplicativo do aluno deve continuar sendo desenhado para celular.
+- O painel do professor deve continuar sendo desenhado para tablet, mantendo funcionamento aceitavel em celular.
+- Toda nova alteracao deve ser registrada neste arquivo antes da entrega.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-12 - LOGIN DEMO DO PROFESSOR E CACHE DO PWA
+======================================================================
+- Corrigido o login demonstrativo do professor para ser resolvido sempre no aparelho, sem consultar a API remota.
+- A conta prof.rafael agora entra imediatamente no ambiente demonstrativo com a senha Demo1234.
+- Usuario demonstrativo e senha passam por normalizacao de espacos; a senha demo aceita diferenca de maiusculas apenas no ambiente de demonstracao.
+- O service worker passou a usar estrategia network-first para HTML, JavaScript, CSS, JSON e manifesto, evitando que codigo antigo continue ativo apos uma publicacao.
+- O registro do PWA passou a solicitar atualizacao sem usar o cache HTTP e recarrega a pagina uma unica vez quando o novo service worker assume o controle.
+- Todos os identificadores de versao dos recursos foram atualizados para 20260712-prof-login-fix2.
+- Adicionado teste automatico especifico para o login demonstrativo do professor com espacos acidentais.
+- Nenhuma regra de login do ambiente de producao foi flexibilizada.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-12 - CABEÇALHO OFICIAL E MATRÍCULA ADMINISTRATIVA
+======================================================================
+ALTERAÇÕES REALIZADAS
+- Substituído o cabeçalho anterior pela arte aprovada com a fotografia da academia e o logotipo oficial em amarelo e laranja.
+- Removido visualmente o prédio vizinho da composição utilizada no cabeçalho; a academia agora aparece destacada contra o céu.
+- A parte preta do cabeçalho ficou maior e a altura foi reduzida para aproveitar melhor as telas.
+- Aplicado o novo cabeçalho ao login do aluno, login e painel do professor, login e painel administrativo.
+- O logotipo da tela de bloqueio do professor foi substituído pelo logotipo oficial fornecido pela academia.
+- No painel administrativo, o botão redundante “Alunos”, ao lado da data, foi substituído por “Matricular novo aluno”.
+- Criado formulário administrativo de matrícula com número de matrícula, CPF, dados pessoais, plano, mensalidade e situação de acesso.
+- Incluída validação para impedir números de matrícula duplicados.
+- Após a matrícula, o painel informa onde gerar a senha temporária do aluno: Config > Usuários e acessos.
+- Incluído botão “Desbloquear acesso” na ficha administrativa quando o aluno estiver bloqueado.
+- O desbloqueio administrativo ativa o aluno, ativa a matrícula e aplica liberação manual, inclusive sobre bloqueio automático por atraso.
+- O perfil administrador recebeu permissão de escrita em alunos, mantendo treinos, avaliações e dados profissionais apenas para consulta.
+- Atualizados cache do PWA e versões dos arquivos para evitar carregamento de cabeçalhos e scripts antigos.
+
+REGRA MANTIDA
+- Toda nova alteração deve ser registrada neste HISTORICO_DESENVOLVIMENTO.txt.
+- api.txt deve permanecer idêntico a apps-script/api.gs.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-12 - MATRICULA INTEGRADA, PLANOS E CABECALHO FINAL
+======================================================================
+ALTERACOES REALIZADAS
+- O cadastro administrativo de um novo aluno passou a concluir matricula e geracao de acesso na mesma tela.
+- A opcao "Gerar acesso agora" vem marcada por padrao; a matricula vira o usuario do aluno e a senha temporaria e mostrada uma unica vez ao final.
+- Criada tela final de credenciais com botoes para copiar e concluir, sem obrigar o administrador a abrir Config > Usuarios e acessos.
+- A demonstracao local passou a persistir contas e novos alunos criados, permitindo testar o login do aluno matriculado mesmo em outra interface.
+- Planos e modalidades configurados passaram a alimentar a selecao da matricula com seus valores mensais.
+- Modalidades agora possuem campo de valor mensal nas Configuracoes.
+- A Grade semanal passou a usar as modalidades configuradas como opcoes do campo Modalidade.
+- A matricula soma automaticamente os itens escolhidos e calcula a mensalidade final.
+- Incluidos os descontos: Individual (0%), Casal (10%), Familia (15%) e percentual personalizado.
+- O cadastro do aluno passou a preservar selectedModalities, baseMonthlyFee, planDiscountType e planDiscountPercent.
+- API e planilha atualizadas para schemaVersion 8, com migracao por inclusao de colunas sem apagar registros existentes.
+- Cabecalho recomposto sem deformar foto ou logotipo: foto da academia a esquerda, PRO FITNESS ao centro e logotipo oficial a direita, com maior area preta.
+- Criada uma versao fina do cabecalho para os paineis abertos e uma versao proporcional para as telas de login.
+- Removido o uso de object-fit: fill nos novos overrides, reduzindo o aspecto espichado.
+- Cache do PWA e identificadores de versao atualizados para 20260712-matricula-integrada-v2.
+
+ARQUIVOS PRINCIPAIS ALTERADOS
+- painel.html
+- assets/js/painel.js
+- assets/js/shared-data.js
+- assets/css/painel.css
+- assets/css/prof.css
+- assets/css/style.css
+- assets/images/pro-fitness-header-oficial.jpg
+- assets/images/pro-fitness-header-fino.jpg
+- assets/js/demo-data.js
+- assets/data/demo.json
+- apps-script/api.gs
+- api.txt
+- sw.js
+- tools/generate-demo-data.mjs
+- docs/arquitetura-paineis.md
+- docs/estrutura-planilha.md
+- docs/sheets-api-setup.md
+- tests/smoke.mjs
+
+VALIDACOES
+- Sintaxe dos JavaScripts validada.
+- Sintaxe da API validada.
+- api.txt confirmado identico a apps-script/api.gs.
+- Smoke tests do repositorio e do pacote atualizados para o schema 8 e para a matricula integrada.
+- Testes adicionados para cabecalho fino, selecao de planos/modalidades, descontos, geracao de acesso e persistencia demonstrativa.
+
+
+======================================================================
+AJUSTE FINAL - 2026-07-12 - ACESSO DO ALUNO SOMENTE NA MATRICULA
+======================================================================
+- Removida a opcao de criar conta de aluno pelo formulario generico de Configuracoes.
+- O acesso do aluno agora e criado exclusivamente na mesma tela da nova matricula.
+- A area Usuarios e acessos continua permitindo administrar contas existentes, redefinir senhas e criar somente contas da equipe (Professor e Administrador).
+- Mantida a regra de atualizar este historico em toda alteracao do programa.
+
+
+======================================================================
+AJUSTE FINAL - 2026-07-12 - PADRAO VISUAL, CREDITOS E RECUPERACAO
+======================================================================
+- O cabecalho interno do aluno passou a usar a mesma imagem fina oficial aplicada ao professor e ao painel administrativo.
+- Confirmado o uso da imagem oficial proporcional nas tres telas de login e da imagem fina nos tres ambientes autenticados.
+- Incluido o credito legivel e discreto "Desenvolvido por @almir.lk" nos modulos Aluno, Professor e Administracao.
+- Criado o botao "Gerar acesso" na ficha do aluno quando uma matricula existente ainda nao possui conta vinculada.
+- A matricula passou a preservar o cadastro salvo quando a geracao da conta falha, permitindo repetir somente a etapa de acesso.
+- A API passou a reutilizar de forma idempotente uma conta com a mesma matricula, pessoa e perfil, sem criar duplicidade.
+- A demonstracao local recebeu a mesma protecao idempotente da API.
+- Adicionado teste integrado que matricula um aluno ficticio no painel, gera a senha e autentica esse aluno no aplicativo.
+- Adicionados testes de regressao para imagens dos cabecalhos, creditos legiveis e recuperacao de acesso.
+- Cache e recursos atualizados para a versao 20260712-final-v4.
+
+VALIDACOES
+- Smoke tests do repositorio: OK.
+- Smoke tests do pacote: OK.
+- Sintaxe dos JavaScripts: OK.
+- api.txt confirmado byte a byte identico a apps-script/api.gs.

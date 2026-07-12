@@ -72,3 +72,18 @@ Pastas permitidas:
 Nao incluir `.git`, `backups`, copias antigas ou arquivos soltos duplicados no ZIP entregue.
 
 O repositorio e validado com `node tests/smoke.mjs`. Uma copia final limpa deve ser validada separadamente com `node tests/smoke.mjs --package`.
+
+
+## Matrícula administrativa integrada
+
+A matrícula de um novo aluno é concluída em uma única tela do painel administrativo:
+
+- número de matrícula e dados pessoais;
+- seleção de planos/modalidades cadastrados e seus valores;
+- soma automática dos itens escolhidos;
+- desconto Individual, Casal (10%), Família (15%) ou percentual personalizado;
+- valor-base, desconto e mensalidade final gravados no cadastro;
+- criação opcional e imediata da conta de acesso;
+- exibição única da senha temporária ao concluir.
+
+As modalidades cadastradas em Config possuem valor mensal e também alimentam a seleção de modalidade da Grade semanal. O administrador não precisa mais sair da matrícula e abrir Config para gerar o primeiro acesso.

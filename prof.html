@@ -9,38 +9,43 @@
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="assets/css/prof.css?v=20260711-auth9" rel="stylesheet"/>
+<link href="assets/css/prof.css?v=20260712-final-v4" rel="stylesheet"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 </head>
 <body>
 <div class="environment-badge" data-environment-badge hidden></div>
 <section class="prof-auth-view" id="profAuthView">
-<div class="prof-auth-visual"><img alt="Pro Fitness Academia" src="assets/images/pro-fitness-fachada.png"/><div><strong>PRO FITNESS</strong><span>PAINEL DO PROFESSOR</span></div></div>
-<div class="prof-auth-card" id="profLoginCard"><p class="prof-view-kicker">TABLET DA EQUIPE</p><h1>Identifique-se para continuar</h1><p>Cada registro ficara vinculado ao professor autenticado.</p><form id="profLoginForm" class="prof-auth-form"><label>Usuario<input name="login" autocomplete="username" required/></label><label>Senha<input type="password" name="password" autocomplete="current-password" required/></label><button class="primary-action" type="submit">Entrar</button></form><p id="profLoginFeedback" class="prof-auth-feedback" aria-live="polite"></p></div>
-<div class="prof-auth-card" id="profPasswordChangeCard" hidden><p class="prof-view-kicker">PRIMEIRO ACESSO</p><h1>Crie uma nova senha</h1><p>A senha temporaria precisa ser substituida antes de abrir o tablet.</p><form id="profPasswordChangeForm" class="prof-auth-form"><label>Senha temporaria<input type="password" name="currentPassword" required/></label><label>Nova senha<input type="password" name="newPassword" minlength="8" required/></label><label>Confirmar senha<input type="password" name="confirmPassword" minlength="8" required/></label><button class="primary-action" type="submit">Salvar nova senha</button></form><button class="text-button" id="cancelProfPasswordChange" type="button">Cancelar</button><p id="profPasswordChangeFeedback" class="prof-auth-feedback" aria-live="polite"></p></div>
+<div class="prof-auth-shell">
+<header class="prof-auth-visual auth-brand-header official-banner-header" aria-label="Pro Fitness Academia">
+<img class="official-header-banner" src="assets/images/pro-fitness-header-oficial.jpg" alt="Fachada e logotipo oficial da Pro Fitness Academia"/>
+<span class="header-role-label">PROFESSOR</span>
+</header>
+<div class="prof-auth-card" id="profLoginCard"><h1>Professor</h1><form id="profLoginForm" class="prof-auth-form"><label>Usuario<input name="login" autocomplete="username" required/></label><label>Senha<input type="password" name="password" autocomplete="current-password" required/></label><button class="primary-action" type="submit">Entrar</button></form><p id="profLoginFeedback" class="prof-auth-feedback" aria-live="polite"></p></div>
+<div class="prof-auth-card" id="profPasswordChangeCard" hidden><h1>Criar nova senha</h1><p class="password-rule">Minimo de 8 caracteres, com letra e numero.</p><form id="profPasswordChangeForm" class="prof-auth-form"><label>Senha temporaria<input type="password" name="currentPassword" required/></label><label>Nova senha<input type="password" name="newPassword" minlength="8" required/></label><label>Confirmar senha<input type="password" name="confirmPassword" minlength="8" required/></label><button class="primary-action" type="submit">Salvar nova senha</button></form><button class="text-button" id="cancelProfPasswordChange" type="button">Cancelar</button><p id="profPasswordChangeFeedback" class="prof-auth-feedback" aria-live="polite"></p></div>
+</div>
 </section>
-<section class="prof-auth-view prof-lock-view" id="profLockView" hidden><div class="prof-auth-card"><p class="prof-view-kicker">TABLET BLOQUEADO</p><h1 id="profLockName">Professor</h1><p>Informe sua senha para retomar ou troque de professor.</p><form id="profUnlockForm" class="prof-auth-form"><label>Senha<input type="password" name="password" autocomplete="current-password" required/></label><button class="primary-action" type="submit">Desbloquear</button></form><button class="text-button" id="profSwitchUserButton" type="button">Trocar professor</button><p id="profUnlockFeedback" class="prof-auth-feedback" aria-live="polite"></p></div></section>
+<section class="prof-auth-view prof-lock-view" id="profLockView" hidden><div class="prof-auth-card prof-lock-card"><img class="lock-brand-logo" src="assets/images/pro-fitness-logo-oficial.jpg" alt="Pro Fitness"/><h1 id="profLockName">Professor</h1><form id="profUnlockForm" class="prof-auth-form"><label>Senha<input type="password" name="password" autocomplete="current-password" required/></label><button class="primary-action" type="submit">Desbloquear</button></form><button class="text-button" id="profSwitchUserButton" type="button">Trocar professor</button><p id="profUnlockFeedback" class="prof-auth-feedback" aria-live="polite"></p></div></section>
 <div class="prof-shell" id="profAppShell" hidden>
-<header aria-label="Pro Fitness Academia" class="prof-photo-header">
-<figure class="prof-academy-visual">
-<img alt="Fachada da Pro Fitness Academia" src="assets/images/pro-fitness-fachada.png"/>
-</figure>
+<header aria-label="Pro Fitness Academia" class="prof-photo-header hybrid-app-header official-banner-header">
+<img class="official-header-banner" src="assets/images/pro-fitness-header-fino.jpg" alt="Fachada e logotipo oficial da Pro Fitness Academia"/>
+<span class="header-role-label">PROFESSOR</span>
 </header>
 <main class="prof-main">
-<div class="prof-session-bar"><div><span>Professor conectado</span><strong id="profCurrentUser">-</strong></div><button id="profLockButton" type="button">Bloquear</button><button id="profLogoutButton" type="button">Trocar professor</button></div>
-<div aria-live="polite" class="status-line">
-<span class="connection-dot" id="connectionDot"></span>
-<span id="connectionText">Carregando dados</span>
-<button class="sync-pending" hidden="" id="pendingSyncText" title="Tentar enviar novamente" type="button"></button>
-<span id="lastSyncText"></span>
-<button aria-label="Atualizar dados" class="status-refresh" id="refreshProfessorData" type="button">
-<span aria-hidden="true">↻</span>
-          Atualizar
-        </button>
+<div class="prof-session-bar" aria-live="polite">
+<div class="prof-session-identity">
+<strong id="profCurrentUser">-</strong>
+<span class="prof-sync-summary"><i class="connection-dot" id="connectionDot"></i><span id="connectionText">Carregando dados</span></span>
+<button class="sync-pending" hidden id="pendingSyncText" title="Tentar enviar novamente" type="button"></button>
+<span class="prof-last-sync" id="lastSyncText"></span>
+</div>
+<div class="prof-session-actions">
+<button id="profLockButton" type="button">Bloquear</button>
+<button id="profLogoutButton" type="button">Trocar</button>
+<button aria-label="Atualizar dados" class="status-refresh" id="refreshProfessorData" type="button"><span aria-hidden="true">↻</span><span class="refresh-label">Atualizar</span></button>
+</div>
 </div>
 <section class="prof-view active" data-view="inicio" id="profHomeView">
 <section class="quick-search-panel">
-<label for="profStudentSearch">Buscar aluno</label>
 <div class="search-field-wrap">
 <span aria-hidden="true">⌕</span>
 <input autocomplete="off" id="profStudentSearch" placeholder="Nome, telefone, plano ou código" type="search"/>
@@ -105,21 +110,15 @@
 </section>
 <section class="prof-view" data-view="ponto" hidden="" id="profTimeView">
 <div class="view-title-row">
-<div>
-<p class="prof-view-kicker">Presenca na academia</p>
-<h1>Minha permanencia</h1>
-</div>
+<h1>Presença</h1>
 <span id="profTimeDate"></span>
 </div>
 <article class="prof-card staff-clock-card">
-<div class="staff-clock-identity">
-<label for="activeProfessorSelect">Professor autenticado</label>
-<select id="activeProfessorSelect" disabled></select>
-</div>
+<select id="activeProfessorSelect" hidden disabled></select>
 <div class="staff-clock-display">
 <span id="staffClockStatus">Fora da academia</span>
 <strong id="staffClockCurrentTime">--:--</strong>
-<p id="staffClockDetail">Selecione seu nome e registre a entrada.</p>
+<p id="staffClockDetail" hidden></p>
 </div>
 <button class="staff-clock-action" id="toggleStaffClockButton" type="button">Registrar entrada</button>
 <div class="staff-clock-summary">
@@ -128,12 +127,11 @@
 </div>
 </article>
 <article class="prof-card staff-clock-history-card">
-<div class="prof-card-head">
-<div><p class="prof-view-kicker">Ultimos registros</p><h2>Historico neste tablet</h2></div>
-</div>
+<div class="prof-card-head"><h2>Registros recentes</h2></div>
 <div class="staff-clock-history" id="staffClockHistory"></div>
 </article>
 </section>
+<footer class="developer-credit">Desenvolvido por <strong>@almir.lk</strong></footer>
 </main>
 <nav aria-label="Navegação do painel do professor" class="prof-bottom-nav">
 <button aria-current="page" class="active" data-prof-view="inicio" type="button">
@@ -158,7 +156,6 @@
 <div class="student-workspace-shell">
 <header class="student-workspace-header">
 <div class="student-workspace-identity">
-<span>ALUNO</span>
 <h2 id="profStudentName">Ficha do aluno</h2>
 <div class="student-workspace-badges" id="profStudentBadges"></div>
 </div>
@@ -191,8 +188,8 @@
 <button class="student-action" id="editProfessorStudent" type="button">Editar ficha</button>
 </nav><section class="student-detail-section">
 <div class="student-detail-head">
-<h3>Ficha do aluno</h3>
-<span id="profStudentFormStatus">Somente visualização</span>
+<h3>Ficha</h3>
+<span id="profStudentFormStatus" hidden></span>
 </div>
 <form id="profStudentForm" novalidate="">
 <input name="id" type="hidden"/>
@@ -278,9 +275,8 @@
 <form class="prof-workout-form" id="profWorkoutForm" novalidate="">
 <header class="prof-workout-header">
 <div>
-<span>TREINO DO ALUNO</span>
 <h2 id="profWorkoutDialogTitle">Novo treino</h2>
-<p id="profWorkoutStudentName">Aluno</p>
+<p id="profWorkoutStudentName" hidden>Aluno</p>
 </div>
 <button aria-label="Fechar treino" class="dialog-close workout-close" id="closeProfessorWorkout" type="button">×</button>
 </header>
@@ -337,9 +333,8 @@
 <form class="prof-assessment-form" id="profAssessmentForm" novalidate="">
 <header class="prof-module-dialog-header">
 <div>
-<span>AVALIAÇÃO FÍSICA</span>
 <h2 id="profAssessmentDialogTitle">Nova avaliação</h2>
-<p id="profAssessmentStudentName">Aluno</p>
+<p id="profAssessmentStudentName" hidden>Aluno</p>
 </div>
 <button aria-label="Fechar avaliação" class="dialog-close module-dialog-close" id="closeProfessorAssessment" type="button">×</button>
 </header>
@@ -401,9 +396,8 @@
 <form class="prof-schedule-form" id="profScheduleForm" novalidate="">
 <header class="prof-module-dialog-header">
 <div>
-<span>AGENDA DO ALUNO</span>
 <h2 id="profScheduleDialogTitle">Novo agendamento</h2>
-<p id="profScheduleStudentName">Aluno</p>
+<p id="profScheduleStudentName" hidden>Aluno</p>
 </div>
 <button aria-label="Fechar agendamento" class="dialog-close module-dialog-close" id="closeProfessorSchedule" type="button">×</button>
 </header>
@@ -450,7 +444,6 @@
 <form class="prof-payment-form" id="profPaymentForm" novalidate="">
 <header class="prof-payment-header">
 <div>
-<span>MENSALIDADE</span>
 <h2 id="profPaymentTitle">Receber mensalidade</h2>
 </div>
 <button aria-label="Fechar recebimento" class="dialog-close payment-close" id="closeProfessorPayment" type="button">×</button>
@@ -537,11 +530,11 @@
 </form>
 </dialog>
 <div aria-live="polite" class="prof-toast" hidden="" id="profToast" role="status"></div>
-<script src="assets/js/app-config.js"></script>
-<script src="assets/js/demo-data.js?v=20260711-auth9"></script>
-<script src="assets/js/shared-data.js?v=20260711-auth9"></script>
-<script src="assets/js/finance-core.js?v=20260711-auth9"></script>
-<script src="assets/js/prof.js?v=20260711-auth9"></script>
-<script src="assets/js/pwa.js"></script>
+<script src="assets/js/app-config.js?v=20260712-final-v4"></script>
+<script src="assets/js/demo-data.js?v=20260712-final-v4"></script>
+<script src="assets/js/shared-data.js?v=20260712-final-v4"></script>
+<script src="assets/js/finance-core.js?v=20260712-final-v4"></script>
+<script src="assets/js/prof.js?v=20260712-final-v4"></script>
+<script src="assets/js/pwa.js?v=20260712-final-v4"></script>
 </body>
 </html>

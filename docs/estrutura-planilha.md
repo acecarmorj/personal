@@ -4,10 +4,10 @@ A fonte oficial da API e `apps-script/api.gs`. Depois de substituir a API, execu
 
 ## Versao da estrutura
 
-- `schemaVersion`: **7**
+- `schemaVersion`: **8**
 - A versao fica registrada nas propriedades do Apps Script e na aba `Config`.
 - Requisicoes comuns nao reformatam todas as abas. A preparacao completa ocorre no `setup` ou quando a versao da estrutura precisa ser migrada.
-- O esquema 3 adicionou sessoes de treino e series realizadas; o esquema 4 adicionou autenticacao; o esquema 5 adicionou QR temporario; o esquema 6 preserva logins e matriculas com zeros a esquerda.
+- O esquema 3 adicionou sessoes de treino e series realizadas; o esquema 4 adicionou autenticacao; o esquema 5 adicionou QR temporario; o esquema 6 preserva logins e matriculas com zeros a esquerda; o esquema 8 registra composicao do plano, valor-base e desconto da matricula.
 - `Contas` e `Sessoes` sao privadas e nao fazem parte de snapshots operacionais.
 
 ## Abas
@@ -15,7 +15,7 @@ A fonte oficial da API e `apps-script/api.gs`. Depois de substituir a API, execu
 Todas as abas operacionais usam `updatedAt`, `updatedBy`, `source` e `deviceId` quando esses campos existem. `source` representa a origem tecnica da sincronizacao, como `tablet-professor`, `painel-administrativo`, `app-aluno` ou `api`.
 
 ### `Alunos`
-`id`, `enrollmentNumber`, `cpf`, `accountId`, `name`, `phone`, `email`, `birthDate`, `goal`, `restrictions`, `status`, `plan`, `monthlyFee`, `notes`, `createdAt`, `updatedAt`, `enrollmentToken`, `enrollmentStatus`, `enrollmentCompletedAt`, `appAccessPolicy`, `accessBlockReason`, `gateCode`, `lastGateSyncAt`, `avatarUrl`, `updatedBy`, `source`, `deviceId`
+`id`, `enrollmentNumber`, `cpf`, `accountId`, `name`, `phone`, `email`, `birthDate`, `goal`, `restrictions`, `status`, `plan`, `selectedModalities`, `baseMonthlyFee`, `planDiscountType`, `planDiscountPercent`, `monthlyFee`, `notes`, `createdAt`, `updatedAt`, `enrollmentToken`, `enrollmentStatus`, `enrollmentCompletedAt`, `appAccessPolicy`, `accessBlockReason`, `gateCode`, `lastGateSyncAt`, `avatarUrl`, `updatedBy`, `source`, `deviceId`
 
 ### `Avaliacoes`
 `id`, `studentId`, `date`, `weight`, `height`, `imc`, `bodyFat`, `chest`, `waist`, `hip`, `arm`, `thigh`, `photos`, `notes`, `updatedAt`, `updatedBy`, `source`, `deviceId`

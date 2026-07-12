@@ -2997,3 +2997,732 @@ form[aria-busy="true"] button[type="submit"]::after {
 @keyframes pf-login-spin {
   to { transform: rotate(360deg); }
 }
+
+/* ======================================================================
+   2026-07-12 - ETAPA 1: LOGIN COMPACTO + CABECALHO HIBRIDO
+   ====================================================================== */
+.prof-auth-view:not(.prof-lock-view) {
+  min-height: 100vh;
+  padding: 26px;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  place-items: center;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(244,201,40,.22), transparent 28rem),
+    #e8e7e1;
+}
+
+.prof-auth-shell {
+  width: min(100%, 830px);
+}
+
+.prof-auth-visual.auth-brand-header,
+.hybrid-app-header {
+  height: 190px !important;
+  min-height: 190px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.35fr) minmax(210px, .65fr) !important;
+  overflow: hidden;
+  border: 1px solid rgba(17,17,17,.13);
+  border-radius: 24px 24px 0 0;
+  background: #b9bab5;
+  box-shadow: 0 18px 46px rgba(21,21,18,.15);
+}
+
+.prof-auth-visual::after { display: none !important; }
+
+.auth-brand-photo {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #aeb0ab;
+}
+
+.auth-brand-photo img,
+.prof-auth-visual.auth-brand-header img,
+.hybrid-app-header .auth-brand-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  object-fit: contain !important;
+  object-position: center !important;
+  filter: none !important;
+}
+
+.auth-brand-wordmark {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 11px;
+  padding: 22px 18px;
+  border-left: 1px solid rgba(17,17,17,.14);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.18), transparent 48%),
+    #b9bab5;
+  text-align: center;
+}
+
+.pf-wordmark,
+.lock-wordmark {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: .18em;
+  white-space: nowrap;
+  font-size: clamp(2.05rem, 5vw, 3.45rem);
+  font-weight: 800;
+  line-height: .86;
+  letter-spacing: -.055em;
+}
+
+.pf-wordmark span,
+.lock-wordmark span { color: #171817; }
+.pf-wordmark strong,
+.lock-wordmark strong { color: var(--yellow); text-shadow: 0 1px 0 rgba(0,0,0,.14); }
+
+.auth-brand-wordmark > small {
+  color: #333430;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+}
+
+.prof-auth-card {
+  width: 100%;
+  margin: 0;
+  padding: 29px 34px 32px;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 18px 46px rgba(21,21,18,.12);
+}
+
+.prof-auth-card h1 {
+  margin: 0 0 20px;
+  font-size: clamp(28px, 4vw, 36px);
+}
+
+.prof-auth-form {
+  gap: 13px;
+  margin: 0;
+}
+
+.prof-auth-feedback:empty { display: none; }
+.prof-auth-feedback:not(:empty) {
+  display: block;
+  min-height: 0;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: var(--danger-bg);
+}
+
+.password-rule {
+  margin: -8px 0 17px !important;
+  color: var(--muted) !important;
+  font-size: 13px;
+  line-height: 1.45 !important;
+}
+
+.prof-lock-view {
+  padding: 24px;
+}
+
+.prof-lock-card {
+  width: min(100%, 420px);
+  padding: 32px;
+  border-radius: 24px;
+  text-align: center;
+}
+
+.lock-wordmark {
+  margin-bottom: 22px;
+  font-size: 2rem;
+}
+
+.prof-lock-card .prof-auth-form { text-align: left; }
+
+/* Cabeçalho interno: foto inteira + identidade, sem esmagar a fachada. */
+.prof-photo-header.hybrid-app-header {
+  height: 138px !important;
+  min-height: 138px !important;
+  margin: 14px 16px 0;
+  grid-template-columns: minmax(0, 1.6fr) minmax(230px, .6fr) !important;
+  border-radius: 20px;
+}
+
+@media (max-width: 720px) {
+  .prof-auth-view:not(.prof-lock-view) {
+    padding: 0;
+    place-items: start stretch;
+  }
+
+  .prof-auth-shell { width: 100%; }
+
+  .prof-auth-visual.auth-brand-header {
+    height: 166px !important;
+    min-height: 166px !important;
+    grid-template-columns: 58% 42% !important;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .auth-brand-wordmark { padding: 15px 10px; }
+
+  .pf-wordmark {
+    display: grid;
+    gap: 0;
+    font-size: clamp(2rem, 10vw, 2.7rem);
+  }
+
+  .auth-brand-wordmark > small {
+    font-size: .62rem;
+    letter-spacing: .12em;
+  }
+
+  .prof-auth-card {
+    min-height: calc(100vh - 166px);
+    padding: 28px 22px calc(28px + env(safe-area-inset-bottom));
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .prof-photo-header.hybrid-app-header {
+    height: 122px !important;
+    min-height: 122px !important;
+    grid-template-columns: 60% 40% !important;
+  }
+}
+
+/* 2026-07-12 - LOGO OFICIAL PRO FITNESS */
+.auth-brand-photo {
+  background: #8f918d;
+}
+
+.auth-brand-photo img,
+.enrollment-visual.auth-brand-header img,
+.prof-auth-visual.auth-brand-header img,
+.hybrid-app-header .auth-brand-photo img,
+.admin-auth-brand .auth-brand-photo img,
+.admin-header.hybrid-app-header .auth-brand-photo img {
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+
+.auth-brand-wordmark {
+  padding: 18px 16px;
+  border-left-color: rgba(255,255,255,.12) !important;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(242,197,0,.11), transparent 12rem),
+    linear-gradient(145deg, #2d2e2c, #111211 72%) !important;
+}
+
+.official-brand-logo {
+  width: min(100%, 330px);
+  max-height: 112px;
+  display: block;
+  object-fit: contain;
+}
+
+.auth-brand-wordmark > small {
+  color: rgba(255,255,255,.78) !important;
+  font-size: .7rem;
+  letter-spacing: .22em;
+}
+
+.lock-brand-logo {
+  width: min(100%, 270px);
+  margin: 0 auto 22px;
+  display: block;
+}
+
+@media (max-width: 620px) {
+  .official-brand-logo {
+    width: min(100%, 210px);
+    max-height: 88px;
+  }
+
+  .auth-brand-wordmark > small {
+    font-size: .58rem;
+    letter-spacing: .15em;
+  }
+}
+
+/* ======================================================================
+   2026-07-12 - ETAPA 2: PAINEL DO PROFESSOR OPERACIONAL E COMPACTO
+   ====================================================================== */
+.prof-photo-header.hybrid-app-header {
+  height: 118px !important;
+  min-height: 118px !important;
+  margin-top: 10px;
+}
+
+.prof-main {
+  padding: 12px 16px 18px;
+}
+
+.prof-session-bar {
+  min-height: 52px;
+  margin-bottom: 12px;
+  padding: 7px 9px 7px 13px;
+  gap: 12px;
+  border-radius: 13px;
+}
+
+.prof-session-bar > .prof-session-identity {
+  min-width: 0;
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.prof-session-identity > strong {
+  color: #fff;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.prof-sync-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #d5d5d2 !important;
+  font-size: 12px !important;
+  font-weight: 700;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.prof-sync-summary .connection-dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+}
+
+.prof-session-actions {
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center;
+  gap: 7px;
+}
+
+.prof-session-bar button {
+  min-height: 36px;
+  padding: 0 11px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.prof-session-bar .status-refresh {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.prof-session-bar .status-refresh > span[aria-hidden] {
+  font-size: 18px;
+}
+
+.prof-last-sync {
+  color: #aaa !important;
+  font-size: 11px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.prof-session-bar .sync-pending {
+  min-height: 28px;
+  padding: 0 9px;
+  color: #171717;
+  border-color: var(--yellow);
+  background: var(--yellow);
+}
+
+.quick-search-panel {
+  margin: 0;
+}
+
+.search-field-wrap {
+  min-height: 50px;
+  padding: 0 12px;
+  border-radius: 14px;
+}
+
+.search-field-wrap input {
+  height: 46px;
+  font-size: 16px;
+}
+
+.search-field-wrap > span {
+  font-size: 23px;
+}
+
+.prof-view {
+  gap: 12px;
+}
+
+.prof-metrics {
+  gap: 8px;
+}
+
+.prof-metric-card {
+  min-height: 76px;
+  padding: 11px 13px;
+  border-radius: 14px;
+}
+
+.prof-metric-card span {
+  font-size: 12px;
+}
+
+.prof-metric-card strong {
+  font-size: clamp(25px, 3.2vw, 34px);
+}
+
+.prof-grid {
+  gap: 10px;
+}
+
+.prof-card {
+  padding: 13px;
+  border-radius: 15px;
+}
+
+.prof-card-head {
+  margin-bottom: 8px;
+}
+
+.prof-card-head h2,
+.view-title-row h1 {
+  font-size: 19px;
+}
+
+.compact-list,
+.student-card-list,
+.agenda-full-list {
+  gap: 7px;
+}
+
+/* Presença: somente estado, relógio, ação e resumo. */
+.staff-clock-card {
+  padding: 18px;
+  grid-template-columns: minmax(220px, 1fr) minmax(260px, .9fr);
+  gap: 16px;
+}
+
+.staff-clock-card > #activeProfessorSelect[hidden],
+.staff-clock-display > p[hidden] {
+  display: none !important;
+}
+
+.staff-clock-display {
+  justify-items: start;
+  text-align: left;
+}
+
+.staff-clock-display > strong {
+  font-size: clamp(34px, 5vw, 48px);
+}
+
+.staff-clock-action {
+  min-height: 52px;
+}
+
+.staff-clock-summary {
+  gap: 8px;
+}
+
+.staff-clock-summary article {
+  padding: 11px 13px;
+}
+
+.staff-clock-history-card {
+  padding-top: 12px;
+}
+
+.staff-clock-history {
+  gap: 6px;
+}
+
+.staff-clock-history-row {
+  padding: 10px 11px;
+}
+
+/* Ficha e abas do aluno mais baixas. */
+.student-workspace-header {
+  min-height: 72px;
+  padding: 12px 62px 11px 16px;
+}
+
+.student-workspace-identity {
+  gap: 6px;
+}
+
+.student-workspace-identity > span {
+  display: none;
+}
+
+.student-workspace-identity h2 {
+  font-size: 22px;
+}
+
+.student-module-tabs {
+  min-height: 48px;
+}
+
+.student-module-tab {
+  min-height: 44px;
+  padding: 8px 11px;
+}
+
+.student-workspace-scroll {
+  padding: 12px 14px 22px;
+  gap: 10px;
+}
+
+.student-detail-section {
+  gap: 10px;
+}
+
+/* Cabeçalhos dos formulários: uma única linha com ação + aluno. */
+.prof-workout-header,
+.prof-payment-header,
+.prof-module-dialog-header {
+  min-height: 68px;
+  padding: 13px 60px 12px 16px;
+  align-items: center;
+}
+
+.prof-workout-header > div > span,
+.prof-payment-header > div > span,
+.prof-module-dialog-header > div > span,
+.prof-workout-header p,
+.prof-module-dialog-header p {
+  display: none !important;
+}
+
+.prof-workout-header h2,
+.prof-payment-header h2,
+.prof-module-dialog-header h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.prof-workout-header .workout-close,
+.prof-payment-header .payment-close,
+.prof-module-dialog-header .module-dialog-close {
+  top: 13px;
+  right: 13px;
+}
+
+.prof-workout-main-fields,
+.prof-module-form-grid {
+  margin-top: 10px;
+  padding: 12px 14px;
+  gap: 9px;
+}
+
+.prof-payment-context {
+  margin-top: 10px;
+  padding: 10px 12px;
+}
+
+@media (max-width: 900px) {
+  .prof-photo-header.hybrid-app-header {
+    height: 112px !important;
+    min-height: 112px !important;
+  }
+
+  .prof-session-bar {
+    align-items: flex-start;
+  }
+
+  .prof-session-actions .refresh-label {
+    display: none;
+  }
+
+  .staff-clock-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .prof-photo-header.hybrid-app-header {
+    height: 118px !important;
+    min-height: 118px !important;
+    margin: 8px 8px 0;
+  }
+
+  .prof-main {
+    padding: 10px 10px 18px;
+  }
+
+  .prof-session-bar {
+    padding: 9px;
+    flex-direction: column;
+  }
+
+  .prof-session-bar > .prof-session-identity,
+  .prof-session-actions {
+    width: 100%;
+  }
+
+  .prof-session-actions {
+    justify-content: flex-end;
+  }
+
+  .prof-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .prof-metric-card {
+    min-height: 70px;
+  }
+
+  .student-workspace-header {
+    min-height: 66px;
+  }
+
+  .student-module-tabs {
+    min-height: 46px;
+  }
+}
+
+/* 2026-07-12 - ETAPA 4: garante que login, bloqueio e aplicativo nao se sobreponham. */
+#profAuthView[hidden],
+#profLockView[hidden],
+#profAppShell[hidden] {
+  display: none !important;
+}
+
+/* Etapa 4: no aplicativo do professor, o selo fica sobre a fotografia, nao sobre o logo. */
+body:has(#profAppShell:not([hidden])) .environment-badge {
+  top: calc(16px + env(safe-area-inset-top));
+  left: max(18px, calc((100vw - 1148px) / 2 + 12px));
+  right: auto;
+  padding: 4px 8px;
+  font-size: .58rem;
+}
+@media (max-width: 620px) {
+  body:has(#profAppShell:not([hidden])) .environment-badge {
+    top: calc(14px + env(safe-area-inset-top));
+    left: 18px;
+  }
+}
+
+/* ======================================================================
+   2026-07-12 - CABEÇALHO OFICIAL FINO
+   ====================================================================== */
+.official-banner-header {
+  position: relative !important;
+  display: block !important;
+  overflow: hidden !important;
+  background: #171817 !important;
+}
+
+.official-header-banner {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  object-fit: fill !important;
+  object-position: center !important;
+}
+
+.header-role-label {
+  position: absolute;
+  right: 5%;
+  bottom: 9px;
+  z-index: 2;
+  color: rgba(255,255,255,.9);
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 9px rgba(0,0,0,.75);
+}
+
+.prof-auth-visual.auth-brand-header.official-banner-header {
+  height: 142px !important;
+  min-height: 142px !important;
+}
+
+.prof-photo-header.hybrid-app-header.official-banner-header {
+  height: 88px !important;
+  min-height: 88px !important;
+  margin-top: 8px !important;
+}
+
+.lock-brand-logo {
+  width: 132px;
+  height: 132px;
+  object-fit: contain;
+  border-radius: 20px;
+  background: #000;
+}
+
+@media (max-width: 720px) {
+  .prof-auth-visual.auth-brand-header.official-banner-header {
+    height: 104px !important;
+    min-height: 104px !important;
+  }
+  .prof-auth-card {
+    min-height: calc(100vh - 104px) !important;
+  }
+  .prof-photo-header.hybrid-app-header.official-banner-header {
+    height: 76px !important;
+    min-height: 76px !important;
+  }
+  .header-role-label {
+    right: 4.5%;
+    bottom: 6px;
+    font-size: .54rem;
+  }
+}
+
+/* 2026-07-12 - CABECALHO OFICIAL SEM DISTORCAO */
+.official-header-banner {
+  object-fit: contain !important;
+  background: #0d0e0d;
+}
+
+.developer-credit {
+  margin: 18px 0 10px;
+  color: #696a65;
+  font-size: .74rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.developer-credit strong {
+  color: #272823;
+  font-weight: 800;
+}
+.prof-photo-header.hybrid-app-header .official-header-banner {
+  object-fit: cover !important;
+}
+.prof-auth-visual.auth-brand-header.official-banner-header {
+  height: 124px !important;
+  min-height: 124px !important;
+}
+.prof-photo-header.hybrid-app-header.official-banner-header {
+  height: 82px !important;
+  min-height: 82px !important;
+}
+@media (max-width: 720px) {
+  .prof-auth-visual.auth-brand-header.official-banner-header {
+    height: 92px !important;
+    min-height: 92px !important;
+  }
+  .prof-auth-card { min-height: calc(100vh - 92px) !important; }
+  .prof-photo-header.hybrid-app-header.official-banner-header {
+    height: 66px !important;
+    min-height: 66px !important;
+  }
+}

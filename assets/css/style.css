@@ -1828,3 +1828,509 @@ form[aria-busy="true"] button[type="submit"]::after {
 @keyframes pf-login-spin {
   to { transform: rotate(360deg); }
 }
+
+/* ======================================================================
+   2026-07-12 - ETAPA 1: LOGIN COMPACTO + CABECALHO HIBRIDO
+   Foto da academia preservada sem corte agressivo e wordmark cinza/preto/amarelo.
+   ====================================================================== */
+.enrollment-view {
+  width: min(100%, 820px) !important;
+  min-height: 100vh !important;
+  margin: 0 auto;
+  padding: 22px;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  background: transparent;
+}
+
+.auth-brand-header {
+  height: 190px !important;
+  min-height: 190px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.35fr) minmax(210px, .65fr) !important;
+  overflow: hidden;
+  border: 1px solid rgba(32, 33, 31, 0.12);
+  border-radius: 24px 24px 0 0;
+  background: #b9bab5;
+  box-shadow: 0 18px 46px rgba(31, 32, 29, 0.14);
+}
+
+.auth-brand-photo {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #aeb0ab;
+}
+
+.auth-brand-photo img,
+.enrollment-visual.auth-brand-header img {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  display: block;
+  object-fit: contain !important;
+  object-position: center !important;
+  filter: none !important;
+}
+
+.auth-brand-wordmark {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 11px;
+  padding: 22px 18px;
+  border-left: 1px solid rgba(32, 33, 31, 0.14);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.18), transparent 48%),
+    #b9bab5;
+  text-align: center;
+}
+
+.pf-wordmark {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: .18em;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: clamp(2.05rem, 6vw, 3.55rem);
+  font-weight: 800;
+  line-height: .86;
+  letter-spacing: -.035em;
+}
+
+.pf-wordmark span { color: #171817; }
+.pf-wordmark strong { color: var(--yellow); text-shadow: 0 1px 0 rgba(0,0,0,.14); }
+
+.auth-brand-wordmark > small {
+  color: #333430;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .19em;
+}
+
+.enrollment-panel {
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 28px 30px 30px !important;
+  border: 1px solid rgba(32, 33, 31, 0.09);
+  border-top: 0;
+  border-radius: 0 0 24px 24px !important;
+  background: var(--surface);
+  box-shadow: 0 18px 46px rgba(31, 32, 29, 0.11);
+}
+
+.enrollment-panel > div {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.enrollment-panel h2 {
+  margin-bottom: 19px;
+  font-size: clamp(2rem, 7vw, 2.55rem);
+}
+
+.login-form {
+  gap: 12px;
+}
+
+.login-form label {
+  font-size: .82rem;
+}
+
+.password-rule {
+  margin: -5px 0 17px !important;
+  color: var(--graphite) !important;
+  font-size: .78rem !important;
+  line-height: 1.45 !important;
+}
+
+.form-feedback:empty {
+  display: none;
+}
+
+.form-feedback:not(:empty) {
+  display: block;
+  min-height: 0;
+  margin-top: 11px !important;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: var(--danger-soft);
+}
+
+@media (min-width: 900px) {
+  .enrollment-view {
+    grid-template-columns: none !important;
+    padding: 34px;
+  }
+
+  .enrollment-visual,
+  .enrollment-visual img {
+    min-height: 0 !important;
+  }
+
+  .enrollment-panel {
+    display: block !important;
+    min-height: 0 !important;
+    padding: 32px 46px 36px !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .enrollment-view {
+    width: 100% !important;
+    padding: 0;
+    justify-content: flex-start;
+  }
+
+  .auth-brand-header {
+    height: 166px !important;
+    min-height: 166px !important;
+    grid-template-columns: 58% 42% !important;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .auth-brand-wordmark {
+    padding: 15px 10px;
+  }
+
+  .pf-wordmark {
+    display: grid;
+    gap: 0;
+    font-size: clamp(2rem, 11vw, 2.75rem);
+  }
+
+  .auth-brand-wordmark > small {
+    font-size: .62rem;
+    letter-spacing: .13em;
+  }
+
+  .enrollment-panel {
+    flex: 1;
+    padding: 26px 22px calc(28px + env(safe-area-inset-bottom)) !important;
+    border: 0;
+    border-radius: 0 !important;
+    box-shadow: none;
+  }
+}
+
+/* 2026-07-12 - LOGO OFICIAL PRO FITNESS */
+.auth-brand-photo {
+  background: #8f918d;
+}
+
+.auth-brand-photo img,
+.enrollment-visual.auth-brand-header img,
+.prof-auth-visual.auth-brand-header img,
+.hybrid-app-header .auth-brand-photo img,
+.admin-auth-brand .auth-brand-photo img,
+.admin-header.hybrid-app-header .auth-brand-photo img {
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+
+.auth-brand-wordmark {
+  padding: 18px 16px;
+  border-left-color: rgba(255,255,255,.12) !important;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(242,197,0,.11), transparent 12rem),
+    linear-gradient(145deg, #2d2e2c, #111211 72%) !important;
+}
+
+.official-brand-logo {
+  width: min(100%, 330px);
+  max-height: 112px;
+  display: block;
+  object-fit: contain;
+}
+
+.auth-brand-wordmark > small {
+  color: rgba(255,255,255,.78) !important;
+  font-size: .7rem;
+  letter-spacing: .22em;
+}
+
+.lock-brand-logo {
+  width: min(100%, 270px);
+  margin: 0 auto 22px;
+  display: block;
+}
+
+@media (max-width: 620px) {
+  .official-brand-logo {
+    width: min(100%, 210px);
+    max-height: 88px;
+  }
+
+  .auth-brand-wordmark > small {
+    font-size: .58rem;
+    letter-spacing: .15em;
+  }
+}
+
+
+/* 2026-07-12 - ETAPA 3: APP DO ALUNO COMPACTO */
+.student-view .app-content {
+  padding-top: 16px;
+}
+
+.student-view .screen-heading {
+  min-height: 42px;
+  margin-bottom: 14px;
+  align-items: center;
+}
+
+.student-view .screen-heading h1 {
+  font-size: clamp(2.05rem, 8vw, 2.45rem);
+  line-height: .95;
+}
+
+.student-view .section-heading {
+  min-height: 32px;
+  margin: 19px 0 10px;
+  align-items: center;
+}
+
+.student-view .section-heading h2 {
+  font-size: clamp(1.4rem, 6vw, 1.65rem);
+  line-height: 1;
+}
+
+.student-view .feature-card,
+.student-view .chart-card,
+.student-view .notice-card,
+.student-view .active-session-card,
+.student-view .payment-status-card {
+  margin-bottom: 11px;
+  padding: 16px;
+}
+
+.student-view .content-stack,
+.student-view .history-list,
+.student-view .exercise-progress-list {
+  gap: 8px;
+}
+
+.student-view .segmented-filter {
+  margin-bottom: 12px;
+}
+
+.student-view .week-strip {
+  margin-bottom: 13px;
+}
+
+.student-view .agenda-card,
+.student-view .history-row,
+.student-view .exercise-progress-row {
+  padding: 13px;
+}
+
+.student-view .metric-grid,
+.student-view .today-grid {
+  gap: 8px;
+  margin-bottom: 11px;
+}
+
+.student-view .metric-card,
+.student-view .today-card {
+  padding: 14px;
+}
+
+.student-view .physical-evolution-grid {
+  gap: 8px;
+  margin-bottom: 11px;
+}
+
+.student-view .physical-evolution-grid article {
+  padding: 11px;
+}
+
+.student-view .bar-chart {
+  min-height: 136px;
+  padding-top: 12px;
+}
+
+.student-view .bar-column {
+  height: 118px;
+}
+
+.student-view .payment-value {
+  margin: 16px 0 6px;
+  font-size: 2.7rem;
+}
+
+.student-view .payment-meta-grid {
+  margin-top: 13px;
+}
+
+.qr-dialog > h2 {
+  margin-right: 44px;
+}
+
+@media (max-width: 370px) {
+  .student-view .app-content {
+    padding-top: 13px;
+  }
+
+  .student-view .screen-heading {
+    margin-bottom: 12px;
+  }
+
+  .student-view .feature-card,
+  .student-view .chart-card,
+  .student-view .payment-status-card {
+    padding: 14px;
+  }
+}
+
+/* 2026-07-12 - ETAPA 4: garante a troca real entre login e aplicativo. */
+#onboardingView[hidden],
+#studentView[hidden] {
+  display: none !important;
+}
+
+/* Etapa 4: o selo de demonstracao nao deve cobrir os controles do aluno. */
+body:has(#onboardingView:not([hidden])) .environment-badge {
+  top: max(8px, env(safe-area-inset-top));
+  left: 10px;
+  right: auto;
+}
+body:has(#studentView:not([hidden])) .environment-badge {
+  top: calc(58px + env(safe-area-inset-top));
+  right: 14px;
+  left: auto;
+  padding: 3px 7px;
+  font-size: .55rem;
+  box-shadow: none;
+}
+
+
+/* Etapa 4: evita rolagem horizontal residual em celulares estreitos. */
+@media (max-width: 370px) {
+  .student-view .segmented-filter,
+  .student-view .week-strip {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* ======================================================================
+   2026-07-12 - CABEÇALHO OFICIAL FINO
+   Usa a arte aprovada com foto da academia e logotipo oficial.
+   ====================================================================== */
+.official-banner-header {
+  position: relative !important;
+  display: block !important;
+  overflow: hidden !important;
+  background: #171817 !important;
+}
+
+.official-header-banner {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  object-fit: fill !important;
+  object-position: center !important;
+}
+
+.header-role-label {
+  position: absolute;
+  right: 5.2%;
+  bottom: 11px;
+  z-index: 2;
+  color: rgba(255,255,255,.9);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 9px rgba(0,0,0,.75);
+}
+
+.enrollment-visual.auth-brand-header.official-banner-header {
+  height: 142px !important;
+  min-height: 142px !important;
+}
+
+@media (max-width: 620px) {
+  .enrollment-visual.auth-brand-header.official-banner-header {
+    height: 104px !important;
+    min-height: 104px !important;
+  }
+  .header-role-label {
+    right: 4.5%;
+    bottom: 7px;
+    font-size: .56rem;
+  }
+  .enrollment-panel {
+    min-height: calc(100vh - 104px) !important;
+  }
+}
+
+/* 2026-07-12 - CABECALHO OFICIAL SEM DISTORCAO */
+.official-header-banner {
+  object-fit: contain !important;
+  background: #0d0e0d;
+}
+
+.student-photo-header {
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.student-photo-header .header-role-label {
+  right: 4.5%;
+  bottom: 5px;
+  font-size: .5rem;
+}
+
+.student-view .app-topbar {
+  min-height: calc(52px + env(safe-area-inset-top));
+  justify-content: flex-end;
+  padding: calc(8px + env(safe-area-inset-top)) 14px 8px;
+}
+
+.student-view .topbar-actions {
+  width: 100%;
+  justify-content: flex-end;
+}
+
+body:has(#studentView:not([hidden])) .environment-badge {
+  top: calc(106px + env(safe-area-inset-top));
+}
+
+.developer-credit {
+  margin: 20px 0 8px;
+  color: #666861;
+  font-size: .74rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.developer-credit strong {
+  color: #30312e;
+  font-weight: 800;
+}
+.enrollment-visual.auth-brand-header.official-banner-header {
+  height: 124px !important;
+  min-height: 124px !important;
+}
+@media (max-width: 620px) {
+  .enrollment-visual.auth-brand-header.official-banner-header {
+    height: 92px !important;
+    min-height: 92px !important;
+  }
+  .enrollment-panel { min-height: calc(100vh - 92px) !important; }
+}

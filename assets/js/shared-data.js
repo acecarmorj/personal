@@ -14,10 +14,12 @@
   const API_PLACEHOLDER = "COLE_A_URL_DO_WEB_APP_AQUI";
   const WEEKLY_NOTE_PREFIX = "WEEKLY_CLASS:";
   const LOCAL_DEMO_ACCOUNTS = {
-    "000001": { id: "ACC-DEMO-STUDENT", personType: "student", personId: "ALU-DEMO-001", login: "000001", email: "aluno001@exemplo.com", role: "student", active: true, mustChangePassword: false },
-    "prof.rafael": { id: "ACC-DEMO-PROF", personType: "staff", personId: "USR-PROF-006", login: "prof.rafael", email: "rafael.costa@exemplo.com", role: "professor", active: true, mustChangePassword: false },
-    "admin.demo": { id: "ACC-DEMO-ADMIN", personType: "staff", personId: "USR-ADMIN-001", login: "admin.demo", email: "administracao@exemplo.com", role: "admin", active: true, mustChangePassword: false }
+    "000001": { id: "ACC-DEMO-STUDENT", personType: "student", personId: "ALU-DEMO-001", login: "000001", email: "aluno001@exemplo.com", role: "student", active: true, mustChangePassword: false, demoPassword: "Demo1234" },
+    "prof.rafael": { id: "ACC-DEMO-PROF", personType: "staff", personId: "USR-PROF-006", login: "prof.rafael", email: "rafael.costa@exemplo.com", role: "professor", active: true, mustChangePassword: false, demoPassword: "Demo1234" },
+    "admin.demo": { id: "ACC-DEMO-ADMIN", personType: "staff", personId: "USR-ADMIN-001", login: "admin.demo", email: "administracao@exemplo.com", role: "admin", active: true, mustChangePassword: false, demoPassword: "Demo1234" }
   };
+  const SHARED_DEMO_ACCOUNTS_KEY = "profitness-demo-dynamic-accounts-v1";
+  const SHARED_DEMO_STUDENTS_KEY = "profitness-demo-dynamic-students-v1";
   const SYNC_DEVICE_KEY = `${STORAGE_NAMESPACE}-sync-device-v1`;
   const SNAPSHOT_RESOURCES = ["students", "assessments", "workouts", "schedule", "payments", "movements", "expenses", "cashClosings", "checkins", "workoutSessions", "exerciseSets", "exercises", "users", "staffTimeEntries", "config", "log"];
   const LEGACY_OPTIONAL_RESOURCES = ["workoutSessions", "exerciseSets"];
@@ -222,6 +224,10 @@
       restrictions: student.restrictions || "",
       status: student.status || "ativo",
       plan: student.plan || "",
+      selectedModalities: Array.isArray(student.selectedModalities) ? clone(student.selectedModalities) : student.selectedModalities || [],
+      baseMonthlyFee: Number(student.baseMonthlyFee ?? student.monthlyFee ?? 0),
+      planDiscountType: student.planDiscountType || "individual",
+      planDiscountPercent: Number(student.planDiscountPercent || 0),
       monthlyFee: Number(student.monthlyFee || 0),
       notes: student.notes || "",
       createdAt: student.createdAt || todayISO(),
@@ -1038,9 +1044,51 @@
     };
   }
 
+  function loadDynamicDemoAccounts() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(SHARED_DEMO_ACCOUNTS_KEY) || "{}");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function getLocalDemoAccounts() {
+    return { ...LOCAL_DEMO_ACCOUNTS, ...loadDynamicDemoAccounts() };
+  }
+
+  function saveDynamicDemoAccounts(accounts) {
+    localStorage.setItem(SHARED_DEMO_ACCOUNTS_KEY, JSON.stringify(accounts || {}));
+  }
+
+  function loadDynamicDemoStudents() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(SHARED_DEMO_STUDENTS_KEY) || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function persistLocalDemoStudent(student) {
+    if (!student?.id) return;
+    const current = loadDynamicDemoStudents();
+    const index = current.findIndex((item) => String(item.id) === String(student.id));
+    const record = clone(student);
+    if (index >= 0) current[index] = record;
+    else current.push(record);
+    localStorage.setItem(SHARED_DEMO_STUDENTS_KEY, JSON.stringify(current));
+  }
+
   function getEmbeddedDemoSnapshot() {
     const embedded = window.PROFITNESS_DEMO_DATA && (window.PROFITNESS_DEMO_DATA.snapshot || window.PROFITNESS_DEMO_DATA);
-    return migrateData(embedded && typeof embedded === "object" ? clone(embedded) : buildDemoData());
+    const snapshot = migrateData(embedded && typeof embedded === "object" ? clone(embedded) : buildDemoData());
+    loadDynamicDemoStudents().forEach((student) => {
+      const index = snapshot.students.findIndex((item) => String(item.id) === String(student.id));
+      if (index >= 0) snapshot.students[index] = createStudentRecord(student);
+      else snapshot.students.push(createStudentRecord(student));
+    });
+    return snapshot;
   }
 
   function isLocalDemoSession(session) {
@@ -1051,10 +1099,12 @@
   function createLocalDemoSession(account) {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString();
+    const publicAccount = clone(account);
+    delete publicAccount.demoPassword;
     const session = {
       token: `LOCAL-DEMO-${account.role}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
       localDemo: true,
-      account: clone(account),
+      account: publicAccount,
       session: {
         id: `SES-LOCAL-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         accountId: account.id,
@@ -1078,10 +1128,12 @@
   async function loginDemoLocal(login, password) {
     if (!isDemoEnvironment()) throw new Error("A demonstracao local nao esta disponivel neste ambiente.");
     const normalizedLogin = String(login || "").trim().toLowerCase();
-    if (String(password || "") !== "Demo1234" || !LOCAL_DEMO_ACCOUNTS[normalizedLogin]) {
-      throw new Error("Credencial demonstrativa invalida.");
+    const account = getLocalDemoAccounts()[normalizedLogin];
+    if (!account) throw new Error("Usuario demonstrativo nao encontrado.");
+    if (String(password || "").trim().toLowerCase() !== String(account.demoPassword || "Demo1234").trim().toLowerCase()) {
+      throw new Error("Senha demonstrativa incorreta.");
     }
-    return createLocalDemoSession(LOCAL_DEMO_ACCOUNTS[normalizedLogin]);
+    return createLocalDemoSession(account);
   }
 
   function getLocalDemoStudentBootstrap(account) {
@@ -1144,10 +1196,13 @@
 
   async function loginRemote(login, password) {
     const normalizedLogin = String(login || "").trim().toLowerCase();
-    if (isDemoEnvironment() && LOCAL_DEMO_ACCOUNTS[normalizedLogin] && String(password || "") === "Demo1234") {
+    // No ambiente demonstrativo, as tres contas oficiais sempre autenticam
+    // localmente. Isso evita atraso, dependencia da API e falhas causadas por
+    // uma implantacao remota ainda sem as contas ficticias.
+    if (isDemoEnvironment() && getLocalDemoAccounts()[normalizedLogin]) {
       return loginDemoLocal(normalizedLogin, password);
     }
-    const data = await requestRemote("POST", { action: "login", login: String(login || ""), password: String(password || ""), ...getDeviceDescriptor() });
+    const data = await requestRemote("POST", { action: "login", login: String(login || "").trim(), password: String(password || ""), ...getDeviceDescriptor() });
     return saveAuthSession(data.data);
   }
 
@@ -1155,7 +1210,8 @@
     const current = loadAuthSession();
     if (!current) throw new Error("Sessao nao encontrada.");
     if (isLocalDemoSession(current)) {
-      if (String(password || "") !== "Demo1234") throw new Error("Senha incorreta.");
+      const account = getLocalDemoAccounts()[String(current.account?.login || "").toLowerCase()];
+      if (String(password || "").trim().toLowerCase() !== String(account?.demoPassword || "Demo1234").trim().toLowerCase()) throw new Error("Senha incorreta.");
       const now = new Date();
       const refreshed = {
         ...current,
@@ -1189,6 +1245,19 @@
   }
 
   async function changePasswordRemote(currentPassword, newPassword) {
+    const current = loadAuthSession();
+    if (isLocalDemoSession(current)) {
+      const login = String(current.account?.login || "").toLowerCase();
+      const accounts = loadDynamicDemoAccounts();
+      const all = getLocalDemoAccounts();
+      const account = all[login];
+      if (!account || String(currentPassword || "").trim().toLowerCase() !== String(account.demoPassword || "Demo1234").trim().toLowerCase()) throw new Error("Senha temporaria incorreta.");
+      const updated = { ...account, demoPassword: String(newPassword || ""), mustChangePassword: false, passwordChangedAt: new Date().toISOString() };
+      accounts[login] = updated;
+      saveDynamicDemoAccounts(accounts);
+      const publicAccount = { ...updated }; delete publicAccount.demoPassword;
+      return saveAuthSession({ ...current, account: publicAccount });
+    }
     const data = await requestRemote("POST", { action: "changePassword", currentPassword, newPassword, ...getDeviceDescriptor() });
     return saveAuthSession(data.data);
   }
@@ -1206,7 +1275,7 @@
 
   async function listAccountsRemote() {
     const current = loadAuthSession();
-    if (isLocalDemoSession(current)) return Object.values(LOCAL_DEMO_ACCOUNTS).map((account) => ({ ...clone(account), permissions: [] }));
+    if (isLocalDemoSession(current)) return Object.values(getLocalDemoAccounts()).map((account) => { const safe = { ...clone(account), permissions: [] }; delete safe.demoPassword; return safe; });
     return (await requestRemote("POST", { action: "listAccounts" })).data || [];
   }
 
@@ -1240,14 +1309,72 @@
   }
 
   async function createAccountRemote(account) {
+    const current = loadAuthSession();
+    if (isLocalDemoSession(current)) {
+      const login = String(account?.login || "").trim().toLowerCase();
+      if (!login) throw new Error("Informe o login da conta.");
+      const existing = getLocalDemoAccounts()[login];
+      if (existing) {
+        const samePerson = String(existing.personId || "") === String(account?.personId || "");
+        const sameRole = String(existing.role || "") === String(account?.role || "student");
+        if (!samePerson || !sameRole) throw new Error("Este login ja esta em uso.");
+        const safe = clone(existing); delete safe.demoPassword;
+        return { account: safe, temporaryPassword: "", reused: true };
+      }
+      const temporaryPassword = `Pf${Math.floor(100000 + Math.random() * 900000)}`;
+      const dynamic = loadDynamicDemoAccounts();
+      const created = {
+        id: `ACC-DEMO-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        personType: account.personType || (account.role === "student" ? "student" : "staff"),
+        personId: String(account.personId || ""),
+        login,
+        email: String(account.email || ""),
+        role: account.role || "student",
+        active: account.active !== false,
+        mustChangePassword: true,
+        demoPassword: temporaryPassword,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      dynamic[login] = created;
+      saveDynamicDemoAccounts(dynamic);
+      const safe = clone(created); delete safe.demoPassword;
+      return { account: safe, temporaryPassword };
+    }
     return (await requestRemote("POST", { action: "createAccount", data: account })).data;
   }
 
   async function resetPasswordRemote(accountId) {
+    const current = loadAuthSession();
+    if (isLocalDemoSession(current)) {
+      const all = getLocalDemoAccounts();
+      const entry = Object.entries(all).find(([, account]) => String(account.id) === String(accountId));
+      if (!entry) throw new Error("Conta nao encontrada.");
+      const [login, account] = entry;
+      const temporaryPassword = `Pf${Math.floor(100000 + Math.random() * 900000)}`;
+      const dynamic = loadDynamicDemoAccounts();
+      const updated = { ...account, demoPassword: temporaryPassword, mustChangePassword: true, updatedAt: new Date().toISOString() };
+      dynamic[login] = updated;
+      saveDynamicDemoAccounts(dynamic);
+      const safe = clone(updated); delete safe.demoPassword;
+      return { account: safe, temporaryPassword };
+    }
     return (await requestRemote("POST", { action: "resetPassword", accountId })).data;
   }
 
   async function updateAccountRemote(account) {
+    const current = loadAuthSession();
+    if (isLocalDemoSession(current)) {
+      const all = getLocalDemoAccounts();
+      const entry = Object.entries(all).find(([, item]) => String(item.id) === String(account.id));
+      if (!entry) throw new Error("Conta nao encontrada.");
+      const [login, existing] = entry;
+      const dynamic = loadDynamicDemoAccounts();
+      dynamic[login] = { ...existing, ...account, updatedAt: new Date().toISOString() };
+      saveDynamicDemoAccounts(dynamic);
+      const safe = clone(dynamic[login]); delete safe.demoPassword;
+      return safe;
+    }
     return (await requestRemote("POST", { action: "updateAccount", data: account })).data;
   }
 
@@ -1995,6 +2122,7 @@
     logoutRemote: logoutRemote,
     pushRemoteSnapshot: pushRemoteSnapshot,
     pushRemotePartialSnapshot: pushRemotePartialSnapshot,
+    persistLocalDemoStudent: persistLocalDemoStudent,
     regenerateEnrollmentToken: regenerateEnrollmentToken,
     regenerateGateCode: regenerateGateCode,
     receivePaymentRemote: receivePaymentRemote,

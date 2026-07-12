@@ -8001,3 +8001,669 @@ form[aria-busy="true"] button[type="submit"]::after {
     grid-template-columns: 1fr;
   }
 }
+
+/* ======================================================================
+   2026-07-12 - ETAPA 1: LOGIN COMPACTO + CABECALHO HIBRIDO
+   ====================================================================== */
+.admin-auth-view {
+  min-height: 100vh;
+  padding: 30px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 91% 0%, rgba(244,201,40,.25), transparent 27rem),
+    var(--canvas);
+}
+
+.admin-auth-shell {
+  width: min(100%, 850px);
+}
+
+.admin-auth-brand.auth-brand-header,
+.admin-header.hybrid-app-header {
+  height: 190px;
+  min-height: 190px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(220px, .65fr);
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgba(63,57,39,.13);
+  border-radius: 24px 24px 0 0;
+  background: #b9bab5;
+  box-shadow: 0 18px 46px rgba(76,64,27,.14);
+}
+
+.auth-brand-photo {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #aeb0ab;
+}
+
+.auth-brand-photo img,
+.admin-auth-brand .auth-brand-photo img,
+.admin-header.hybrid-app-header .auth-brand-photo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  filter: none;
+}
+
+.auth-brand-wordmark {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 11px;
+  padding: 22px 18px;
+  border-left: 1px solid rgba(34,35,31,.14);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.18), transparent 48%),
+    #b9bab5;
+  text-align: center;
+}
+
+.pf-wordmark {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: .18em;
+  white-space: nowrap;
+  font-size: clamp(2.05rem, 4.7vw, 3.45rem);
+  font-weight: 800;
+  line-height: .86;
+  letter-spacing: -.055em;
+}
+
+.pf-wordmark span { color: #171817; }
+.pf-wordmark strong { color: var(--lime); text-shadow: 0 1px 0 rgba(0,0,0,.14); }
+
+.auth-brand-wordmark > small {
+  color: #333430;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+}
+
+.admin-auth-card {
+  width: 100%;
+  margin: 0;
+  padding: 30px 38px 34px;
+  border-radius: 0 0 24px 24px;
+  background: rgba(251,251,248,.99);
+  box-shadow: 0 18px 46px rgba(76,64,27,.12);
+}
+
+.admin-auth-card h1 {
+  margin: 0 0 20px;
+  font-size: clamp(1.9rem, 4vw, 2.35rem);
+}
+
+.admin-auth-form {
+  gap: 13px;
+  margin: 0;
+}
+
+.admin-auth-feedback:empty { display: none; }
+.admin-auth-feedback:not(:empty) {
+  display: block;
+  min-height: 0;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #f9e5e2;
+}
+
+.password-rule {
+  margin: -8px 0 17px !important;
+  color: var(--muted) !important;
+  font-size: .8rem;
+  line-height: 1.45 !important;
+}
+
+/* Cabeçalho interno: mantém a densidade do painel e mostra a fachada inteira. */
+.admin-header.hybrid-app-header {
+  height: 124px;
+  min-height: 124px;
+  grid-template-columns: minmax(0, 1.65fr) minmax(250px, .55fr);
+  border-radius: 18px;
+}
+
+.admin-header.hybrid-app-header::after { display: none; }
+
+@media (max-width: 760px) {
+  .admin-auth-view {
+    padding: 0;
+    place-items: start stretch;
+  }
+
+  .admin-auth-shell { width: 100%; }
+
+  .admin-auth-brand.auth-brand-header {
+    height: 166px;
+    min-height: 166px;
+    grid-template-columns: 58% 42%;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .auth-brand-wordmark { padding: 15px 10px; }
+
+  .pf-wordmark {
+    display: grid;
+    gap: 0;
+    font-size: clamp(2rem, 10vw, 2.7rem);
+  }
+
+  .auth-brand-wordmark > small {
+    font-size: .62rem;
+    letter-spacing: .12em;
+  }
+
+  .admin-auth-card {
+    min-height: calc(100vh - 166px);
+    padding: 28px 22px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* 2026-07-12 - LOGO OFICIAL PRO FITNESS */
+.auth-brand-photo {
+  background: #8f918d;
+}
+
+.auth-brand-photo img,
+.enrollment-visual.auth-brand-header img,
+.prof-auth-visual.auth-brand-header img,
+.hybrid-app-header .auth-brand-photo img,
+.admin-auth-brand .auth-brand-photo img,
+.admin-header.hybrid-app-header .auth-brand-photo img {
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+
+.auth-brand-wordmark {
+  padding: 18px 16px;
+  border-left-color: rgba(255,255,255,.12) !important;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(242,197,0,.11), transparent 12rem),
+    linear-gradient(145deg, #2d2e2c, #111211 72%) !important;
+}
+
+.official-brand-logo {
+  width: min(100%, 330px);
+  max-height: 112px;
+  display: block;
+  object-fit: contain;
+}
+
+.auth-brand-wordmark > small {
+  color: rgba(255,255,255,.78) !important;
+  font-size: .7rem;
+  letter-spacing: .22em;
+}
+
+.lock-brand-logo {
+  width: min(100%, 270px);
+  margin: 0 auto 22px;
+  display: block;
+}
+
+@media (max-width: 620px) {
+  .official-brand-logo {
+    width: min(100%, 210px);
+    max-height: 88px;
+  }
+
+  .auth-brand-wordmark > small {
+    font-size: .58rem;
+    letter-spacing: .15em;
+  }
+}
+
+/* Etapa 4: no painel administrativo, o selo nao cobre o logotipo do cabecalho. */
+body:has(#adminAppShell:not([hidden])) .environment-badge {
+  top: 22px;
+  left: 32px;
+  right: auto;
+  padding: 4px 8px;
+  font-size: .6rem;
+}
+
+/* ======================================================================
+   2026-07-12 - CABEÇALHO OFICIAL + MATRÍCULA ADMINISTRATIVA
+   ====================================================================== */
+.official-banner-header {
+  position: relative !important;
+  display: block !important;
+  overflow: hidden !important;
+  background: #171817 !important;
+}
+
+.official-header-banner {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  object-fit: fill !important;
+  object-position: center !important;
+}
+
+.header-role-label {
+  position: absolute;
+  right: 4.8%;
+  bottom: 9px;
+  z-index: 2;
+  color: rgba(255,255,255,.9);
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 9px rgba(0,0,0,.75);
+}
+
+.admin-auth-brand.auth-brand-header.official-banner-header {
+  height: 146px !important;
+  min-height: 146px !important;
+}
+
+.admin-header.hybrid-app-header.official-banner-header {
+  height: 90px !important;
+  min-height: 90px !important;
+}
+
+#openStudentsOverviewButton {
+  min-width: 220px;
+}
+
+.access-unlock-button {
+  color: #1f5b2c;
+  border: 1px solid rgba(41,118,61,.3);
+  background: rgba(76,166,95,.12);
+}
+
+.admin-modal-open {
+  overflow: hidden;
+}
+
+.admin-enrollment-modal:not([hidden]) {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: 24px;
+  background: rgba(17,18,17,.66);
+  backdrop-filter: blur(5px);
+}
+
+.admin-enrollment-modal .student-form-layout {
+  width: min(100%, 920px);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 22px;
+  border-radius: 22px;
+  background: #fffef9;
+  box-shadow: 0 24px 70px rgba(0,0,0,.3);
+}
+
+.admin-enrollment-modal .student-form-sections {
+  grid-template-columns: repeat(2, minmax(0,1fr));
+}
+
+.admin-enrollment-modal .student-form-section:first-child {
+  grid-column: 1 / -1;
+}
+
+.modal-close-button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 12px;
+  color: #222;
+  font-size: 1.55rem;
+  line-height: 1;
+  background: rgba(0,0,0,.06);
+}
+
+.modal-close-button:hover {
+  background: rgba(0,0,0,.11);
+}
+
+@media (max-width: 760px) {
+  .admin-auth-brand.auth-brand-header.official-banner-header {
+    height: 106px !important;
+    min-height: 106px !important;
+  }
+  .admin-header.hybrid-app-header.official-banner-header {
+    height: 78px !important;
+    min-height: 78px !important;
+  }
+  .header-role-label {
+    right: 4%;
+    bottom: 6px;
+    font-size: .52rem;
+  }
+  .admin-enrollment-modal:not([hidden]) {
+    padding: 0;
+  }
+  .admin-enrollment-modal .student-form-layout {
+    width: 100%;
+    min-height: 100vh;
+    max-height: none;
+    border-radius: 0;
+  }
+  .admin-enrollment-modal .student-form-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ======================================================================
+   2026-07-12 - MATRICULA INTEGRADA, PLANOS COM PRECO E CABECALHO SEM DISTORCAO
+   ====================================================================== */
+.official-header-banner {
+  object-fit: contain !important;
+  background: #0d0e0d;
+}
+
+.developer-credit {
+  margin: 8px 0 2px;
+  color: #666861;
+  font-size: .76rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.developer-credit strong {
+  color: #282923;
+  font-weight: 800;
+}
+
+.admin-header.hybrid-app-header .official-header-banner {
+  object-fit: cover !important;
+}
+
+.admin-auth-brand.auth-brand-header.official-banner-header {
+  height: 124px !important;
+  min-height: 124px !important;
+}
+
+.admin-header.hybrid-app-header.official-banner-header {
+  height: 82px !important;
+  min-height: 82px !important;
+}
+
+.enrollment-plan-section {
+  grid-column: 1 / -1;
+}
+
+.enrollment-offerings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.enrollment-offering-option {
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(36, 36, 32, .13);
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.enrollment-offering-option:has(input:checked) {
+  border-color: rgba(195, 151, 0, .6);
+  background: rgba(244, 201, 40, .13);
+  box-shadow: inset 0 0 0 1px rgba(244, 201, 40, .24);
+}
+
+.enrollment-offering-option input {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  accent-color: #d6a900;
+}
+
+.enrollment-offering-option span {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.enrollment-offering-option strong {
+  font-size: .94rem;
+}
+
+.enrollment-offering-option small {
+  color: #756f61;
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.enrollment-discount-panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #f5f3eb;
+}
+
+.enrollment-discount-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.enrollment-discount-options label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 2px;
+  min-height: 58px;
+  padding: 10px;
+  border: 1px solid rgba(35, 35, 31, .12);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.enrollment-discount-options label:has(input:checked) {
+  border-color: rgba(195, 151, 0, .58);
+  background: rgba(244, 201, 40, .14);
+}
+
+.enrollment-discount-options input {
+  grid-row: 1 / span 2;
+  width: 18px;
+  height: 18px;
+  accent-color: #d6a900;
+}
+
+.enrollment-discount-options span {
+  font-weight: 800;
+}
+
+.enrollment-discount-options small {
+  color: #777164;
+  font-size: .73rem;
+}
+
+.custom-discount-field {
+  max-width: 280px;
+}
+
+.enrollment-price-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.enrollment-price-summary > div {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  border: 1px solid rgba(30, 30, 26, .1);
+  border-radius: 13px;
+  background: #fff;
+}
+
+.enrollment-price-summary span {
+  color: #777164;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.enrollment-price-summary strong {
+  font-size: 1.05rem;
+}
+
+.enrollment-price-summary .final {
+  color: #19190f;
+  border-color: rgba(203, 160, 0, .38);
+  background: #f8d94f;
+}
+
+.compact-status-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.generate-access-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid rgba(43, 109, 54, .24);
+  border-radius: 15px;
+  background: rgba(75, 158, 89, .09);
+  cursor: pointer;
+}
+
+.generate-access-option input {
+  width: 21px;
+  height: 21px;
+  accent-color: #367743;
+}
+
+.generate-access-option span {
+  display: grid;
+  gap: 4px;
+}
+
+.generate-access-option small {
+  color: #62675f;
+  line-height: 1.35;
+}
+
+.access-login-preview {
+  display: grid;
+  gap: 4px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  background: #171817;
+  color: #fff;
+}
+
+.access-login-preview span {
+  color: rgba(255,255,255,.67);
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+.access-login-preview strong {
+  color: #f4c928;
+  font-family: "DM Mono", monospace;
+  font-size: 1.08rem;
+}
+
+.student-access-result {
+  width: min(100%, 620px);
+  padding: 26px;
+  border-radius: 22px;
+  background: #fffef9;
+  box-shadow: 0 24px 70px rgba(0,0,0,.3);
+}
+
+.student-access-result h3 {
+  margin: 0 0 8px;
+  font-size: 1.45rem;
+}
+
+.student-access-result > p {
+  margin: 0 0 18px;
+  color: #6d685d;
+  line-height: 1.5;
+}
+
+.student-credential-card {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 15px;
+  border: 1px solid rgba(31,31,27,.12);
+  border-radius: 14px;
+  background: #f5f3eb;
+}
+
+.student-credential-card span {
+  color: #6e695d;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.student-credential-card strong {
+  font-family: "DM Mono", monospace;
+  font-size: 1.2rem;
+}
+
+.student-credential-card.password {
+  color: #17170e;
+  background: #f8d94f;
+}
+
+.student-credential-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@media (max-width: 900px) {
+  .enrollment-offerings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .enrollment-discount-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .admin-auth-brand.auth-brand-header.official-banner-header {
+    height: 92px !important;
+    min-height: 92px !important;
+  }
+  .admin-header.hybrid-app-header.official-banner-header {
+    height: 68px !important;
+    min-height: 68px !important;
+  }
+  .enrollment-offerings,
+  .enrollment-discount-options,
+  .enrollment-price-summary,
+  .compact-status-grid {
+    grid-template-columns: 1fr;
+  }
+  .student-access-result {
+    min-height: 100vh;
+    border-radius: 0;
+  }
+}

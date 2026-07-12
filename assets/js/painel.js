@@ -79,6 +79,9 @@ const COST_CENTER_LABELS = {
 };
 
 const studentForm = document.getElementById("studentForm");
+const studentEnrollmentModal = document.getElementById("studentEnrollmentModal");
+const unlockStudentAccessButton = document.getElementById("unlockStudentAccessButton");
+const generateStudentAccessButton = document.getElementById("generateStudentAccessButton");
 const paymentForm = document.getElementById("paymentForm");
 const paymentDialog = document.getElementById("paymentDialog");
 const receiptDialog = document.getElementById("receiptDialog");
@@ -117,6 +120,11 @@ const globalStudentSearch = document.getElementById("globalStudentSearch");
 const globalStudentSearchList = document.getElementById("globalStudentSearchList");
 const planCatalogForm = document.getElementById("planCatalogForm");
 const modalityCatalogForm = document.getElementById("modalityCatalogForm");
+const enrollmentOfferings = document.getElementById("enrollmentOfferings");
+const customDiscountField = document.getElementById("customDiscountField");
+const accessLoginPreview = document.getElementById("accessLoginPreview");
+const studentAccessResult = document.getElementById("studentAccessResult");
+const weeklyCategorySelect = document.getElementById("weeklyCategorySelect");
 const paymentRulesForm = document.getElementById("paymentRulesForm");
 const staffCatalogForm = document.getElementById("staffCatalogForm");
 const staffReportStartDate = document.getElementById("staffReportStartDate");
@@ -920,7 +928,7 @@ function getNextWeeklyOccurrence(weeklyClass, referenceDate) {
 }
 
 function weeklyClassMarkup(weeklyClass) {
-  const category = WEEKLY_CATEGORY_LABELS[weeklyClass.category] || WEEKLY_CATEGORY_LABELS.outra;
+  const category = getWeeklyCategoryLabel(weeklyClass.category);
   return `
     <article class="weekly-class-card">
       <div class="weekly-class-time">
@@ -1021,7 +1029,7 @@ function renderWeeklyManagement() {
   document.getElementById("weeklyScheduleAdminList").innerHTML = weeklyClasses.length
     ? weeklyClasses.map((weeklyClass) => {
         const day = getWeekDay(weeklyClass.dayOfWeek);
-        const category = WEEKLY_CATEGORY_LABELS[weeklyClass.category] || WEEKLY_CATEGORY_LABELS.outra;
+        const category = getWeeklyCategoryLabel(weeklyClass.category);
         return `
           <article class="weekly-admin-item ${weeklyClass.status === "inativo" ? "inactive" : ""}">
             <div class="weekly-admin-day">
@@ -1300,6 +1308,14 @@ function renderStudentHeader(student) {
     <article><span>Total de presenças</span><strong>${presence.count}</strong></article>
     <article><span>Primeira presença</span><strong>${escapeHtml(formatPresenceRecord(presence.first))}</strong></article>
   `;
+
+  if (unlockStudentAccessButton) {
+    unlockStudentAccessButton.hidden = access.allowsGate;
+    unlockStudentAccessButton.title = access.allowsGate ? "" : getOperationalAccessReason(access);
+  }
+  if (generateStudentAccessButton) {
+    generateStudentAccessButton.hidden = Boolean(student.accountId);
+  }
 }
 
 function renderAdminStudentSummary(student) {
@@ -1404,19 +1420,36 @@ function renderRoster() {
 }
 
 function populateStudentForm(student) {
+  studentForm.reset();
+  studentAccessResult.hidden = true;
+  studentForm.hidden = false;
   if (!student) {
-    studentForm.reset();
     studentForm.elements.id.value = "";
     studentForm.elements.enrollmentStatus.value = "pendente";
     studentForm.elements.appAccessPolicy.value = "auto";
+    studentForm.elements.status.value = "ativo";
+    studentForm.elements.generateAccess.checked = true;
+    renderEnrollmentOfferings([]);
+    accessLoginPreview.textContent = "Informe a matrícula";
     return;
   }
 
   Object.entries(student).forEach(([key, value]) => {
-    if (studentForm.elements[key]) {
+    if (studentForm.elements[key] && !["selectedModalities"].includes(key)) {
       studentForm.elements[key].value = value ?? "";
     }
   });
+  let selected = [];
+  try { selected = Array.isArray(student.selectedModalities) ? student.selectedModalities : JSON.parse(student.selectedModalities || "[]"); } catch (error) { selected = []; }
+  if (!selected.length && student.plan) {
+    const planNames = String(student.plan).split("+").map((name) => normalizeTextKey(name.trim()));
+    selected = getEnrollmentOfferings().filter((item) => planNames.includes(normalizeTextKey(item.name))).map((item) => item.id);
+  }
+  studentForm.elements.planDiscountType.value = student.planDiscountType || "individual";
+  studentForm.elements.customDiscountPercent.value = student.planDiscountType === "personalizado" ? safeNumber(student.planDiscountPercent) : 0;
+  studentForm.elements.generateAccess.checked = !student.accountId;
+  renderEnrollmentOfferings(selected);
+  accessLoginPreview.textContent = student.enrollmentNumber || "Informe a matrícula";
 }
 
 function getDefaultPaymentRecorder() {
@@ -3272,20 +3305,106 @@ function parseCatalog(value, fallback) {
   return fallback;
 }
 
+function normalizePricedCatalog(items, prefix) {
+  return (Array.isArray(items) ? items : []).map((item) => {
+    if (typeof item === "string") {
+      return { id: `${prefix}-${normalizeTextKey(item)}`, name: item, monthlyFee: 0 };
+    }
+    const name = String(item?.name || "").trim();
+    return {
+      ...item,
+      id: item?.id || `${prefix}-${normalizeTextKey(name)}`,
+      name,
+      monthlyFee: Math.max(0, safeNumber(item?.monthlyFee))
+    };
+  }).filter((item) => item.name);
+}
+
 function getAdminConfig() {
   const current = panelState.config?.[0] || { id: "CFG-001", appName: "Pro Fitness Academia" };
   const studentPlans = [...new Set(panelState.students.map((student) => student.plan).filter(Boolean))]
     .map((name) => ({ id: `PLAN-${normalizeTextKey(name)}`, name, monthlyFee: panelState.students.find((student) => student.plan === name)?.monthlyFee || 0 }));
+  const defaultModalities = Object.values(WEEKLY_CATEGORY_LABELS)
+    .filter((name) => name !== "Outra atividade")
+    .map((name) => ({ id: `MOD-${normalizeTextKey(name)}`, name, monthlyFee: 0 }));
   return {
     ...current,
-    plans: parseCatalog(current.plans, studentPlans),
-    modalities: parseCatalog(current.modalities, Object.values(WEEKLY_CATEGORY_LABELS).filter((name) => name !== "Outra atividade")),
+    plans: normalizePricedCatalog(parseCatalog(current.plans, studentPlans), "PLAN"),
+    modalities: normalizePricedCatalog(parseCatalog(current.modalities, defaultModalities), "MOD"),
     costCenters: parseCatalog(current.costCenters, Object.keys(COST_CENTER_LABELS)),
     paymentAlertDays: parseCatalog(current.paymentAlertDays, [7, 3, 0]),
     paymentGraceDays: Math.max(0, safeNumber(current.paymentGraceDays)),
     blockAccessOnOverdue: current.blockAccessOnOverdue !== false && current.blockAccessOnOverdue !== "false",
     whatsappNumber: String(current.whatsappNumber || current.supportPhone || "5522988233216").replace(/\D/g, "")
   };
+}
+
+function getEnrollmentOfferings() {
+  const config = getAdminConfig();
+  const unique = new Map();
+  config.modalities.forEach((item) => {
+    const key = normalizeTextKey(item.name);
+    unique.set(key, { ...item, id: item.id || `MOD-${key}` });
+  });
+  config.plans.filter((item) => !String(item.name).includes("+")).forEach((item) => {
+    const key = normalizeTextKey(item.name);
+    if (!unique.has(key)) unique.set(key, { ...item, id: item.id || `PLAN-${key}` });
+  });
+  if (!unique.size) config.plans.forEach((item) => unique.set(normalizeTextKey(item.name), { ...item }));
+  return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+}
+
+function getWeeklyCategoryLabel(category) {
+  const key = normalizeTextKey(category).toLocaleLowerCase("pt-BR");
+  const modality = getAdminConfig().modalities.find((item) => normalizeTextKey(item.name).toLocaleLowerCase("pt-BR") === key);
+  return modality?.name || WEEKLY_CATEGORY_LABELS[category] || WEEKLY_CATEGORY_LABELS.outra;
+}
+
+function getSelectedEnrollmentOfferings() {
+  const selectedIds = [...studentForm.querySelectorAll('[data-enrollment-offering]:checked')].map((input) => input.value);
+  const byId = new Map(getEnrollmentOfferings().map((item) => [String(item.id), item]));
+  return selectedIds.map((id) => byId.get(String(id))).filter(Boolean);
+}
+
+function getEnrollmentDiscount() {
+  const type = studentForm.elements.planDiscountType?.value || "individual";
+  if (type === "casal") return { type, percent: 10 };
+  if (type === "familia") return { type, percent: 15 };
+  if (type === "personalizado") return { type, percent: Math.min(100, Math.max(0, safeNumber(studentForm.elements.customDiscountPercent?.value))) };
+  return { type: "individual", percent: 0 };
+}
+
+function updateEnrollmentPriceSummary() {
+  const selected = getSelectedEnrollmentOfferings();
+  const subtotal = selected.reduce((sum, item) => sum + safeNumber(item.monthlyFee), 0);
+  const discount = getEnrollmentDiscount();
+  const discountValue = subtotal * discount.percent / 100;
+  const finalValue = Math.max(0, subtotal - discountValue);
+  studentForm.elements.selectedModalities.value = JSON.stringify(selected.map((item) => item.id));
+  studentForm.elements.plan.value = selected.map((item) => item.name).join(" + ");
+  studentForm.elements.baseMonthlyFee.value = subtotal.toFixed(2);
+  studentForm.elements.monthlyFee.value = finalValue.toFixed(2);
+  document.getElementById("enrollmentSubtotal").textContent = Store.currency(subtotal);
+  document.getElementById("enrollmentDiscountValue").textContent = `${Store.currency(discountValue)} (${formatNumber(discount.percent, discount.percent % 1 ? 2 : 0)}%)`;
+  document.getElementById("enrollmentFinalValue").textContent = Store.currency(finalValue);
+  if (customDiscountField) customDiscountField.hidden = discount.type !== "personalizado";
+}
+
+function renderEnrollmentOfferings(selectedIds) {
+  const selected = new Set((selectedIds || []).map(String));
+  const items = getEnrollmentOfferings();
+  enrollmentOfferings.innerHTML = items.length
+    ? items.map((item) => `<label class="enrollment-offering-option"><input data-enrollment-offering type="checkbox" value="${escapeHtml(item.id)}" ${selected.has(String(item.id)) ? "checked" : ""}/><span><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(Store.currency(item.monthlyFee || 0))}</small></span></label>`).join("")
+    : '<div class="empty-state">Cadastre planos ou modalidades com valor em Configurações.</div>';
+  updateEnrollmentPriceSummary();
+}
+
+function syncWeeklyCategoryOptions() {
+  if (!weeklyCategorySelect) return;
+  const currentValue = weeklyCategorySelect.value;
+  const modalities = getAdminConfig().modalities;
+  weeklyCategorySelect.innerHTML = `${modalities.map((item) => `<option value="${escapeHtml(normalizeTextKey(item.name).toLocaleLowerCase("pt-BR"))}">${escapeHtml(item.name)}</option>`).join("")}<option value="outra">Outra atividade</option>`;
+  if ([...weeklyCategorySelect.options].some((option) => option.value === currentValue)) weeklyCategorySelect.value = currentValue;
 }
 
 function normalizeTextKey(value) {
@@ -3304,8 +3423,9 @@ function renderSettings() {
     ? config.plans.map((plan) => `<article class="settings-list-item"><div><strong>${escapeHtml(plan.name)}</strong><span>${Store.currency(plan.monthlyFee || 0)}</span></div><button class="ghost-button small-button" data-delete-plan="${escapeHtml(plan.id || normalizeTextKey(plan.name))}" type="button">Remover</button></article>`).join("")
     : '<div class="empty-state">Nenhum plano cadastrado.</div>';
   document.getElementById("modalityCatalogList").innerHTML = config.modalities.length
-    ? config.modalities.map((name) => `<article class="settings-list-item"><strong>${escapeHtml(name)}</strong><button class="ghost-button small-button" data-delete-modality="${escapeHtml(name)}" type="button">Remover</button></article>`).join("")
+    ? config.modalities.map((item) => `<article class="settings-list-item"><div><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(Store.currency(item.monthlyFee || 0))}</span></div><button class="ghost-button small-button" data-delete-modality="${escapeHtml(item.id)}" type="button">Remover</button></article>`).join("")
     : '<div class="empty-state">Nenhuma modalidade cadastrada.</div>';
+  syncWeeklyCategoryOptions();
   const professors = getStaffUsers(true);
   document.getElementById("staffCatalogList").innerHTML = professors.length
     ? professors.map((professor) => `<article class="settings-list-item"><div><strong>${escapeHtml(professor.name)}</strong><span>${escapeHtml(professor.email || "Sem e-mail")}</span></div><button class="ghost-button small-button" data-delete-staff="${escapeHtml(professor.id)}" type="button">Remover</button></article>`).join("")
@@ -3565,13 +3685,14 @@ function handlePlanCatalogSave(event) {
 
 function handleModalityCatalogSave(event) {
   event.preventDefault();
-  const name = String(new FormData(event.currentTarget).get("name") || "").trim();
+  const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  const name = String(payload.name || "").trim();
   const config = getAdminConfig();
-  if (config.modalities.some((item) => item.toLocaleLowerCase("pt-BR") === name.toLocaleLowerCase("pt-BR"))) {
+  if (config.modalities.some((item) => item.name.toLocaleLowerCase("pt-BR") === name.toLocaleLowerCase("pt-BR"))) {
     window.alert("Esta modalidade ja esta cadastrada.");
     return;
   }
-  config.modalities.push(name);
+  config.modalities.push({ id: `MOD-${normalizeTextKey(name)}`, name, monthlyFee: safeNumber(payload.monthlyFee) });
   event.currentTarget.reset();
   saveAdminConfig(config, "modality-created", `Modalidade ${name} adicionada nas configuracoes.`);
 }
@@ -3638,7 +3759,7 @@ function handleSettingsAction(event) {
   }
   const config = getAdminConfig();
   if (planButton) config.plans = config.plans.filter((plan) => (plan.id || normalizeTextKey(plan.name)) !== planButton.dataset.deletePlan);
-  if (modalityButton) config.modalities = config.modalities.filter((name) => name !== modalityButton.dataset.deleteModality);
+  if (modalityButton) config.modalities = config.modalities.filter((item) => String(item.id) !== String(modalityButton.dataset.deleteModality));
   saveAdminConfig(config, "catalog-updated", "Catalogos administrativos atualizados.");
 }
 
@@ -3741,24 +3862,100 @@ function renderOperation() {
   renderLogBoard();
 }
 
-function handleStudentSave(event) {
+async function handleStudentSave(event) {
   event.preventDefault();
+  if (event.currentTarget.dataset.busy === "true") return;
   const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  const isNewStudent = !payload.id;
+  const enrollmentNumber = String(payload.enrollmentNumber || "").trim();
+  const duplicateEnrollment = panelState.students.find((student) =>
+    String(student.enrollmentNumber || "").trim() === enrollmentNumber && String(student.id) !== String(payload.id || "")
+  );
+  if (!enrollmentNumber) {
+    window.alert("Informe o número de matrícula.");
+    studentForm.elements.enrollmentNumber.focus();
+    return;
+  }
+  if (duplicateEnrollment) {
+    window.alert(`A matrícula ${enrollmentNumber} já pertence a ${duplicateEnrollment.name}.`);
+    studentForm.elements.enrollmentNumber.focus();
+    return;
+  }
+  const selectedOfferings = getSelectedEnrollmentOfferings();
+  if (!selectedOfferings.length) {
+    window.alert("Selecione ao menos um plano ou modalidade.");
+    enrollmentOfferings.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  const discount = getEnrollmentDiscount();
   const existingStudent = Store.findStudent(panelState, payload.id);
+  const shouldGenerateAccess = !existingStudent?.accountId && studentForm.elements.generateAccess.checked;
   const nextStudent = Store.createStudentRecord({
     ...existingStudent,
     ...payload,
-    monthlyFee: safeNumber(payload.monthlyFee)
+    enrollmentNumber,
+    cpf: String(payload.cpf || "").replace(/\D/g, ""),
+    plan: selectedOfferings.map((item) => item.name).join(" + "),
+    selectedModalities: selectedOfferings.map((item) => item.id),
+    baseMonthlyFee: safeNumber(payload.baseMonthlyFee),
+    planDiscountType: discount.type,
+    planDiscountPercent: discount.percent,
+    monthlyFee: safeNumber(payload.monthlyFee),
+    enrollmentStatus: shouldGenerateAccess ? "pendente" : (payload.enrollmentStatus || existingStudent?.enrollmentStatus || "pendente"),
+    enrollmentCompletedAt: existingStudent?.enrollmentCompletedAt || "",
+    appAccessPolicy: payload.appAccessPolicy || "auto"
   });
 
-  const nextState = Store.upsertStudent(panelState, nextStudent);
-  selectedStudentId = nextStudent.id;
-  saveWithLog(
-    nextState,
-    payload.id ? "student-updated" : "student-created",
-    nextStudent.id,
-    payload.id ? "Cadastro de aluno atualizado no painel." : "Novo aluno criado no painel."
-  );
+  Store.setFormBusy(event.currentTarget, true, shouldGenerateAccess ? "Matriculando e gerando acesso..." : "Matriculando...");
+  try {
+    let savedStudent = nextStudent;
+    let credentials = null;
+    let nextState = Store.upsertStudent(panelState, savedStudent);
+    selectedStudentId = savedStudent.id;
+    studentForm.elements.id.value = savedStudent.id;
+    saveWithLog(nextState, isNewStudent ? "student-created" : "student-updated", savedStudent.id, isNewStudent ? "Novo aluno matriculado pelo painel administrativo." : "Cadastro de aluno atualizado no painel.");
+    if (Store.isLocalDemoSession(authSession)) Store.persistLocalDemoStudent(savedStudent);
+
+    if (shouldGenerateAccess) {
+      const result = await Store.createAccountRemote({
+        personType: "student",
+        personId: savedStudent.id,
+        login: enrollmentNumber,
+        email: savedStudent.email || "",
+        role: "student",
+        active: true
+      });
+      credentials = result;
+      savedStudent = Store.createStudentRecord({ ...savedStudent, accountId: result.account?.id || savedStudent.accountId, enrollmentStatus: "ativo", enrollmentCompletedAt: new Date().toISOString() });
+      nextState = Store.upsertStudent(panelState, savedStudent);
+      saveWithLog(nextState, "student-access-created", savedStudent.id, "Conta de acesso criada junto com a matrícula.");
+      if (Store.isLocalDemoSession(authSession)) Store.persistLocalDemoStudent(savedStudent);
+    }
+
+    if (credentials?.temporaryPassword) {
+      studentForm.hidden = true;
+      studentAccessResult.hidden = false;
+      document.getElementById("createdStudentLogin").textContent = enrollmentNumber;
+      document.getElementById("createdStudentPassword").textContent = credentials.temporaryPassword;
+      studentAccessResult.dataset.credentials = `Pro Fitness\nMatrícula: ${enrollmentNumber}\nSenha temporária: ${credentials.temporaryPassword}`;
+      return;
+    }
+    if (credentials?.reused) {
+      closeStudentEnrollment();
+      window.alert(`Matrícula salva e acesso existente vinculado.\n\nUsuário: ${enrollmentNumber}`);
+      return;
+    }
+    if (isNewStudent) {
+      closeStudentEnrollment();
+      window.alert(`Aluno matriculado com sucesso.\n\nMatrícula: ${enrollmentNumber}`);
+    }
+  } catch (error) {
+    document.getElementById("studentFormSaveStatus").textContent = `Aluno salvo, mas o acesso não foi gerado: ${error.message || "falha na API"}`;
+    window.alert(`A matrícula foi salva, mas não foi possível gerar o acesso agora.\n\n${error.message || "Verifique a API e tente novamente."}`);
+  } finally {
+    Store.setFormBusy(event.currentTarget, false);
+  }
 }
 
 function handlePaymentSave(event) {
@@ -4049,22 +4246,78 @@ function updateImcPreview() {
 function createNewStudent() {
   studentSearchTerm = "";
   activeFilter = "todos";
-  if (studentSearchFilter) {
-    studentSearchFilter.value = "";
-  }
+  activePanelTab = "ficha";
+  activeMainSection = "operation";
+  if (studentSearchFilter) studentSearchFilter.value = "";
   document.querySelectorAll("[data-filter]").forEach((button) => {
     button.classList.toggle("active", button.dataset.filter === "todos");
   });
 
-  const student = Store.createStudentRecord({
-    name: "Novo aluno",
-    plan: "Plano a definir",
-    monthlyFee: 0
+  setActiveMainSection("operation");
+  studentForm.reset();
+  studentForm.elements.id.value = "";
+  studentForm.elements.status.value = "ativo";
+  studentForm.elements.enrollmentStatus.value = "pendente";
+  studentForm.elements.appAccessPolicy.value = "auto";
+  studentForm.elements.monthlyFee.value = "0.00";
+  studentForm.elements.baseMonthlyFee.value = "0.00";
+  studentForm.elements.planDiscountType.value = "individual";
+  studentForm.elements.customDiscountPercent.value = "0";
+  studentForm.elements.generateAccess.checked = true;
+  renderEnrollmentOfferings([]);
+  accessLoginPreview.textContent = "Informe a matrícula";
+  studentForm.hidden = false;
+  studentAccessResult.hidden = true;
+  document.getElementById("studentFormSaveStatus").textContent = "Nova matrícula";
+  studentEnrollmentModal.hidden = false;
+  document.body.classList.add("admin-modal-open");
+  window.setTimeout(() => studentForm.elements.enrollmentNumber.focus(), 40);
+}
+
+function openSelectedStudentAccess() {
+  const student = getSelectedStudent();
+  if (!student || student.accountId) return;
+  populateStudentForm(student);
+  studentForm.elements.generateAccess.checked = true;
+  document.getElementById("studentFormSaveStatus").textContent = "Gerar acesso pendente";
+  studentEnrollmentModal.hidden = false;
+  document.body.classList.add("admin-modal-open");
+  window.setTimeout(() => studentForm.elements.enrollmentNumber.focus(), 40);
+}
+
+function closeStudentEnrollment() {
+  studentEnrollmentModal.hidden = true;
+  document.body.classList.remove("admin-modal-open");
+  studentForm.reset();
+  studentForm.hidden = false;
+  studentAccessResult.hidden = true;
+  studentAccessResult.dataset.credentials = "";
+}
+
+function unlockSelectedStudentAccess() {
+  const student = getSelectedStudent();
+  if (!student) return;
+  const access = Store.getAccessState(panelState, student.id);
+  if (access.allowsGate) return;
+  const proceed = window.confirm(
+    `Desbloquear o acesso de ${student.name}?\n\n` +
+    "O aluno ficará ativo e liberado manualmente, inclusive quando houver bloqueio automático por atraso."
+  );
+  if (!proceed) return;
+  const updated = Store.createStudentRecord({
+    ...student,
+    status: "ativo",
+    enrollmentStatus: "ativo",
+    appAccessPolicy: "liberado",
+    accessBlockReason: "Liberado manualmente pela administração.",
+    updatedAt: new Date().toISOString()
   });
-  selectedStudentId = student.id;
-  activePanelTab = "ficha";
-  activeMainSection = "operation";
-  saveWithLog(Store.upsertStudent(panelState, student), "student-created", student.id, "Novo aluno criado para matricula.");
+  saveWithLog(
+    Store.upsertStudent(panelState, updated),
+    "student-access-unlocked",
+    student.id,
+    `Acesso de ${student.name} liberado manualmente pela administração.`
+  );
 }
 
 function createNewWorkout() {
@@ -4831,6 +5084,16 @@ async function validateGateSimulator(event) {
 
 function attachPanelEvents() {
   studentForm.addEventListener("submit", handleStudentSave);
+  enrollmentOfferings.addEventListener("change", updateEnrollmentPriceSummary);
+  [...studentForm.querySelectorAll('input[name="planDiscountType"]')].forEach((input) => input.addEventListener("change", updateEnrollmentPriceSummary));
+  studentForm.elements.customDiscountPercent.addEventListener("input", updateEnrollmentPriceSummary);
+  studentForm.elements.enrollmentNumber.addEventListener("input", () => { accessLoginPreview.textContent = studentForm.elements.enrollmentNumber.value.trim() || "Informe a matrícula"; });
+  document.getElementById("copyStudentCredentialsButton").addEventListener("click", async () => {
+    const text = studentAccessResult.dataset.credentials || "";
+    try { await navigator.clipboard.writeText(text); window.alert("Credenciais copiadas."); }
+    catch (error) { window.prompt("Copie as credenciais:", text); }
+  });
+  document.getElementById("finishStudentEnrollmentButton").addEventListener("click", closeStudentEnrollment);
   paymentForm.addEventListener("submit", handlePaymentSave);
   movementForm.addEventListener("submit", handleMovementSave);
   expenseForm.addEventListener("submit", handleExpenseSave);
@@ -4959,10 +5222,10 @@ function attachPanelEvents() {
     document.querySelector(".main-section-nav").scrollIntoView({ behavior: "smooth", block: "start" });
   });
   document.getElementById("clearWeeklyScheduleButton").addEventListener("click", resetWeeklyScheduleForm);
-  document.getElementById("openStudentsOverviewButton").addEventListener("click", () => {
-    setActiveMainSection("operation");
-    document.querySelector(".main-section-nav").scrollIntoView({ behavior: "smooth", block: "start" });
-  });
+  document.getElementById("openStudentsOverviewButton").addEventListener("click", createNewStudent);
+  document.getElementById("closeStudentEnrollmentButton").addEventListener("click", closeStudentEnrollment);
+  generateStudentAccessButton.addEventListener("click", openSelectedStudentAccess);
+  unlockStudentAccessButton.addEventListener("click", unlockSelectedStudentAccess);
 
   document.querySelectorAll("[data-main-section]").forEach((button) => {
     button.addEventListener("click", () => setActiveMainSection(button.dataset.mainSection));
