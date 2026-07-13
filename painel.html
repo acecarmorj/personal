@@ -10,18 +10,19 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="assets/css/painel.css?v=20260712-final-v4" rel="stylesheet"/>
+<link href="assets/css/login.css?v=20260713-login-v1" rel="stylesheet"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 </head>
 <body>
 <div class="environment-badge" data-environment-badge="" hidden=""></div>
 <section class="admin-auth-view" id="adminAuthView">
 <div class="admin-auth-shell">
-<header aria-label="Pro Fitness Academia" class="admin-auth-brand auth-brand-header official-banner-header">
-<img alt="Fachada e logotipo oficial da Pro Fitness Academia" class="official-header-banner" src="assets/images/pro-fitness-header-oficial.jpg"/>
-<span class="header-role-label">ADMINISTRACAO</span>
+<header aria-label="Pro Fitness Academia" class="admin-auth-brand login-hero">
+<img alt="Fachada da Pro Fitness Academia em Carmo, Rio de Janeiro" class="login-hero-photo" src="assets/images/pro-fitness-fachada.png"/>
+<div class="login-hero-copy"><span class="login-role-badge">Gestão Pro Fitness</span><p>Pro Fitness Academia <i></i> Carmo-RJ</p><h1>Gestão que<br/>acompanha o<br/>movimento.</h1><small>Visão clara para cuidar da academia todos os dias.</small></div>
 </header>
-<div class="admin-auth-card" id="adminLoginCard"><h1>Administracao</h1><form class="admin-auth-form" id="adminLoginForm"><label>Usuario ou e-mail<input autocomplete="username" name="login" required=""/></label><label>Senha<input autocomplete="current-password" name="password" required="" type="password"/></label><button class="primary-button" type="submit">Entrar</button></form><p aria-live="polite" class="admin-auth-feedback" id="adminLoginFeedback"></p></div>
-<div class="admin-auth-card" hidden="" id="adminPasswordChangeCard"><h1>Criar nova senha</h1><p class="password-rule">Minimo de 8 caracteres, com letra e numero.</p><form class="admin-auth-form" id="adminPasswordChangeForm"><label>Senha temporaria<input name="currentPassword" required="" type="password"/></label><label>Nova senha<input minlength="8" name="newPassword" required="" type="password"/></label><label>Confirmar senha<input minlength="8" name="confirmPassword" required="" type="password"/></label><button class="primary-button" type="submit">Salvar nova senha</button></form><button class="ghost-button" id="cancelAdminPasswordChange" type="button">Cancelar</button><p aria-live="polite" class="admin-auth-feedback" id="adminPasswordChangeFeedback"></p></div>
+<div class="admin-auth-card" id="adminLoginCard"><div class="login-form-brand" aria-hidden="true"><img src="assets/images/pro-fitness-logo-oficial.jpg" alt=""/><span><strong>PRO FITNESS</strong><small>ACADEMIA</small></span></div><span class="login-form-kicker">Central administrativa</span><h1>Acesse o painel</h1><p class="login-form-intro">Use suas credenciais para continuar a gestão da academia.</p><form class="admin-auth-form" id="adminLoginForm"><label>Usuário ou e-mail<input autocomplete="username" name="login" required=""/></label><label>Senha<input autocomplete="current-password" name="password" required="" type="password"/></label><button class="primary-button" type="submit">Entrar no painel</button></form><p aria-live="polite" class="admin-auth-feedback" id="adminLoginFeedback"></p><p class="login-support">Acesso restrito à administração Pro Fitness.</p><p class="login-developer-credit">Desenvolvido por <strong>@almir.lk</strong></p></div>
+<div class="admin-auth-card" hidden="" id="adminPasswordChangeCard"><div class="login-form-brand" aria-hidden="true"><img src="assets/images/pro-fitness-logo-oficial.jpg" alt=""/><span><strong>PRO FITNESS</strong><small>ACADEMIA</small></span></div><span class="login-form-kicker">Primeiro acesso</span><h1>Criar nova senha</h1><p class="password-rule">Minimo de 8 caracteres, com letra e numero.</p><form class="admin-auth-form" id="adminPasswordChangeForm"><label>Senha temporaria<input name="currentPassword" required="" type="password"/></label><label>Nova senha<input minlength="8" name="newPassword" required="" type="password"/></label><label>Confirmar senha<input minlength="8" name="confirmPassword" required="" type="password"/></label><button class="primary-button" type="submit">Salvar nova senha</button></form><button class="ghost-button" id="cancelAdminPasswordChange" type="button">Cancelar</button><p aria-live="polite" class="admin-auth-feedback" id="adminPasswordChangeFeedback"></p></div>
 </div>
 </section>
 <div class="dashboard-shell" hidden="" id="adminAppShell">

@@ -1,4 +1,4 @@
-const CACHE_NAME = "profitness-shell-20260712-final-v4";
+const CACHE_NAME = "profitness-shell-20260713-login-v1";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,7 @@ const APP_SHELL = [
   "./assets/css/style.css",
   "./assets/css/painel.css",
   "./assets/css/prof.css",
+  "./assets/css/login.css",
   "./assets/js/app-config.js",
   "./assets/js/demo-data.js",
   "./assets/js/shared-data.js",

@@ -10,20 +10,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="assets/css/style.css?v=20260712-final-v4" />
+    <link rel="stylesheet" href="assets/css/login.css?v=20260713-login-v1" />
     <link rel="manifest" href="manifest.webmanifest" />
   </head>
 <body>
     <div class="environment-badge" data-environment-badge hidden></div>
     <div class="student-app-shell">
       <section class="enrollment-view" id="onboardingView">
-        <header class="enrollment-visual auth-brand-header official-banner-header" aria-label="Pro Fitness Academia">
-          <img class="official-header-banner" src="assets/images/pro-fitness-header-oficial.jpg" alt="Fachada e logotipo oficial da Pro Fitness Academia" />
-          <span class="header-role-label">ALUNO</span>
+        <header class="enrollment-visual login-hero" aria-label="Pro Fitness Academia">
+          <img class="login-hero-photo" src="assets/images/pro-fitness-fachada.png" alt="Fachada da Pro Fitness Academia em Carmo, Rio de Janeiro" />
+          <div class="login-hero-copy">
+            <span class="login-role-badge">Área do aluno</span>
+            <p>Pro Fitness Academia <i></i> Carmo-RJ</p>
+            <h1>Seu treino<br />começa aqui.</h1>
+            <small>Acompanhe sua rotina, evolução e pagamentos em um só lugar.</small>
+          </div>
         </header>
 
         <div class="enrollment-panel">
           <div id="enrollmentWelcome">
-            <h2>Aluno</h2>
+            <div class="login-form-brand" aria-hidden="true"><img src="assets/images/pro-fitness-logo-oficial.jpg" alt="" /><span><strong>PRO FITNESS</strong><small>ACADEMIA</small></span></div>
+            <span class="login-form-kicker">Acesso do aluno</span>
+            <h2>Bem-vindo de volta</h2>
+            <p class="login-form-intro">Entre com sua matrícula e senha para acessar sua rotina.</p>
             <form id="studentLoginForm" class="student-form login-form">
               <label for="studentLogin">Matricula</label>
               <input id="studentLogin" inputmode="numeric" name="login" autocomplete="username" placeholder="Ex.: 000123" required />
@@ -33,9 +42,13 @@
             </form>
                         <p class="form-feedback" id="studentLoginFeedback" aria-live="polite"></p>
             <p id="onboardingHint" hidden></p>
+            <p class="login-support">Problemas para entrar? Procure a recepção.</p>
+            <p class="login-developer-credit">Desenvolvido por <strong>@almir.lk</strong></p>
           </div>
 
           <div id="passwordChangeCard" hidden>
+            <div class="login-form-brand" aria-hidden="true"><img src="assets/images/pro-fitness-logo-oficial.jpg" alt="" /><span><strong>PRO FITNESS</strong><small>ACADEMIA</small></span></div>
+            <span class="login-form-kicker">Primeiro acesso</span>
             <h2>Criar nova senha</h2>
             <p class="password-rule">Minimo de 8 caracteres, com letra e numero.</p>
             <form id="studentPasswordChangeForm" class="student-form login-form">

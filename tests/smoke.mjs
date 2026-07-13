@@ -350,7 +350,7 @@ assert.doesNotMatch(panelHtml, /adminDemoLoginButton|Acessar demonstracao admini
 assert.match(read("assets/js/shared-data.js"), /getLocalDemoAccounts\(\)\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
 assert.match(read("assets/js/shared-data.js"), /localDemoRuntimeSnapshot/, "Base demonstrativa grande deve permanecer somente em memoria");
 assert.doesNotMatch(read("assets/js/shared-data.js"), /localStorage\.setItem\(LOCAL_DEMO_MASTER_KEY/, "Base demonstrativa completa nao deve ser duplicada no localStorage");
-assert.match(read("sw.js"), /profitness-shell-20260712-final-v4/, "Service worker deve invalidar o cache da versao final validada");
+assert.match(read("sw.js"), /profitness-shell-20260713-login-v1/, "Service worker deve invalidar o cache do novo login");
 
 assert.match(panelHtml, /Matricular novo aluno/, "Painel deve oferecer matricula administrativa direta");
 assert.match(panelHtml, /unlockStudentAccessButton/, "Ficha administrativa deve oferecer desbloqueio de acesso");
@@ -374,10 +374,14 @@ assert.match(professorHtml, /assets\/js\/demo-data\.js/, "Professor deve carrega
 assert.match(panelHtml, /assets\/js\/demo-data\.js/, "Administrador deve carregar a base demo incorporada");
 
 for (const html of [studentHtml, professorHtml, panelHtml]) {
-  assert.match(html, /assets\/images\/pro-fitness-header-oficial\.jpg/, "Todos os logins devem usar o cabecalho oficial");
+  assert.match(html, /assets\/images\/pro-fitness-fachada\.png/, "Todos os logins devem destacar a foto da academia");
+  assert.match(html, /assets\/css\/login\.css/, "Todos os logins devem compartilhar a mesma identidade visual");
   assert.match(html, /assets\/images\/pro-fitness-header-fino\.jpg/, "Todos os modulos internos devem usar o mesmo cabecalho fino");
   assert.match(html, /Desenvolvido por <strong>@almir\.lk<\/strong>/, "Todos os modulos devem exibir o credito do desenvolvedor");
 }
+assert.ok(exists("assets/css/login.css"), "O desenho compartilhado do login deve estar no pacote");
+assert.match(read("assets/css/login.css"), /\.login-hero-photo/, "Login deve possuir tratamento fotografico responsivo");
+assert.match(read("assets/css/login.css"), /\.login-developer-credit/, "Credito do login deve permanecer legivel");
 for (const cssFile of ["assets/css/style.css", "assets/css/prof.css", "assets/css/painel.css"]) {
   const css = read(cssFile);
   assert.match(css, /\.developer-credit\s*\{/, `${cssFile} deve estilizar o credito`);

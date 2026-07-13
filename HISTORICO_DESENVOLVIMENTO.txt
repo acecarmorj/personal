@@ -1965,3 +1965,19 @@ VALIDACOES
 - Smoke tests do pacote: OK.
 - Sintaxe dos JavaScripts: OK.
 - api.txt confirmado byte a byte identico a apps-script/api.gs.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-13 - NOVAS TELAS DE LOGIN
+======================================================================
+- As telas de login de Aluno, Professor e Administracao foram redesenhadas com uma identidade visual unica.
+- A antiga faixa estreita foi substituida por uma apresentacao ampla com a foto real da fachada da Pro Fitness.
+- A fotografia recebeu enquadramento responsivo, degrade de contraste e mensagens especificas para cada perfil.
+- No celular, a foto ocupa o topo e o formulario aparece em um card claro parcialmente sobreposto.
+- No tablet e computador, a tela usa composicao dividida com fotografia a esquerda e acesso a direita.
+- Os formularios receberam logotipo, hierarquia tipografica, campos maiores, foco visivel e botoes amarelos destacados.
+- As telas de criacao da nova senha receberam o mesmo acabamento visual.
+- O credito "Desenvolvido por @almir.lk" permanece discreto e legivel nas tres entradas.
+- Criado assets/css/login.css para manter o desenho das tres interfaces centralizado e consistente.
+- O novo CSS foi incluido no cache offline e o cache passou para 20260713-login-v1.
+- Nenhum arquivo foi publicado no GitHub nesta etapa; todo o trabalho permanece somente em D:\PersonalPro.
