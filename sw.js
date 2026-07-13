@@ -1,4 +1,4 @@
-const CACHE_NAME = "profitness-shell-20260713-login-v1";
+const CACHE_NAME = "profitness-shell-20260713-login-v2";
 const APP_SHELL = [
   "./",
   "./index.html",

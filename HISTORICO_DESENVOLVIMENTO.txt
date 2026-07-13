@@ -1981,3 +1981,4 @@ ATUALIZACAO - 2026-07-13 - NOVAS TELAS DE LOGIN
 - Criado assets/css/login.css para manter o desenho das tres interfaces centralizado e consistente.
 - O novo CSS foi incluido no cache offline e o cache passou para 20260713-login-v1.
 - Nenhum arquivo foi publicado no GitHub nesta etapa; todo o trabalho permanece somente em D:\PersonalPro.
+- Correcao posterior: reforcada a regra hidden das tres telas de acesso para impedir que login e aplicativo aparecam empilhados depois da autenticacao.

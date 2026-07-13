@@ -350,7 +350,7 @@ assert.doesNotMatch(panelHtml, /adminDemoLoginButton|Acessar demonstracao admini
 assert.match(read("assets/js/shared-data.js"), /getLocalDemoAccounts\(\)\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
 assert.match(read("assets/js/shared-data.js"), /localDemoRuntimeSnapshot/, "Base demonstrativa grande deve permanecer somente em memoria");
 assert.doesNotMatch(read("assets/js/shared-data.js"), /localStorage\.setItem\(LOCAL_DEMO_MASTER_KEY/, "Base demonstrativa completa nao deve ser duplicada no localStorage");
-assert.match(read("sw.js"), /profitness-shell-20260713-login-v1/, "Service worker deve invalidar o cache do novo login");
+assert.match(read("sw.js"), /profitness-shell-20260713-login-v2/, "Service worker deve invalidar o cache do login corrigido");
 
 assert.match(panelHtml, /Matricular novo aluno/, "Painel deve oferecer matricula administrativa direta");
 assert.match(panelHtml, /unlockStudentAccessButton/, "Ficha administrativa deve oferecer desbloqueio de acesso");
@@ -382,6 +382,9 @@ for (const html of [studentHtml, professorHtml, panelHtml]) {
 assert.ok(exists("assets/css/login.css"), "O desenho compartilhado do login deve estar no pacote");
 assert.match(read("assets/css/login.css"), /\.login-hero-photo/, "Login deve possuir tratamento fotografico responsivo");
 assert.match(read("assets/css/login.css"), /\.login-developer-credit/, "Credito do login deve permanecer legivel");
+assert.match(read("assets/css/login.css"), /#adminAuthView\[hidden\]/, "Login administrativo deve desaparecer depois da autenticacao");
+assert.match(read("assets/css/login.css"), /#profAuthView\[hidden\]/, "Login do professor deve desaparecer depois da autenticacao");
+assert.match(read("assets/css/login.css"), /#onboardingView\[hidden\]/, "Login do aluno deve desaparecer depois da autenticacao");
 for (const cssFile of ["assets/css/style.css", "assets/css/prof.css", "assets/css/painel.css"]) {
   const css = read(cssFile);
   assert.match(css, /\.developer-credit\s*\{/, `${cssFile} deve estilizar o credito`);

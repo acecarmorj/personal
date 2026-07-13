@@ -2,7 +2,7 @@
   "use strict";
   if (!("serviceWorker" in navigator) || location.protocol === "file:") return;
 
-  const RELOAD_KEY = "profitness-sw-reloaded-20260713-login-v1";
+  const RELOAD_KEY = "profitness-sw-reloaded-20260713-login-v2";
 
   window.addEventListener("load", async () => {
     try {

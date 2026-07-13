@@ -261,6 +261,13 @@
   display: none !important;
 }
 
+/* O estado de autenticacao sempre prevalece sobre o layout visual. */
+#onboardingView[hidden],
+#profAuthView[hidden],
+#adminAuthView[hidden] {
+  display: none !important;
+}
+
 .login-form-intro {
   margin: 12px 0 25px !important;
   color: var(--login-muted) !important;
