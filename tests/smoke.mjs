@@ -49,7 +49,7 @@ const apiContext = {
 };
 vm.runInNewContext(`${apiSource}\nthis.__apiTest = { SHEETS, CURRENT_SCHEMA_VERSION, getSnapshotResourceNames, buildConfigSnapshotMetadata, validateCompleteSnapshot, normalizePartialSnapshot, hasDeleteConflict, resolveResourceName, derivePasswordCredential, constantTimeEqual, getSessionPolicy, sanitizeSession, getAccountPermissions, hasPermission, authorizeGenericOperation, normalizeLogin };`, apiContext);
 const api = apiContext.__apiTest;
-assert.equal(api.CURRENT_SCHEMA_VERSION, 8, "schemaVersion da API deve ser 8");
+assert.equal(api.CURRENT_SCHEMA_VERSION, 9, "schemaVersion da API deve ser 9");
 
 for (const [resource, definition] of Object.entries(api.SHEETS)) {
   const headers = [...definition.headers];
@@ -67,6 +67,9 @@ assert.ok(api.SHEETS.accessAttempts, "API deve auditar tentativas de acesso");
 assert.ok(api.SHEETS.loginAttempts, "API deve auditar tentativas de login");
 assert.ok(api.SHEETS.students.headers.includes("enrollmentNumber"), "Aluno deve possuir numero de matricula");
 assert.ok(api.SHEETS.students.headers.includes("accountId"), "Aluno deve vincular uma conta");
+for (const header of ["collectionLastContactAt", "collectionContactType", "collectionNotes", "paymentPromiseDate"]) {
+  assert.ok(api.SHEETS.payments.headers.includes(header), `Pagamentos deve possuir ${header}`);
+}
 assert.ok(!api.getSnapshotResourceNames().includes("accounts"), "Snapshot nao deve exportar contas");
 assert.ok(!api.getSnapshotResourceNames().includes("sessions"), "Snapshot nao deve exportar sessoes");
 assert.ok(!api.SHEETS.log.headers.includes("payload"), "Log remoto nao deve armazenar payload completo");
@@ -119,7 +122,7 @@ const metadataConfig = JSON.parse(JSON.stringify(api.buildConfigSnapshotMetadata
 assert.deepEqual(metadataConfig.plans, originalConfig.plans, "Atualizacao de metadados deve preservar planos");
 assert.deepEqual(metadataConfig.modalities, originalConfig.modalities, "Atualizacao de metadados deve preservar modalidades");
 assert.deepEqual(metadataConfig.costCenters, originalConfig.costCenters, "Atualizacao de metadados deve preservar centros de custo");
-assert.equal(metadataConfig.schemaVersion, 8);
+assert.equal(metadataConfig.schemaVersion, 9);
 
 const completeApiSnapshot = Object.fromEntries(api.getSnapshotResourceNames().map((resource) => [resource, []]));
 assert.equal(api.validateCompleteSnapshot(completeApiSnapshot), undefined);
@@ -165,6 +168,34 @@ const partialPayment = { amount: 150, discount: 10, fine: 5, paidAmount: 50, sta
 assert.equal(finance.netAmount(partialPayment), 145);
 assert.equal(finance.outstandingAmount(partialPayment), 95);
 assert.equal(finance.effectivePaymentStatus(partialPayment, "2026-07-11"), "parcial");
+assert.equal(finance.isDelinquent(partialPayment, "2026-07-11"), true, "Pagamento parcial vencido deve permanecer na inadimplencia");
+const movementSummary = finance.summarizeMovements([
+  { type: "entrada", amount: 200, status: "confirmado" },
+  { type: "entrada", amount: 999, status: "estornado" },
+  { type: "saida", amount: 65, status: "confirmado" }
+]);
+assert.equal(movementSummary.income, 200);
+assert.equal(movementSummary.expense, 65);
+assert.equal(movementSummary.result, 135, "Resultado deve ser entradas menos saidas sem estornos");
+const delinquency = finance.delinquencySummary([
+  { studentId: "A", amount: 100, paidAmount: 0, status: "vencido", dueDate: "2026-07-01" },
+  { studentId: "B", amount: 100, paidAmount: 50, status: "parcial", dueDate: "2026-07-01" },
+  { studentId: "C", amount: 100, status: "pago", dueDate: "2026-07-01" },
+  { studentId: "D", amount: 100, status: "cancelado", dueDate: "2026-07-01" }
+], "2026-07-13");
+assert.equal(delinquency.expected, 300);
+assert.equal(delinquency.overdue, 150);
+assert.equal(delinquency.rate, 50);
+assert.equal(delinquency.studentCount, 2);
+const recovery = finance.recoverySummary([
+  { studentId: "A", amount: 100, paidAmount: 100, status: "pago", dueDate: "2026-06-10", paidAt: "2026-07-05" },
+  { studentId: "B", amount: 100, paidAmount: 0, status: "vencido", dueDate: "2026-06-10" }
+], "2026-07", "2026-07-13");
+assert.equal(recovery.recovered, 100);
+assert.equal(recovery.previousDebtOpen, 100);
+assert.equal(recovery.rate, 50);
+const allocation = finance.allocateAmount(119.9, [{ name: "Musculacao", weight: 89.9 }, { name: "Natacao", weight: 30 }]);
+assert.ok(Math.abs(allocation.reduce((total, item) => total + item.value, 0) - 119.9) < 0.000001, "Rateio por modalidade deve preservar o valor total");
 
 const storage = new Map();
 const sharedContext = {
@@ -350,10 +381,44 @@ assert.doesNotMatch(panelHtml, /adminDemoLoginButton|Acessar demonstracao admini
 assert.match(read("assets/js/shared-data.js"), /getLocalDemoAccounts\(\)\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
 assert.match(read("assets/js/shared-data.js"), /localDemoRuntimeSnapshot/, "Base demonstrativa grande deve permanecer somente em memoria");
 assert.doesNotMatch(read("assets/js/shared-data.js"), /localStorage\.setItem\(LOCAL_DEMO_MASTER_KEY/, "Base demonstrativa completa nao deve ser duplicada no localStorage");
-assert.match(read("sw.js"), /profitness-shell-20260713-login-v2/, "Service worker deve invalidar o cache do login corrigido");
+assert.match(read("sw.js"), /profitness-shell-20260713-finance-v2/, "Service worker deve invalidar o cache dos comandos financeiros visiveis");
 
 assert.match(panelHtml, /Matricular novo aluno/, "Painel deve oferecer matricula administrativa direta");
 assert.match(panelHtml, /unlockStudentAccessButton/, "Ficha administrativa deve oferecer desbloqueio de acesso");
+assert.match(panelHtml, /data-filter="inadimplentes"/, "Lista de alunos deve oferecer filtro de inadimplentes");
+assert.match(panelHtml, /id="studentAccessAlert"/, "Ficha do aluno deve possuir aviso visivel do motivo do bloqueio");
+assert.match(panelJs, /activeFilter === "inadimplentes"/, "Filtro de inadimplentes deve estar implementado");
+assert.match(panelJs, /roster-block-reason/, "Cartao do aluno bloqueado deve exibir o motivo do bloqueio");
+assert.match(panelHtml, /id="toggleFinanceValuesButton"/, "Financeiro deve oferecer controle para ocultar valores");
+assert.match(panelJs, /function setFinanceValuesVisibility/, "Privacidade dos valores financeiros deve estar implementada");
+assert.match(panelJs, /R\$ •••••/, "Valores financeiros devem ser mascarados sem desaparecer completamente");
+assert.doesNotMatch(panelHtml, /id="financeQuickStudentSearch"/, "Barra financeira nao deve repetir a selecao de aluno");
+assert.doesNotMatch(panelHtml, /finance-actions-menu|Outras acoes/, "As tres acoes financeiras devem permanecer visiveis");
+assert.match(panelHtml, /id="quickReceivePaymentButton"[\s\S]*id="newExpenseButton"[\s\S]*id="newMovementButton"/, "Recebimento, despesa e lancamento devem aparecer juntos no topo");
+assert.match(panelJs, /label: "Resultado liquido"/, "Resumo deve destacar o resultado liquido");
+assert.match(panelHtml, /id="collectionMetricGrid"/, "Mensalidades deve possuir Central de Cobranca");
+assert.match(panelHtml, /data-collection-aging="1-7"/, "Central de Cobranca deve separar atrasos de 1 a 7 dias");
+assert.match(panelHtml, /data-collection-aging="31\+"/, "Central de Cobranca deve separar atrasos acima de 30 dias");
+assert.match(panelHtml, /id="collectionPlanFilter"/, "Central de Cobranca deve filtrar por plano");
+assert.match(panelHtml, /id="collectionDueStart"[\s\S]*id="collectionDueEnd"/, "Central de Cobranca deve filtrar por periodo de vencimento");
+assert.match(panelHtml, /id="collectionContactDialog"/, "Central de Cobranca deve registrar contatos");
+assert.match(panelJs, /function getCollectionDebtors/, "Inadimplencia deve ser consolidada por aluno");
+assert.match(panelJs, /function buildCollectionWhatsApp/, "Central de Cobranca deve gerar mensagem de WhatsApp");
+assert.match(panelJs, /collectionLastContactAt[\s\S]*paymentPromiseDate/, "Contato e promessa de pagamento devem ser persistidos");
+assert.match(read("assets/js/shared-data.js"), /collectionLastContactAt[\s\S]*paymentPromiseDate/, "Store deve preservar dados da cobranca");
+assert.match(panelHtml, /id="financeManagementMetrics"/, "Resumo deve possuir indicadores gerenciais");
+assert.match(panelHtml, /id="financeManagementTrend"/, "Resumo deve possuir grafico gerencial de 12 meses");
+assert.match(panelHtml, /id="financeModalityRevenue"/, "Resumo deve detalhar receita por modalidade");
+assert.match(panelJs, /\[30, 60, 90\]\.map\(getFinanceForecastHorizon\)/, "Fluxo de caixa deve projetar 30, 60 e 90 dias");
+assert.match(panelJs, /getRecentMonths\(reference, 12\)/, "Visao gerencial deve cobrir os ultimos 12 meses");
+assert.match(panelJs, /label: "Resultado liquido"[\s\S]*function getStudentRevenueComponents/, "Resultado e rateio por modalidade devem permanecer no resumo");
+assert.match(panelJs, /delinquencyRate[\s\S]*recoveryRate/, "Visao gerencial deve calcular inadimplencia e recuperacao");
+assert.match(panelHtml, /id="reportPeriodPreset"/, "Relatorios devem oferecer atalhos de periodo");
+assert.match(panelHtml, /class="report-advanced-filters"/, "Filtros secundarios do relatorio devem ficar recolhidos");
+assert.match(panelJs, /function applyReportPeriodPreset/, "Atalhos de periodo devem atualizar as datas");
+assert.match(panelJs, /\["Media por entrada"/, "Relatorio nao deve chamar media por lancamento de ticket medio");
+assert.match(panelJs, /const received = payments\.filter[\s\S]*const overdue = payments\.filter\(isPaymentDelinquent\)/, "Relatorio individual deve considerar pagamentos parciais e saldo vencido");
+assert.doesNotMatch(panelJs, /function getFinanceQuickStudentLabel|function renderFinanceQuickStudentOptions|function findFinanceQuickStudent/, "Codigo da busca financeira removida nao deve permanecer morto");
 assert.match(panelJs, /function unlockSelectedStudentAccess/, "Desbloqueio administrativo deve estar implementado");
 assert.match(panelJs, /duplicateEnrollment/, "Matricula administrativa deve impedir numero duplicado");
 assert.ok(exists("assets/images/pro-fitness-header-oficial.jpg"), "Cabecalho oficial aprovado deve estar no pacote");
@@ -372,6 +437,8 @@ assert.match(read("assets/js/shared-data.js"), /persistLocalDemoStudent/, "Aluno
 assert.match(studentHtml, /assets\/js\/demo-data\.js/, "Aluno deve carregar a base demo incorporada");
 assert.match(professorHtml, /assets\/js\/demo-data\.js/, "Professor deve carregar a base demo incorporada");
 assert.match(panelHtml, /assets\/js\/demo-data\.js/, "Administrador deve carregar a base demo incorporada");
+assert.ok(panelHtml.indexOf('id="adminDailyGrid"') < panelHtml.indexOf("Agenda semanal"), "Agenda semanal deve vir depois dos indicadores administrativos");
+assert.ok(panelHtml.indexOf("Agenda semanal") < panelHtml.indexOf("Frequencia nos ultimos 7 dias"), "Agenda semanal deve aparecer antes dos graficos de frequencia");
 
 for (const html of [studentHtml, professorHtml, panelHtml]) {
   assert.match(html, /assets\/images\/pro-fitness-fachada\.png/, "Todos os logins devem destacar a foto da academia");
@@ -533,9 +600,9 @@ if (packageMode) {
   assert.equal(exists(".git"), false, "ZIP final nao deve conter .git");
   assert.equal(exists("backups"), false, "ZIP final nao deve conter backups");
 }
-assert.match(read("HISTORICO_DESENVOLVIMENTO.txt"), /ULTIMA ATUALIZACAO: 12\/07\/2026/);
+assert.match(read("HISTORICO_DESENVOLVIMENTO.txt"), /ULTIMA ATUALIZACAO: 13\/07\/2026/);
 assert.match(read("docs/estrutura-planilha.md"), /presenceSource/);
-assert.match(read("docs/sheets-api-setup.md"), /schemaVersion: 8/);
+assert.match(read("docs/sheets-api-setup.md"), /schemaVersion: 9/);
 const demoTool = read("tools/generate-demo-data.mjs");
 assert.match(demoTool, /PersonalPro-backups/, "Gerador deve salvar backups fora do projeto por padrao");
 assert.doesNotMatch(demoTool, /payload:\s*JSON\.stringify/, "Gerador nao deve recriar payload integral no log");

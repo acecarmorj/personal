@@ -4,7 +4,7 @@ A fonte oficial da API e `apps-script/api.gs`. Depois de substituir a API, execu
 
 ## Versao da estrutura
 
-- `schemaVersion`: **8**
+- `schemaVersion`: **9**
 - A versao fica registrada nas propriedades do Apps Script e na aba `Config`.
 - Requisicoes comuns nao reformatam todas as abas. A preparacao completa ocorre no `setup` ou quando a versao da estrutura precisa ser migrada.
 - O esquema 3 adicionou sessoes de treino e series realizadas; o esquema 4 adicionou autenticacao; o esquema 5 adicionou QR temporario; o esquema 6 preserva logins e matriculas com zeros a esquerda; o esquema 8 registra composicao do plano, valor-base e desconto da matricula.
@@ -35,7 +35,7 @@ Todas as abas operacionais usam `updatedAt`, `updatedBy`, `source` e `deviceId` 
 - Grade fixa: `scheduleKind = weekly-class`, `recurring = true` e `dayOfWeek` de `0` a `6`.
 
 ### `Pagamentos`
-`id`, `studentId`, `reference`, `amount`, `discount`, `fine`, `netAmount`, `paidAmount`, `dueDate`, `status`, `method`, `paidAt`, `recordedBy`, `reversalReason`, `reversedBy`, `reversedAt`, `description`, `createdAt`, `updatedAt`, `notes`, `updatedBy`, `source`, `deviceId`
+`id`, `studentId`, `reference`, `amount`, `discount`, `fine`, `netAmount`, `paidAmount`, `dueDate`, `status`, `method`, `paidAt`, `recordedBy`, `reversalReason`, `reversedBy`, `reversedAt`, `collectionLastContactAt`, `collectionContactType`, `collectionNotes`, `paymentPromiseDate`, `description`, `createdAt`, `updatedAt`, `notes`, `updatedBy`, `source`, `deviceId`
 
 ### `Movimentacoes`
 `id`, `date`, `time`, `type`, `category`, `description`, `amount`, `method`, `account`, `costCenter`, `studentId`, `paymentId`, `expenseId`, `status`, `voidReason`, `voidedBy`, `voidedAt`, `createdAt`, `updatedAt`, `notes`, `updatedBy`, `source`, `deviceId`

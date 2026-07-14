@@ -15,9 +15,13 @@ let activePanelTab = "ficha";
 let activeMainSection = "overview";
 let activeWeeklyDay = new Date().getDay();
 let activeFinanceTab = "summary";
+let activeCollectionAging = "todos";
 let financeHistoryStudentId = selectedStudentId;
 let adminSyncPromise = null;
 let adminAutoSyncTimer = null;
+let financeValuesHidden = false;
+let financePrivacyProcessing = false;
+const financePrivateTextNodes = new Map();
 
 const ADMIN_SYNC_QUEUE_PREFIX = Store.storageKey("admin-sync-queue-v2");
 const ADMIN_PENDING_SNAPSHOT_PREFIX = Store.storageKey("admin-pending-snapshot-v2");
@@ -95,10 +99,14 @@ const workspaceTitle = document.getElementById("workspaceTitle");
 const workspaceEmpty = document.getElementById("workspaceEmpty");
 const workspaceContent = document.getElementById("workspaceContent");
 const financeMonthFilter = document.getElementById("financeMonthFilter");
-const financeQuickStudentSearch = document.getElementById("financeQuickStudentSearch");
-const financeQuickStudentList = document.getElementById("financeQuickStudentList");
+const toggleFinanceValuesButton = document.getElementById("toggleFinanceValuesButton");
 const financeStatusFilter = document.getElementById("financeStatusFilter");
 const financeSearchFilter = document.getElementById("financeSearchFilter");
+const collectionPlanFilter = document.getElementById("collectionPlanFilter");
+const collectionDueStart = document.getElementById("collectionDueStart");
+const collectionDueEnd = document.getElementById("collectionDueEnd");
+const collectionContactDialog = document.getElementById("collectionContactDialog");
+const collectionContactForm = document.getElementById("collectionContactForm");
 const cashDateFilter = document.getElementById("cashDateFilter");
 const movementTypeFilter = document.getElementById("movementTypeFilter");
 const movementMethodFilter = document.getElementById("movementMethodFilter");
@@ -108,6 +116,7 @@ const expenseStatusFilter = document.getElementById("expenseStatusFilter");
 const expenseSearchFilter = document.getElementById("expenseSearchFilter");
 const reportStartDate = document.getElementById("reportStartDate");
 const reportEndDate = document.getElementById("reportEndDate");
+const reportPeriodPreset = document.getElementById("reportPeriodPreset");
 const reportTypeFilter = document.getElementById("reportTypeFilter");
 const reportMethodFilter = document.getElementById("reportMethodFilter");
 const reportCostCenterFilter = document.getElementById("reportCostCenterFilter");
@@ -471,6 +480,8 @@ function getFilteredStudents() {
 
   if (activeFilter === "pendentes") {
     students = students.filter((student) => student.enrollmentStatus !== "ativo");
+  } else if (activeFilter === "inadimplentes") {
+    students = students.filter((student) => getStudentPaymentSummary(student.id).status === "vencido");
   } else if (activeFilter === "bloqueados") {
     students = students.filter((student) => Store.getAccessState(panelState, student.id).status === "bloqueado");
   } else if (activeFilter === "ativos") {
@@ -1229,10 +1240,11 @@ function getStudentPaymentSummary(studentId) {
     return { status: "neutral", label: "Sem mensalidade", payment: null };
   }
 
-  const status = getEffectivePaymentStatus(payment);
+  const status = isPaymentDelinquent(payment) ? "vencido" : getEffectivePaymentStatus(payment);
   const labels = {
     pago: "Mensalidade paga",
     pendente: "Mensalidade pendente",
+    parcial: "Mensalidade parcialmente paga",
     vencido: "Mensalidade vencida"
   };
 
@@ -1302,6 +1314,14 @@ function renderStudentHeader(student) {
     <span><strong>Plano</strong>${escapeHtml(student.plan || "Não informado")}</span>
     <span><strong>Telefone</strong>${escapeHtml(student.phone || "Não informado")}</span>
   `;
+
+  const accessAlert = document.getElementById("studentAccessAlert");
+  const isBlocked = access.status === "bloqueado";
+  accessAlert.hidden = !isBlocked;
+  accessAlert.innerHTML = isBlocked ? `
+    <span class="student-access-alert-icon" aria-hidden="true">!</span>
+    <div><small>Motivo do bloqueio</small><strong>${escapeHtml(access.reason || "Bloqueio definido pela administracao.")}</strong></div>
+  ` : "";
 
   document.getElementById("studentPresenceSummary").innerHTML = `
     <article><span>Última presença</span><strong>${escapeHtml(formatPresenceRecord(presence.last))}</strong></article>
@@ -1413,6 +1433,12 @@ function renderRoster() {
             ${badge(paymentSummary.status, paymentSummary.label)}
             ${badge(access.status, getOperationalAccessLabel(access))}
           </div>
+          ${access.status === "bloqueado" ? `
+            <div class="roster-block-reason">
+              <span>Motivo do bloqueio</span>
+              <strong>${escapeHtml(access.reason || "Bloqueio definido pela administracao.")}</strong>
+            </div>
+          ` : ""}
         </article>
       `;
     })
@@ -1509,7 +1535,8 @@ function getReceiptNumber(payment) {
 
 function renderPaymentReceipt(payment) {
   const student = Store.findStudent(panelState, payment.studentId);
-  if (!student || getEffectivePaymentStatus(payment) !== "pago") {
+  const status = getEffectivePaymentStatus(payment);
+  if (!student || getPaymentPaidAmount(payment) <= 0 || status === "cancelado") {
     return false;
   }
 
@@ -1531,7 +1558,7 @@ function renderPaymentReceipt(payment) {
     <div><span>Multa/acrescimo</span><strong>${escapeHtml(Store.currency(payment.fine))}</strong></div>
     <div><span>Valor calculado</span><strong>${escapeHtml(Store.currency(calculatedAmount))}</strong></div>
     <div><span>Responsavel</span><strong>${escapeHtml(payment.recordedBy || "Equipe Pro Fitness")}</strong></div>
-    <div><span>Status</span><strong>Pago</strong></div>
+    <div><span>Status</span><strong>${escapeHtml(status === "parcial" ? "Pagamento parcial" : "Pago")}</strong></div>
   `;
   document.getElementById("receiptPaidAmount").textContent = Store.currency(paidAmount);
   const note = document.getElementById("receiptNote");
@@ -1544,7 +1571,7 @@ function renderPaymentReceipt(payment) {
 function openPaymentReceipt(paymentId) {
   const payment = findRecord("payments", paymentId);
   if (!payment || !renderPaymentReceipt(payment)) {
-    window.alert("O comprovante esta disponivel apenas para mensalidades pagas.");
+    window.alert("O comprovante esta disponivel quando existe valor recebido.");
     return;
   }
   receiptDialog.dataset.paymentId = payment.id;
@@ -1593,6 +1620,7 @@ function setPaymentEditorMode(student, payment, mode, originalStatus) {
   const receiptButton = document.getElementById("paymentReceiptButton");
   const statusLabels = {
     pago: "Paga",
+    parcial: "Parcialmente paga",
     pendente: "Pendente",
     vencido: "Vencida",
     inexistente: "Ainda nao gerada"
@@ -1612,7 +1640,7 @@ function setPaymentEditorMode(student, payment, mode, originalStatus) {
   }
 
   const effectiveStatus = originalStatus || (payment?.id ? getEffectivePaymentStatus(payment) : "inexistente");
-  const canPrintReceipt = Boolean(payment?.id && effectiveStatus === "pago");
+  const canPrintReceipt = Boolean(payment?.id && getPaymentPaidAmount(payment) > 0 && effectiveStatus !== "cancelado");
   receiptButton.hidden = !canPrintReceipt;
   receiptButton.dataset.paymentId = canPrintReceipt ? payment.id : "";
   const reference = payment?.reference || Store.currentMonth();
@@ -1668,9 +1696,6 @@ function openStudentPaymentFlow(student, requestedReference) {
   financeMonthFilter.value = reference;
   financeStatusFilter.value = "todos";
   financeSearchFilter.value = student.name;
-  if (financeQuickStudentSearch) {
-    financeQuickStudentSearch.value = getFinanceQuickStudentLabel(student);
-  }
   setActiveMainSection("finance");
   populatePaymentForm(student, paymentDraft);
   setPaymentEditorMode(student, paymentDraft, "receive", originalStatus);
@@ -1684,89 +1709,11 @@ function openStudentPaymentFlow(student, requestedReference) {
   });
 }
 
-function getFinanceQuickStudentLabel(student) {
-  const phone = String(student.phone || "").trim();
-  return phone ? `${student.name} · ${phone}` : student.name;
-}
-
-function renderFinanceQuickStudentOptions() {
-  if (!financeQuickStudentList) {
-    return;
-  }
-  financeQuickStudentList.innerHTML = panelState.students
-    .slice()
-    .sort((left, right) => String(left.name || "").localeCompare(String(right.name || ""), "pt-BR"))
-    .map((student) => {
-      const detail = [student.plan, student.phone].filter(Boolean).join(" · ");
-      return `<option value="${escapeHtml(getFinanceQuickStudentLabel(student))}">${escapeHtml(detail)}</option>`;
-    })
-    .join("");
-}
-
-function findFinanceQuickStudent(queryValue) {
-  const rawQuery = String(queryValue || "").trim();
-  if (!rawQuery) {
-    return selectedStudentId ? Store.findStudent(panelState, selectedStudentId) : null;
-  }
-
-  const query = rawQuery.toLocaleLowerCase("pt-BR");
-  const digits = rawQuery.replace(/\D/g, "");
-  const students = panelState.students;
-  const exactMatch = students.find((student) => {
-    const fields = [
-      getFinanceQuickStudentLabel(student),
-      student.name,
-      student.phone,
-      student.email,
-      student.id,
-      student.enrollmentToken,
-      student.gateCode
-    ]
-      .filter(Boolean)
-      .map((value) => String(value).trim().toLocaleLowerCase("pt-BR"));
-    const phoneDigits = String(student.phone || "").replace(/\D/g, "");
-    return fields.includes(query) || (digits && phoneDigits === digits);
-  });
-  if (exactMatch) {
-    return exactMatch;
-  }
-
-  const partialMatches = students.filter((student) => {
-    const searchable = [
-      student.name,
-      student.phone,
-      student.email,
-      student.id,
-      student.enrollmentToken,
-      student.gateCode,
-      student.plan
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLocaleLowerCase("pt-BR");
-    return searchable.includes(query) || (digits && String(student.phone || "").replace(/\D/g, "").includes(digits));
-  });
-
-  return partialMatches.length === 1 ? partialMatches[0] : null;
-}
-
 function receivePaymentFromFinanceBar() {
-  const student = findFinanceQuickStudent(financeQuickStudentSearch?.value);
-  if (!student) {
-    financeQuickStudentSearch?.setCustomValidity("Selecione um aluno da lista ou digite nome, telefone ou codigo completo.");
-    financeQuickStudentSearch?.reportValidity();
-    financeQuickStudentSearch?.focus();
-    return;
-  }
-
-  financeQuickStudentSearch.setCustomValidity("");
-  financeQuickStudentSearch.value = getFinanceQuickStudentLabel(student);
-  selectedStudentId = student.id;
-  openStudentPaymentFlow(student, financeMonthFilter.value || Store.currentMonth());
+  createNewPayment();
 }
 
 function renderFinanceStudentOptions() {
-  renderFinanceQuickStudentOptions();
   const select = paymentForm.elements.studentId;
   const currentValue = select.value;
   select.innerHTML = panelState.students.length
@@ -2045,7 +1992,14 @@ function getEffectivePaymentStatus(payment) {
   return Finance.effectivePaymentStatus(payment, Store.todayISO());
 }
 
+function isPaymentDelinquent(payment) {
+  return Finance.isDelinquent(payment, Store.todayISO());
+}
+
 function getEffectiveExpenseStatus(expense) {
+  if (["cancelado", "estornado"].includes(expense.status)) {
+    return "cancelado";
+  }
   if (expense.status === "pago") {
     return "pago";
   }
@@ -2092,9 +2046,9 @@ function getPaymentStatusLabel(status) {
 function getStudentFinancialSummaryData(studentId) {
   const payments = getStudentPaymentHistoryRecords(studentId);
   const paid = payments.filter((payment) => getEffectivePaymentStatus(payment) === "pago");
-  const overdue = payments.filter((payment) => getEffectivePaymentStatus(payment) === "vencido");
-  const pending = payments.filter((payment) => getEffectivePaymentStatus(payment) === "pendente");
   const partial = payments.filter((payment) => getEffectivePaymentStatus(payment) === "parcial");
+  const openPayments = payments.filter((payment) => getPaymentOutstandingAmount(payment) > 0 && getEffectivePaymentStatus(payment) !== "cancelado");
+  const overdue = openPayments.filter(isPaymentDelinquent);
   const lastPaid = paid
     .slice()
     .sort((left, right) => String(right.paidAt || right.reference || "").localeCompare(String(left.paidAt || left.reference || "")))[0] || null;
@@ -2103,9 +2057,9 @@ function getStudentFinancialSummaryData(studentId) {
     payments,
     totalPaid: sumFinance([...paid, ...partial], getPaymentPaidAmount),
     paidCount: paid.length + partial.length,
-    openCount: pending.length + overdue.length + partial.length,
+    openCount: openPayments.length,
     overdueCount: overdue.length,
-    overdueAmount: sumFinance(overdue, getPaymentNetAmount),
+    overdueAmount: sumFinance(overdue, getPaymentOutstandingAmount),
     lastPaid
   };
 }
@@ -2134,7 +2088,7 @@ function buildStudentPaymentHistoryMarkup(studentId, includeActions) {
     const calculatedAmount = getPaymentNetAmount(payment);
     const paidAmount = getPaymentPaidAmount(payment);
     const actions = [];
-    if (status === "pago") {
+    if (paidAmount > 0 && status !== "cancelado") {
       actions.push(`<button class="ghost-button small-button" type="button" data-print-receipt="${escapeHtml(payment.id)}">Comprovante</button>`);
     }
     if (includeActions) {
@@ -2387,38 +2341,52 @@ function setActiveFinanceTab(tabName) {
 }
 
 function renderFinanceMetrics(monthlyPayments, monthlyMovements) {
-  const paidPayments = monthlyPayments.filter((payment) => getEffectivePaymentStatus(payment) === "pago");
-  const partialPayments = monthlyPayments.filter((payment) => getEffectivePaymentStatus(payment) === "parcial");
-  const pendingPayments = monthlyPayments.filter((payment) => getEffectivePaymentStatus(payment) === "pendente");
-  const overduePayments = monthlyPayments.filter((payment) => getEffectivePaymentStatus(payment) === "vencido");
+  const reference = financeMonthFilter.value || Store.currentMonth();
+  const previousReference = getRecentMonths(reference, 2)[0];
+  const previousPayments = panelState.payments.filter((payment) => payment.reference === previousReference);
+  const previousMovements = getReportableMovements().filter((movement) => String(movement.date || "").slice(0, 7) === previousReference);
+  const expected = sumFinance(monthlyPayments.filter((payment) => getEffectivePaymentStatus(payment) !== "cancelado"), getPaymentNetAmount);
+  const received = sumFinance(monthlyPayments.filter((payment) => ["pago", "parcial"].includes(getEffectivePaymentStatus(payment))), getPaymentPaidAmount);
+  const overduePayments = monthlyPayments.filter(isPaymentDelinquent);
+  const overdue = sumFinance(overduePayments, getPaymentOutstandingAmount);
   const confirmedMovements = monthlyMovements.filter((movement) => movement.status !== "estornado");
   const income = sumFinance(confirmedMovements.filter((item) => item.type === "entrada"));
   const expense = sumFinance(confirmedMovements.filter((item) => item.type === "saida"));
-  const cashBalance = income - expense;
+  const result = income - expense;
+  const previousExpected = sumFinance(previousPayments.filter((payment) => getEffectivePaymentStatus(payment) !== "cancelado"), getPaymentNetAmount);
+  const previousReceived = sumFinance(previousPayments.filter((payment) => ["pago", "parcial"].includes(getEffectivePaymentStatus(payment))), getPaymentPaidAmount);
+  const previousOverdue = sumFinance(previousPayments.filter(isPaymentDelinquent), getPaymentOutstandingAmount);
+  const previousConfirmed = previousMovements.filter((movement) => movement.status !== "estornado");
+  const previousResult = sumFinance(previousConfirmed.filter((item) => item.type === "entrada")) - sumFinance(previousConfirmed.filter((item) => item.type === "saida"));
+  const comparison = (current, previous) => {
+    if (!previous) return current ? "sem base no mes anterior" : "sem variacao";
+    const percent = ((current - previous) / Math.abs(previous)) * 100;
+    return `${percent >= 0 ? "+" : ""}${formatNumber(percent, 1)}% vs. mes anterior`;
+  };
   const metrics = [
     {
+      label: "Previsto no mes",
+      value: Store.currency(expected),
+      note: comparison(expected, previousExpected),
+      tone: "neutral"
+    },
+    {
       label: "Recebido",
-      value: Store.currency(sumFinance([...paidPayments, ...partialPayments], getPaymentPaidAmount)),
-      note: `${paidPayments.length} quitada(s) e ${partialPayments.length} parcial(is)`,
+      value: Store.currency(received),
+      note: comparison(received, previousReceived),
       tone: "success"
     },
     {
-      label: "Pendente",
-      value: Store.currency(sumFinance(pendingPayments, getPaymentNetAmount) + sumFinance(partialPayments, getPaymentOutstandingAmount)),
-      note: `${pendingPayments.length} aguardando e ${partialPayments.length} parcial(is)`,
-      tone: "warning"
-    },
-    {
       label: "Vencido",
-      value: Store.currency(sumFinance(overduePayments, getPaymentNetAmount)),
-      note: `${overduePayments.length} cobranca${overduePayments.length === 1 ? "" : "s"} em atraso`,
+      value: Store.currency(overdue),
+      note: `${new Set(overduePayments.map((payment) => payment.studentId)).size} aluno(s) · ${comparison(overdue, previousOverdue)}`,
       tone: "danger"
     },
     {
-      label: "Saldo do caixa",
-      value: Store.currency(cashBalance),
-      note: `${Store.currency(income)} entradas - ${Store.currency(expense)} saidas`,
-      tone: cashBalance >= 0 ? "success" : "danger"
+      label: "Resultado liquido",
+      value: Store.currency(result),
+      note: comparison(result, previousResult),
+      tone: result >= 0 ? "success" : "danger"
     }
   ];
 
@@ -2607,6 +2575,7 @@ function renderFinancePaymentList() {
 
 function renderFinancePaymentsModule() {
   renderFinanceStudentOptions();
+  renderCollectionCenter();
   renderFinancePaymentList();
   if (!financeHistoryStudentId || !Store.findStudent(panelState, financeHistoryStudentId)) {
     financeHistoryStudentId = selectedStudentId || panelState.students[0]?.id || "";
@@ -2638,12 +2607,131 @@ function daysOverdue(dateValue) {
   return Math.max(0, Math.floor((new Date(`${Store.todayISO()}T12:00:00`) - new Date(`${dateValue}T12:00:00`)) / 86400000));
 }
 
+function getCollectionAging(days) {
+  if (days <= 7) return "1-7";
+  if (days <= 15) return "8-15";
+  if (days <= 30) return "16-30";
+  return "31+";
+}
+
+function getCollectionDebtors() {
+  const grouped = new Map();
+  panelState.payments
+    .filter(isPaymentDelinquent)
+    .forEach((payment) => {
+      const student = Store.findStudent(panelState, payment.studentId);
+      if (!student) return;
+      const current = grouped.get(student.id) || { student, payments: [], total: 0, oldestDueDate: payment.dueDate || Store.todayISO(), lastContactAt: "", contactNotes: "", promiseDate: "", contactType: "" };
+      current.payments.push(payment);
+      current.total += getPaymentOutstandingAmount(payment);
+      if (String(payment.dueDate || "") < String(current.oldestDueDate || "")) current.oldestDueDate = payment.dueDate;
+      if (String(payment.collectionLastContactAt || "") >= String(current.lastContactAt || "")) {
+        current.lastContactAt = payment.collectionLastContactAt || current.lastContactAt;
+        current.contactNotes = payment.collectionNotes || current.contactNotes;
+        current.promiseDate = payment.paymentPromiseDate || current.promiseDate;
+        current.contactType = payment.collectionContactType || current.contactType;
+      }
+      grouped.set(student.id, current);
+    });
+  return [...grouped.values()].map((item) => ({ ...item, days: daysOverdue(item.oldestDueDate), aging: getCollectionAging(daysOverdue(item.oldestDueDate)), payment: item.payments.slice().sort((left, right) => String(left.dueDate || "").localeCompare(String(right.dueDate || "")))[0] })).sort((left, right) => right.days - left.days || right.total - left.total);
+}
+
+function getUpcomingCollectionPayments() {
+  const today = Store.todayISO();
+  const end = shiftISODate(today, 7);
+  return panelState.payments
+    .filter((payment) => ["pendente", "parcial"].includes(getEffectivePaymentStatus(payment)) && payment.dueDate >= today && payment.dueDate <= end)
+    .map((payment) => ({ payment, student: Store.findStudent(panelState, payment.studentId), outstanding: getPaymentOutstandingAmount(payment) }))
+    .filter((item) => item.student && item.outstanding > 0)
+    .sort((left, right) => String(left.payment.dueDate).localeCompare(String(right.payment.dueDate)) || String(left.student.name).localeCompare(String(right.student.name), "pt-BR"));
+}
+
+function buildCollectionWhatsApp(student, total, oldestDueDate) {
+  const phone = String(student?.phone || "").replace(/\D/g, "");
+  if (!phone) return "";
+  const brazilPhone = phone.startsWith("55") ? phone : `55${phone}`;
+  const message = `Ola, ${student.name}. Identificamos uma mensalidade da Pro Fitness em aberto, vencida em ${Store.formatDate(oldestDueDate)}, com saldo de ${Store.currency(total)}. Podemos ajudar com a regularizacao?`;
+  return `https://wa.me/${escapeHtml(brazilPhone)}?text=${encodeURIComponent(message)}`;
+}
+
+function renderCollectionCenter() {
+  const debtors = getCollectionDebtors();
+  const upcoming = getUpcomingCollectionPayments();
+  const totalOverdue = debtors.reduce((sum, item) => sum + item.total, 0);
+  const upcomingTotal = upcoming.reduce((sum, item) => sum + item.outstanding, 0);
+  document.getElementById("collectionMetricGrid").innerHTML = [
+    ["Total vencido", Store.currency(totalOverdue), `${debtors.length} aluno(s)`],
+    ["Inadimplentes", debtors.length, debtors.length === 1 ? "aluno para cobrar" : "alunos para cobrar"],
+    ["Proximos 7 dias", Store.currency(upcomingTotal), `${upcoming.length} vencimento(s)`]
+  ].map(([label, value, note]) => `<article><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong><small>${escapeHtml(note)}</small></article>`).join("");
+
+  const plans = [...new Set(panelState.students.map((student) => student.plan).filter(Boolean))].sort((left, right) => left.localeCompare(right, "pt-BR"));
+  const selectedPlan = collectionPlanFilter.value || "todos";
+  collectionPlanFilter.innerHTML = `<option value="todos">Todos os planos</option>${plans.map((plan) => `<option value="${escapeHtml(plan)}">${escapeHtml(plan)}</option>`).join("")}`;
+  collectionPlanFilter.value = plans.includes(selectedPlan) ? selectedPlan : "todos";
+
+  const filtered = debtors.filter((item) => {
+    if (activeCollectionAging !== "todos" && item.aging !== activeCollectionAging) return false;
+    if (collectionPlanFilter.value !== "todos" && item.student.plan !== collectionPlanFilter.value) return false;
+    if (collectionDueStart.value && item.oldestDueDate < collectionDueStart.value) return false;
+    if (collectionDueEnd.value && item.oldestDueDate > collectionDueEnd.value) return false;
+    return true;
+  });
+  document.getElementById("collectionDebtorCount").textContent = `${filtered.length} ${filtered.length === 1 ? "aluno" : "alunos"}`;
+  document.getElementById("collectionDebtorList").innerHTML = filtered.length ? filtered.map((item) => {
+    const whatsapp = buildCollectionWhatsApp(item.student, item.total, item.oldestDueDate);
+    return `<article class="collection-debtor-item"><div class="collection-debtor-main"><div><strong>${escapeHtml(item.student.name)}</strong><span>${escapeHtml(item.student.plan || "Plano nao informado")} · ${item.days} dia(s) em atraso</span></div><strong>${escapeHtml(Store.currency(item.total))}</strong></div><div class="collection-debtor-meta"><span>Vencimento mais antigo: ${escapeHtml(Store.formatDate(item.oldestDueDate))}</span><span>${item.payments.length} mensalidade(s)</span>${item.lastContactAt ? `<span>Ultimo contato: ${escapeHtml(Store.formatDateTime(item.lastContactAt))}</span>` : "<span>Sem contato registrado</span>"}${item.promiseDate ? `<span class="promise-chip">Promessa: ${escapeHtml(Store.formatDate(item.promiseDate))}</span>` : ""}</div>${item.contactNotes ? `<p>${escapeHtml(item.contactNotes)}</p>` : ""}<div class="collection-debtor-actions"><button class="ghost-button small-button" data-collection-contact="${escapeHtml(item.student.id)}" type="button">Registrar contato</button>${whatsapp ? `<a class="ghost-button small-button whatsapp-button" href="${whatsapp}" target="_blank" rel="noopener">WhatsApp</a>` : ""}<button class="primary-button small-button" data-collection-receive="${escapeHtml(item.payment.id)}" type="button">Receber</button></div></article>`;
+  }).join("") : '<div class="empty-state">Nenhum inadimplente encontrado para estes filtros.</div>';
+
+  document.getElementById("collectionUpcomingCount").textContent = String(upcoming.length);
+  document.getElementById("collectionUpcomingList").innerHTML = upcoming.length ? upcoming.slice(0, 8).map((item) => `<article><div><strong>${escapeHtml(item.student.name)}</strong><span>${escapeHtml(Store.formatDate(item.payment.dueDate))} · ${escapeHtml(item.student.plan || "Plano")}</span></div><strong>${escapeHtml(Store.currency(item.outstanding))}</strong></article>`).join("") : '<div class="empty-state">Nenhum vencimento nos proximos sete dias.</div>';
+}
+
+function openCollectionContact(studentId) {
+  const debtor = getCollectionDebtors().find((item) => item.student.id === studentId);
+  if (!debtor) return;
+  collectionContactForm.reset();
+  collectionContactForm.elements.studentId.value = studentId;
+  collectionContactForm.elements.paymentId.value = debtor.payment.id;
+  const now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  collectionContactForm.elements.contactAt.value = now;
+  collectionContactForm.elements.contactType.value = debtor.contactType || "whatsapp";
+  collectionContactForm.elements.promiseDate.value = debtor.promiseDate || "";
+  collectionContactForm.elements.notes.value = debtor.contactNotes || "";
+  document.getElementById("collectionContactContext").innerHTML = `<strong>${escapeHtml(debtor.student.name)}</strong><span>${debtor.days} dia(s) em atraso · ${escapeHtml(Store.currency(debtor.total))}</span>${debtor.lastContactAt ? `<small>Ultimo contato: ${escapeHtml(Store.formatDateTime(debtor.lastContactAt))}</small>` : ""}`;
+  collectionContactDialog.showModal();
+}
+
+function closeCollectionContact() {
+  if (collectionContactDialog.open) collectionContactDialog.close();
+}
+
+function handleCollectionContactSave(event) {
+  event.preventDefault();
+  const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  const payment = findRecord("payments", payload.paymentId);
+  if (!payment) return;
+  const updated = Store.createPaymentRecord({ ...payment, collectionLastContactAt: new Date(payload.contactAt).toISOString(), collectionContactType: payload.contactType, collectionNotes: payload.notes.trim(), paymentPromiseDate: payload.promiseDate || "", updatedAt: new Date().toISOString() });
+  closeCollectionContact();
+  saveWithLog(Store.upsertPayment(panelState, updated), "collection-contact", payload.studentId, `Contato de cobranca registrado por ${payload.contactType}.`);
+}
+
+function handleCollectionAction(event) {
+  const contactButton = event.target.closest("[data-collection-contact]");
+  if (contactButton) { openCollectionContact(contactButton.dataset.collectionContact); return; }
+  const receiveButton = event.target.closest("[data-collection-receive]");
+  if (!receiveButton) return;
+  const payment = findRecord("payments", receiveButton.dataset.collectionReceive);
+  const student = payment ? Store.findStudent(panelState, payment.studentId) : null;
+  if (student) openStudentPaymentFlow(student, payment.reference);
+}
+
 function renderFinancePriorities() {
   const paymentPriorities = panelState.payments
-    .filter((payment) => getEffectivePaymentStatus(payment) === "vencido")
+    .filter(isPaymentDelinquent)
     .map((payment) => {
       const student = Store.findStudent(panelState, payment.studentId);
-      return { type: "Mensalidade", title: student?.name || "Aluno", dueDate: payment.dueDate, amount: getPaymentNetAmount(payment), tone: "danger" };
+      return { type: "Mensalidade", title: student?.name || "Aluno", dueDate: payment.dueDate, amount: getPaymentOutstandingAmount(payment), tone: "danger" };
     });
   const expensePriorities = panelState.expenses
     .filter((expense) => getEffectiveExpenseStatus(expense) === "vencido")
@@ -2662,18 +2750,177 @@ function renderFinancePriorities() {
     : '<div class="empty-state">Nenhuma pendencia vencida. Caixa em dia.</div>';
 }
 
-function renderFinanceForecast() {
+function getForecastMonthReferences(endDate) {
+  const start = new Date(`${Store.todayISO().slice(0, 7)}-01T12:00:00`);
+  const end = new Date(`${String(endDate).slice(0, 7)}-01T12:00:00`);
+  const references = [];
+  for (const cursor = new Date(start); cursor <= end; cursor.setMonth(cursor.getMonth() + 1)) {
+    references.push(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`);
+  }
+  return references;
+}
+
+function getFinanceForecastHorizon(days) {
   const today = Store.todayISO();
-  const end = shiftISODate(today, 30);
-  const receivables = panelState.payments.filter((item) => getEffectivePaymentStatus(item) === "pendente" && item.dueDate >= today && item.dueDate <= end);
-  const payables = panelState.expenses.filter((item) => getEffectiveExpenseStatus(item) === "pendente" && item.dueDate >= today && item.dueDate <= end);
-  const income = sumFinance(receivables, getPaymentNetAmount);
+  const endDate = shiftISODate(today, days);
+  const openPayments = panelState.payments.filter((payment) => {
+    const status = getEffectivePaymentStatus(payment);
+    return ["pendente", "parcial", "vencido"].includes(status)
+      && getPaymentOutstandingAmount(payment) > 0
+      && String(payment.dueDate || today) <= endDate;
+  });
+  const existingPaymentKeys = new Set(panelState.payments.map((payment) => `${payment.studentId}:${payment.reference}`));
+  const projected = [];
+  getForecastMonthReferences(endDate).forEach((reference) => {
+    panelState.students
+      .filter((student) => ["ativo", "active"].includes(String(student.status || "").toLocaleLowerCase("pt-BR")))
+      .forEach((student) => {
+        if (existingPaymentKeys.has(`${student.id}:${reference}`) || safeNumber(student.monthlyFee) <= 0) return;
+        const dueDate = getSuggestedPaymentDueDate(student.id, reference, null);
+        if (dueDate < today || dueDate > endDate) return;
+        projected.push({ studentId: student.id, reference, dueDate, amount: safeNumber(student.monthlyFee) });
+      });
+  });
+  const payables = panelState.expenses.filter((expense) => expense.status !== "cancelado"
+    && ["pendente", "vencido"].includes(getEffectiveExpenseStatus(expense))
+    && String(expense.dueDate || today) <= endDate);
+  const registeredIncome = sumFinance(openPayments, getPaymentOutstandingAmount);
+  const projectedIncome = sumFinance(projected);
   const expense = sumFinance(payables);
+  return {
+    days,
+    income: registeredIncome + projectedIncome,
+    expense,
+    balance: registeredIncome + projectedIncome - expense,
+    registeredCount: openPayments.length,
+    projectedCount: projected.length,
+    payableCount: payables.length
+  };
+}
+
+function renderFinanceForecast() {
+  const horizons = [30, 60, 90].map(getFinanceForecastHorizon);
   document.getElementById("financeForecast").innerHTML = `
-    <div class="forecast-result"><span>Saldo projetado</span><strong class="${income - expense < 0 ? "negative" : ""}">${Store.currency(income - expense)}</strong></div>
-    <div class="forecast-line"><span>A receber</span><strong>${Store.currency(income)}</strong><small>${receivables.length} cobranca(s)</small></div>
-    <div class="forecast-line"><span>A pagar</span><strong>${Store.currency(expense)}</strong><small>${payables.length} despesa(s)</small></div>
+    <div class="forecast-horizon-grid">
+      ${horizons.map((item) => `
+        <article class="forecast-horizon-card">
+          <div><span>${item.days} dias</span><strong class="${item.balance < 0 ? "negative" : ""}">${escapeHtml(Store.currency(item.balance))}</strong><small>saldo previsto</small></div>
+          <dl>
+            <div><dt>A receber</dt><dd>${escapeHtml(Store.currency(item.income))}</dd></div>
+            <div><dt>A pagar</dt><dd>${escapeHtml(Store.currency(item.expense))}</dd></div>
+          </dl>
+          <p>${item.registeredCount} cobranca(s), ${item.projectedCount} mensalidade(s) projetada(s) e ${item.payableCount} despesa(s).</p>
+        </article>
+      `).join("")}
+    </div>
+    <p class="forecast-footnote">Mensalidades futuras usam o valor atual dos alunos ativos; despesas entram somente quando cadastradas.</p>
   `;
+}
+
+function getStudentRevenueComponents(student) {
+  const offerings = getEnrollmentOfferings();
+  const byId = new Map(offerings.map((item) => [String(item.id), item]));
+  const byName = new Map(offerings.map((item) => [normalizeTextKey(item.name), item]));
+  let selected = student?.selectedModalities || [];
+  if (typeof selected === "string") {
+    try { selected = JSON.parse(selected || "[]"); } catch (error) { selected = []; }
+  }
+  const selectedItems = (Array.isArray(selected) ? selected : [])
+    .map((value) => byId.get(String(value)) || byName.get(normalizeTextKey(value)))
+    .filter(Boolean)
+    .map((item) => ({ name: item.name, weight: Math.max(0, safeNumber(item.monthlyFee)) }));
+  if (selectedItems.length) {
+    return selectedItems.map((item) => ({ ...item, weight: item.weight || 1 }));
+  }
+
+  const parts = String(student?.plan || "Nao informado").split(/\s*\+\s*/).map((item) => item.trim()).filter(Boolean);
+  if (parts.length <= 1) return [{ name: parts[0] || "Nao informado", weight: Math.max(1, safeNumber(student?.baseMonthlyFee || student?.monthlyFee)) }];
+  const configuredPlan = getAdminConfig().plans.find((plan) => normalizeTextKey(plan.name) === normalizeTextKey(student?.plan));
+  const total = Math.max(1, safeNumber(student?.baseMonthlyFee || configuredPlan?.monthlyFee || student?.monthlyFee));
+  const extraWeight = total > 30 * (parts.length - 1) ? 30 : total / parts.length;
+  const baseWeight = Math.max(extraWeight, total - extraWeight * (parts.length - 1));
+  return parts.map((name, index) => ({ name, weight: index ? extraWeight : baseWeight }));
+}
+
+function getManagementFinancialData(reference, monthlyPayments, monthlyMovements) {
+  const confirmed = monthlyMovements.filter((movement) => movement.status !== "estornado");
+  const incomeMovements = confirmed.filter((movement) => movement.type === "entrada");
+  const membershipMovements = incomeMovements.filter((movement) => movement.category === "mensalidade");
+  const payerIds = new Set(membershipMovements.map((movement) => movement.studentId).filter(Boolean));
+  const membershipIncome = sumFinance(membershipMovements);
+  const movementSummary = Finance.summarizeMovements(confirmed);
+  const delinquency = Finance.delinquencySummary(monthlyPayments, Store.todayISO());
+  const recovery = Finance.recoverySummary(panelState.payments, reference, Store.todayISO());
+  return {
+    income: movementSummary.income,
+    expense: movementSummary.expense,
+    ticket: payerIds.size ? membershipIncome / payerIds.size : 0,
+    payerCount: payerIds.size,
+    delinquencyRate: delinquency.rate,
+    overdue: delinquency.overdue,
+    overdueStudents: delinquency.studentCount,
+    recoveryRate: recovery.rate,
+    recovered: recovery.recovered,
+    recoveredCount: recovery.paymentCount
+  };
+}
+
+function renderFinanceManagementMetrics(reference, monthlyPayments, monthlyMovements) {
+  const data = getManagementFinancialData(reference, monthlyPayments, monthlyMovements);
+  document.getElementById("financeManagementReference").textContent = formatPaymentReference(reference);
+  const metrics = [
+    ["Receita no caixa", Store.currency(data.income), "Entradas confirmadas", "success"],
+    ["Despesas pagas", Store.currency(data.expense), "Saidas confirmadas", "neutral"],
+    ["Ticket medio", Store.currency(data.ticket), `${data.payerCount} aluno(s) pagante(s)`, "neutral"],
+    ["Inadimplencia", `${formatNumber(data.delinquencyRate, 1)}%`, `${data.overdueStudents} aluno(s) · ${Store.currency(data.overdue)}`, data.delinquencyRate ? "danger" : "success"],
+    ["Recuperacao", `${formatNumber(data.recoveryRate, 1)}%`, `${Store.currency(data.recovered)} recuperados`, data.recovered ? "success" : "neutral"]
+  ];
+  document.getElementById("financeManagementMetrics").innerHTML = metrics.map(([label, value, note, tone]) => `
+    <article class="management-metric-card ${tone}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong><small>${escapeHtml(note)}</small></article>
+  `).join("");
+}
+
+function renderFinanceManagementTrend(reference) {
+  const movements = getReportableMovements().filter((movement) => movement.status !== "estornado");
+  const data = getRecentMonths(reference, 12).map((month) => {
+    const monthly = movements.filter((movement) => String(movement.date || "").slice(0, 7) === month);
+    return { month, ...Finance.summarizeMovements(monthly) };
+  });
+  const maximum = Math.max(1, ...data.flatMap((item) => [item.income, item.expense]));
+  document.getElementById("financeManagementTrend").innerHTML = data.map((item) => `
+    <article class="management-trend-column" aria-label="${escapeHtml(formatPaymentReference(item.month))}">
+      <div class="management-trend-bars">
+        <i class="income" style="--management-height:${Math.max(2, item.income / maximum * 100).toFixed(2)}%"></i>
+        <i class="expense" style="--management-height:${Math.max(2, item.expense / maximum * 100).toFixed(2)}%"></i>
+      </div>
+      <strong>${escapeHtml(getFinanceMonthLabel(item.month))}</strong><span>${escapeHtml(item.month.slice(2, 4))}</span>
+    </article>
+  `).join("");
+}
+
+function renderFinanceModalityRevenue(monthlyPayments) {
+  const totals = new Map();
+  monthlyPayments
+    .filter((payment) => ["pago", "parcial"].includes(getEffectivePaymentStatus(payment)) && getPaymentPaidAmount(payment) > 0)
+    .forEach((payment) => {
+      const student = Store.findStudent(panelState, payment.studentId);
+      if (!student) return;
+      Finance.allocateAmount(getPaymentPaidAmount(payment), getStudentRevenueComponents(student))
+        .forEach((item) => totals.set(item.name, (totals.get(item.name) || 0) + item.value));
+    });
+  const ordered = [...totals.entries()].map(([name, value]) => ({ name, value })).sort((left, right) => right.value - left.value);
+  const visible = ordered.slice(0, 6);
+  if (ordered.length > 6) visible.push({ name: "Outras", value: ordered.slice(6).reduce((sum, item) => sum + item.value, 0) });
+  const maximum = Math.max(1, ...visible.map((item) => item.value));
+  document.getElementById("financeModalityRevenue").innerHTML = visible.length ? `${visible.map((item) => `
+    <article class="management-modality-row"><div><span>${escapeHtml(item.name)}</span><strong>${escapeHtml(Store.currency(item.value))}</strong></div><i style="--modality-width:${(item.value / maximum * 100).toFixed(2)}%"></i></article>
+  `).join("")}<p>Rateio proporcional das mensalidades recebidas na competencia.</p>` : '<div class="empty-state">Nenhuma mensalidade recebida nesta competencia.</div>';
+}
+
+function renderFinanceManagement(reference, monthlyPayments, monthlyMovements) {
+  renderFinanceManagementMetrics(reference, monthlyPayments, monthlyMovements);
+  renderFinanceManagementTrend(reference);
+  renderFinanceModalityRevenue(monthlyPayments);
 }
 
 function renderFinanceSummary() {
@@ -2685,6 +2932,7 @@ function renderFinanceSummary() {
   renderFinanceTodaySummary();
   renderFinancePriorities();
   renderFinanceForecast();
+  renderFinanceManagement(reference, monthlyPayments, monthlyMovements);
 }
 
 function setFinanceEditorOpen(editor, open) {
@@ -2984,6 +3232,49 @@ function renderExpenseModule() {
   renderExpenseList();
 }
 
+function getMonthEndDate(reference) {
+  const [year, month] = String(reference || "").split("-").map(Number);
+  if (!year || !month) return Store.todayISO();
+  return `${year}-${String(month).padStart(2, "0")}-${String(new Date(year, month, 0).getDate()).padStart(2, "0")}`;
+}
+
+function applyReportPeriodPreset(preset) {
+  const today = Store.todayISO();
+  const currentMonth = Store.currentMonth();
+  if (preset === "previous-month") {
+    const previousMonth = getRecentMonths(currentMonth, 2)[0];
+    reportStartDate.value = `${previousMonth}-01`;
+    reportEndDate.value = getMonthEndDate(previousMonth);
+  } else if (preset === "last-30") {
+    reportStartDate.value = shiftISODate(today, -29);
+    reportEndDate.value = today;
+  } else if (preset === "last-90") {
+    reportStartDate.value = shiftISODate(today, -89);
+    reportEndDate.value = today;
+  } else if (preset === "current-month") {
+    reportStartDate.value = `${currentMonth}-01`;
+    reportEndDate.value = today;
+  }
+}
+
+function updateReportFilterSummary() {
+  const presetLabel = reportPeriodPreset.options[reportPeriodPreset.selectedIndex]?.text || "Periodo personalizado";
+  const details = [];
+  const studentId = getReportSelectedStudentId();
+  if (studentId) details.push(Store.findStudent(panelState, studentId)?.name || "Aluno selecionado");
+  if (reportMethodFilter.value !== "todos") details.push(FINANCE_METHOD_LABELS[reportMethodFilter.value] || reportMethodFilter.value);
+  if (reportCostCenterFilter.value !== "todos") details.push(COST_CENTER_LABELS[reportCostCenterFilter.value] || reportCostCenterFilter.value);
+  document.getElementById("reportActiveFiltersLabel").textContent = [presetLabel, ...details].join(" · ");
+}
+
+function applyFinanceReportFilters() {
+  if (reportStartDate.value && reportEndDate.value && reportStartDate.value > reportEndDate.value) {
+    window.alert("A data inicial nao pode ser posterior a data final.");
+    return;
+  }
+  renderFinanceReports();
+}
+
 function populateReportStudentOptions() {
   if (!reportStudentFilter) return;
   const currentValue = reportStudentFilter.value || "todos";
@@ -3026,7 +3317,7 @@ function getReportPayments(studentId) {
   return panelState.payments
     .filter((payment) => !studentId || payment.studentId === studentId)
     .filter((payment) => {
-      const referenceDate = payment.paidAt || payment.dueDate || (payment.reference ? `${payment.reference}-01` : "");
+      const referenceDate = String(payment.paidAt || payment.dueDate || (payment.reference ? `${payment.reference}-01` : "")).slice(0, 10);
       return (!start || referenceDate >= start) && (!end || referenceDate <= end);
     })
     .sort((left, right) => {
@@ -3111,10 +3402,9 @@ function renderStudentFinanceReport(studentId) {
   }
 
   const payments = getReportPayments(student.id);
-  const paid = payments.filter((payment) => getEffectivePaymentStatus(payment) === "pago");
-  const pending = payments.filter((payment) => getEffectivePaymentStatus(payment) === "pendente");
-  const overdue = payments.filter((payment) => getEffectivePaymentStatus(payment) === "vencido");
-  const canceled = payments.filter((payment) => getEffectivePaymentStatus(payment) === "cancelado");
+  const received = payments.filter((payment) => getPaymentPaidAmount(payment) > 0 && getEffectivePaymentStatus(payment) !== "cancelado");
+  const overdue = payments.filter(isPaymentDelinquent);
+  const open = payments.filter((payment) => getPaymentOutstandingAmount(payment) > 0 && !isPaymentDelinquent(payment) && getEffectivePaymentStatus(payment) !== "cancelado");
   card.hidden = false;
   document.getElementById("studentReportPeriodLabel").textContent = `${Store.formatDate(reportStartDate.value)} a ${Store.formatDate(reportEndDate.value)}`;
   document.getElementById("studentReportIdentification").innerHTML = `
@@ -3123,9 +3413,9 @@ function renderStudentFinanceReport(studentId) {
     <div><span>Telefone</span><strong>${escapeHtml(student.phone || "Nao informado")}</strong></div>
   `;
   const metrics = [
-    ["Total pago", sumFinance(paid, getPaymentPaidAmount), "success"],
-    ["Em aberto", sumFinance(pending, getPaymentNetAmount), "warning"],
-    ["Vencido", sumFinance(overdue, getPaymentNetAmount), "danger"],
+    ["Total pago", sumFinance(received, getPaymentPaidAmount), "success"],
+    ["Em aberto", sumFinance(open, getPaymentOutstandingAmount), "warning"],
+    ["Vencido", sumFinance(overdue, getPaymentOutstandingAmount), "danger"],
     ["Registros", payments.length, "neutral", true]
   ];
   document.getElementById("studentReportMetricGrid").innerHTML = metrics.map(([label, value, tone, count]) => `
@@ -3133,34 +3423,41 @@ function renderStudentFinanceReport(studentId) {
   `).join("");
   document.getElementById("studentReportResultCount").textContent = `${payments.length} registro${payments.length === 1 ? "" : "s"}`;
   document.getElementById("studentReportPaymentTable").innerHTML = payments.length
-    ? `<div class="student-report-payment-header"><span>Competencia</span><span>Vencimento</span><span>Pagamento</span><span>Valor</span><span>Forma</span><span>Status</span><span>Acao</span></div>${payments.map((payment) => {
+      ? `<div class="student-report-payment-header"><span>Competencia</span><span>Vencimento</span><span>Pagamento</span><span>Valor</span><span>Forma</span><span>Status</span><span>Acao</span></div>${payments.map((payment) => {
         const status = getEffectivePaymentStatus(payment);
+        const paidAmount = getPaymentPaidAmount(payment);
+        const outstanding = getPaymentOutstandingAmount(payment);
+        const valueLabel = status === "pago"
+          ? Store.currency(paidAmount)
+          : status === "parcial"
+            ? `${Store.currency(paidAmount)} pago · ${Store.currency(outstanding)} aberto`
+            : Store.currency(outstanding);
         return `<article class="student-report-payment-row">
           <strong data-label="Competencia">${escapeHtml(formatPaymentReference(payment.reference))}</strong>
           <span data-label="Vencimento">${escapeHtml(Store.formatDate(payment.dueDate))}</span>
-          <span data-label="Pagamento">${status === "pago" ? escapeHtml(Store.formatDate(payment.paidAt)) : "—"}</span>
-          <strong data-label="Valor">${escapeHtml(Store.currency(status === "pago" ? getPaymentPaidAmount(payment) : getPaymentNetAmount(payment)))}</strong>
-          <span data-label="Forma">${status === "pago" ? escapeHtml(FINANCE_METHOD_LABELS[payment.method] || payment.method || "—") : "—"}</span>
+          <span data-label="Pagamento">${paidAmount > 0 ? escapeHtml(Store.formatDate(payment.paidAt)) : "—"}</span>
+          <strong data-label="Valor">${escapeHtml(valueLabel)}</strong>
+          <span data-label="Forma">${paidAmount > 0 ? escapeHtml(FINANCE_METHOD_LABELS[payment.method] || payment.method || "—") : "—"}</span>
           <span data-label="Status">${badge(status, getPaymentStatusLabel(status))}</span>
-          <span class="report-row-action" data-label="Acao">${status === "pago" ? `<button class="ghost-button small-button" data-print-receipt="${escapeHtml(payment.id)}" type="button">Comprovante</button>` : "—"}</span>
+          <span class="report-row-action" data-label="Acao">${paidAmount > 0 && status !== "cancelado" ? `<button class="ghost-button small-button" data-print-receipt="${escapeHtml(payment.id)}" type="button">Comprovante</button>` : "—"}</span>
         </article>`;
       }).join("")}`
     : '<div class="empty-state">Nenhuma mensalidade no periodo selecionado.</div>';
 }
 
 function renderFinanceReports() {
-  if (!reportStartDate.value) reportStartDate.value = `${Store.currentMonth()}-01`;
-  if (!reportEndDate.value) reportEndDate.value = Store.todayISO();
+  if (!reportStartDate.value || !reportEndDate.value) applyReportPeriodPreset(reportPeriodPreset.value || "current-month");
   populateReportStudentOptions();
+  updateReportFilterSummary();
   const studentId = getReportSelectedStudentId();
   const student = studentId ? Store.findStudent(panelState, studentId) : null;
   const movements = getReportMovements();
-  const income = sumFinance(movements.filter((item) => item.type === "entrada"));
-  const expense = sumFinance(movements.filter((item) => item.type === "saida"));
-  const result = income - expense;
-  const incomeCount = movements.filter((item) => item.type === "entrada").length;
-  const averageTicket = incomeCount ? income / incomeCount : 0;
-  const metrics = [["Entradas", income, "success"], ["Saidas", expense, "neutral"], ["Resultado", result, result >= 0 ? "success" : "danger"], ["Ticket medio", averageTicket, "warning"]];
+  const summary = Finance.summarizeMovements(movements);
+  const income = summary.income;
+  const expense = summary.expense;
+  const result = summary.result;
+  const averageEntry = summary.incomeCount ? income / summary.incomeCount : 0;
+  const metrics = [["Entradas", income, "success"], ["Saidas", expense, "neutral"], ["Resultado", result, result >= 0 ? "success" : "danger"], ["Media por entrada", averageEntry, "warning"]];
   document.getElementById("reportMetricGrid").innerHTML = metrics.map(([label, value, tone]) => `<article class="finance-metric-card ${tone}"><span>${label}</span><strong>${Store.currency(value)}</strong><small>${movements.length} movimento(s)</small></article>`).join("");
 
   const categoryGroups = Object.entries(movements.reduce((groups, item) => {
@@ -3194,6 +3491,55 @@ function renderFinance() {
   if (!financeMonthFilter.value) financeMonthFilter.value = Store.currentMonth();
   renderFinanceStudentOptions();
   setActiveFinanceTab(activeFinanceTab);
+}
+
+function maskFinanceCurrencyValues() {
+  if (!financeValuesHidden || financePrivacyProcessing) return;
+  const financeSection = document.getElementById("financeSection");
+  if (!financeSection) return;
+  financePrivacyProcessing = true;
+  const walker = document.createTreeWalker(financeSection, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach((node) => {
+    const value = String(node.nodeValue || "");
+    if (!/R\$\s*-?[\d.]+,\d{2}/.test(value) || node.parentElement?.closest("#toggleFinanceValuesButton")) return;
+    if (!financePrivateTextNodes.has(node)) financePrivateTextNodes.set(node, value);
+    node.nodeValue = value.replace(/R\$\s*-?[\d.]+,\d{2}/g, "R$ •••••");
+  });
+  financePrivacyProcessing = false;
+}
+
+function setFinanceValuesVisibility(hidden) {
+  financeValuesHidden = Boolean(hidden);
+  const financeSection = document.getElementById("financeSection");
+  financeSection?.classList.toggle("finance-values-hidden", financeValuesHidden);
+  toggleFinanceValuesButton?.setAttribute("aria-pressed", String(financeValuesHidden));
+  if (toggleFinanceValuesButton) toggleFinanceValuesButton.title = financeValuesHidden ? "Mostrar valores financeiros" : "Ocultar valores financeiros";
+  const label = document.getElementById("financePrivacyLabel");
+  if (label) label.textContent = financeValuesHidden ? "Mostrar valores" : "Ocultar valores";
+  localStorage.setItem(Store.storageKey("finance-values-hidden-v1"), financeValuesHidden ? "1" : "0");
+  if (financeValuesHidden) {
+    maskFinanceCurrencyValues();
+    return;
+  }
+  financePrivacyProcessing = true;
+  financePrivateTextNodes.forEach((original, node) => {
+    node.nodeValue = original;
+  });
+  financePrivateTextNodes.clear();
+  financePrivacyProcessing = false;
+}
+
+function initializeFinancePrivacy() {
+  financeValuesHidden = localStorage.getItem(Store.storageKey("finance-values-hidden-v1")) === "1";
+  const financeSection = document.getElementById("financeSection");
+  if (financeSection && typeof MutationObserver !== "undefined") {
+    new MutationObserver(() => {
+      if (financeValuesHidden && !financePrivacyProcessing) window.requestAnimationFrame(maskFinanceCurrencyValues);
+    }).observe(financeSection, { childList: true, characterData: true, subtree: true });
+  }
+  setFinanceValuesVisibility(financeValuesHidden);
 }
 
 function renderAccess(student) {
@@ -4534,17 +4880,18 @@ function exportFinanceCsv() {
       ["Aluno", "Competencia", "Vencimento", "Data do pagamento", "Valor previsto", "Desconto", "Multa", "Valor final", "Valor pago", "Forma", "Status", "Responsavel", "Observacao"],
       ...payments.map((payment) => {
         const status = getEffectivePaymentStatus(payment);
+        const paidAmount = getPaymentPaidAmount(payment);
         return [
           student.name,
           formatPaymentReference(payment.reference),
           payment.dueDate || "",
-          status === "pago" ? payment.paidAt || "" : "",
+          paidAmount > 0 ? payment.paidAt || "" : "",
           safeNumber(payment.amount).toFixed(2).replace(".", ","),
           safeNumber(payment.discount).toFixed(2).replace(".", ","),
           safeNumber(payment.fine).toFixed(2).replace(".", ","),
           getPaymentNetAmount(payment).toFixed(2).replace(".", ","),
-          status === "pago" ? getPaymentPaidAmount(payment).toFixed(2).replace(".", ",") : "",
-          status === "pago" ? FINANCE_METHOD_LABELS[payment.method] || payment.method : "",
+          paidAmount > 0 ? paidAmount.toFixed(2).replace(".", ",") : "",
+          paidAmount > 0 ? FINANCE_METHOD_LABELS[payment.method] || payment.method : "",
           getPaymentStatusLabel(status),
           payment.recordedBy || "",
           payment.notes || ""
@@ -5208,15 +5555,9 @@ function attachPanelEvents() {
     setActiveMainSection("operation");
   });
   document.getElementById("quickReceivePaymentButton").addEventListener("click", receivePaymentFromFinanceBar);
+  toggleFinanceValuesButton.addEventListener("click", () => setFinanceValuesVisibility(!financeValuesHidden));
   document.getElementById("newMovementButton").addEventListener("click", createNewMovement);
   document.getElementById("newExpenseButton").addEventListener("click", createNewExpense);
-  financeQuickStudentSearch.addEventListener("input", () => financeQuickStudentSearch.setCustomValidity(""));
-  financeQuickStudentSearch.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      receivePaymentFromFinanceBar();
-    }
-  });
   document.getElementById("manageWeeklyScheduleButton").addEventListener("click", () => {
     setActiveMainSection("weekly");
     document.querySelector(".main-section-nav").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -5274,6 +5615,27 @@ function attachPanelEvents() {
   financeStatusFilter.addEventListener("change", renderFinancePaymentList);
   financeSearchFilter.addEventListener("input", renderFinancePaymentList);
   document.getElementById("paymentHistory").addEventListener("click", handleFinanceAction);
+  document.getElementById("collectionDebtorList").addEventListener("click", handleCollectionAction);
+  document.getElementById("collectionAgingTabs").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-collection-aging]");
+    if (!button) return;
+    activeCollectionAging = button.dataset.collectionAging;
+    document.querySelectorAll("[data-collection-aging]").forEach((item) => item.classList.toggle("active", item === button));
+    renderCollectionCenter();
+  });
+  [collectionPlanFilter, collectionDueStart, collectionDueEnd].forEach((field) => field.addEventListener("change", renderCollectionCenter));
+  document.getElementById("clearCollectionFilters").addEventListener("click", () => {
+    activeCollectionAging = "todos";
+    collectionPlanFilter.value = "todos";
+    collectionDueStart.value = "";
+    collectionDueEnd.value = "";
+    document.querySelectorAll("[data-collection-aging]").forEach((item) => item.classList.toggle("active", item.dataset.collectionAging === "todos"));
+    renderCollectionCenter();
+  });
+  collectionContactForm.addEventListener("submit", handleCollectionContactSave);
+  document.getElementById("closeCollectionContactButton").addEventListener("click", closeCollectionContact);
+  document.getElementById("cancelCollectionContactButton").addEventListener("click", closeCollectionContact);
+  collectionContactDialog.addEventListener("click", (event) => { if (event.target === collectionContactDialog) closeCollectionContact(); });
   document.getElementById("financeStudentHistoryList").addEventListener("click", handleFinanceAction);
   document.getElementById("closePaymentDialogButton").addEventListener("click", closePaymentDialog);
   document.getElementById("cancelPaymentDialogButton").addEventListener("click", closePaymentDialog);
@@ -5349,8 +5711,18 @@ function attachPanelEvents() {
   expenseStatusFilter.addEventListener("change", renderExpenseList);
   expenseSearchFilter.addEventListener("input", renderExpenseList);
 
-  document.getElementById("applyReportFiltersButton").addEventListener("click", renderFinanceReports);
+  document.getElementById("applyReportFiltersButton").addEventListener("click", applyFinanceReportFilters);
+  reportPeriodPreset.addEventListener("change", () => {
+    if (reportPeriodPreset.value !== "custom") applyReportPeriodPreset(reportPeriodPreset.value);
+    applyFinanceReportFilters();
+  });
+  [reportStartDate, reportEndDate].forEach((field) => field.addEventListener("change", () => {
+    reportPeriodPreset.value = "custom";
+    updateReportFilterSummary();
+  }));
   reportStudentFilter.addEventListener("change", renderFinanceReports);
+  reportTypeFilter.addEventListener("change", renderFinanceReports);
+  reportMethodFilter.addEventListener("change", renderFinanceReports);
   reportCostCenterFilter.addEventListener("change", renderFinanceReports);
   document.getElementById("studentReportPaymentTable").addEventListener("click", handleFinanceAction);
   document.getElementById("exportFinanceCsvButton").addEventListener("click", exportFinanceCsv);
@@ -5457,6 +5829,7 @@ function attachPanelEvents() {
 }
 
 attachPanelEvents();
+initializeFinancePrivacy();
 resetWeeklyScheduleForm();
 cashDateFilter.value = Store.todayISO();
 expenseMonthFilter.value = Store.currentMonth();

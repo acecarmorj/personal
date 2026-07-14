@@ -16,7 +16,7 @@
 5. Em demonstracao, o primeiro setup tambem cria as contas demo uma unica vez; depois importe `assets/data/demo.json`.
 6. Publique uma nova versao do Web App executada pelo proprietario e acessivel por qualquer pessoa.
 7. O acesso anonimo ao Web App permite abrir o login; a API valida token e permissao internamente em toda operacao protegida.
-8. Confirme `schemaVersion: 8` no retorno do setup e teste somente `GET ?action=health` sem autenticacao.
+8. Confirme `schemaVersion: 9` no retorno do setup e teste somente `GET ?action=health` sem autenticacao.
 
 `setup`, inicializacao do pepper e criacao das contas demo nunca sao expostos pela interface ou por endpoint publico.
 

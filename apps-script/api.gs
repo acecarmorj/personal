@@ -16,7 +16,7 @@
 const SPREADSHEET_ID_PROPERTY = "PROFITNESS_SPREADSHEET_ID";
 const SCHEMA_VERSION_PROPERTY = "PROFITNESS_SCHEMA_VERSION";
 const AUTH_PEPPER_PROPERTY = "PROFITNESS_AUTH_PEPPER";
-const CURRENT_SCHEMA_VERSION = 8;
+const CURRENT_SCHEMA_VERSION = 9;
 const AUTH_RESOURCE_NAMES = ["accounts", "sessions", "gateTokens", "accessAttempts", "loginAttempts"];
 const PASSWORD_ALGORITHM = "PBKDF2-HMAC-SHA256";
 const PASSWORD_VERSION = 1;
@@ -112,7 +112,7 @@ const SHEETS = {
   },
   payments: {
     sheetName: "Pagamentos",
-    headers: ["id", "studentId", "reference", "amount", "discount", "fine", "netAmount", "paidAmount", "dueDate", "status", "method", "paidAt", "recordedBy", "reversalReason", "reversedBy", "reversedAt", "description", "createdAt", "updatedAt", "notes", "updatedBy", "source", "deviceId"]
+    headers: ["id", "studentId", "reference", "amount", "discount", "fine", "netAmount", "paidAmount", "dueDate", "status", "method", "paidAt", "recordedBy", "reversalReason", "reversedBy", "reversedAt", "collectionLastContactAt", "collectionContactType", "collectionNotes", "paymentPromiseDate", "description", "createdAt", "updatedAt", "notes", "updatedBy", "source", "deviceId"]
   },
   movements: {
     sheetName: "Movimentacoes",

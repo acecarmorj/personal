@@ -1,7 +1,7 @@
 PRO FITNESS ACADEMIA - HISTORICO DE DESENVOLVIMENTO
 =====================================================
 
-ULTIMA ATUALIZACAO: 12/07/2026
+ULTIMA ATUALIZACAO: 13/07/2026
 
 ATENCAO OBRIGATORIA PARA QUALQUER IA OU DESENVOLVEDOR
 -----------------------------------------------------
@@ -1982,3 +1982,126 @@ ATUALIZACAO - 2026-07-13 - NOVAS TELAS DE LOGIN
 - O novo CSS foi incluido no cache offline e o cache passou para 20260713-login-v1.
 - Nenhum arquivo foi publicado no GitHub nesta etapa; todo o trabalho permanece somente em D:\PersonalPro.
 - Correcao posterior: reforcada a regra hidden das tres telas de acesso para impedir que login e aplicativo aparecam empilhados depois da autenticacao.
+- Na aba Painel, a Agenda semanal foi movida para logo abaixo dos indicadores de aniversarios, matriculas e cadastros, antes de Frequencia e Agenda de hoje.
+- A lista de alunos recebeu o filtro Inadimplentes, baseado em mensalidades efetivamente vencidas.
+- Alunos bloqueados agora exibem o motivo diretamente no cartao da listagem e em um alerta destacado na ficha selecionada.
+- O Financeiro recebeu um botao de olho para ocultar e revelar valores monetarios, preservando a escolha no navegador.
+- Regra documentada: ausencia nao bloqueia automaticamente; inadimplencia segue vencimento e carencia; conta desativada depende de acao administrativa.
+- Financeiro etapa 1: barra superior simplificada, acoes secundarias agrupadas e Resumo reorganizado em quatro indicadores, acoes do dia, caixa, evolucao e previsao.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-13 - FINANCEIRO ETAPA 2: CENTRAL DE COBRANCA
+======================================================================
+- Criada uma Central de Cobranca dentro de Mensalidades, sem adicionar uma nova aba ao painel.
+- Inadimplentes agora sao consolidados por aluno, incluindo todas as mensalidades vencidas e o saldo total em aberto.
+- Incluidas as faixas de atraso: 1 a 7, 8 a 15, 16 a 30 e mais de 30 dias.
+- Incluidos filtros por plano e periodo de vencimento, com opcao de limpeza rapida.
+- Incluidos indicadores de total vencido, quantidade de inadimplentes e valores que vencem nos proximos sete dias.
+- Cada cobranca permite registrar data, canal, observacao e promessa de pagamento.
+- Incluido atalho para WhatsApp com mensagem pronta e botao de recebimento direto.
+- A API da planilha foi preparada para schemaVersion 9 com quatro novos campos de acompanhamento de cobranca em Pagamentos.
+- api.txt foi mantido byte a byte identico a apps-script/api.gs.
+- Documentacao da estrutura da planilha e de implantacao atualizada para o schemaVersion 9.
+
+ARQUIVOS ALTERADOS
+- painel.html
+- assets/css/painel.css
+- assets/js/painel.js
+- assets/js/shared-data.js
+- apps-script/api.gs
+- api.txt
+- docs/estrutura-planilha.md
+- docs/sheets-api-setup.md
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Sintaxe do painel administrativo validada.
+- Smoke tests ampliados para a Central de Cobranca e para os novos campos da API.
+- Integridade entre api.gs e api.txt conferida por SHA-256.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-13 - FINANCEIRO ETAPA 3: VISAO GERENCIAL
+======================================================================
+- O Resumo Financeiro recebeu uma area gerencial integrada, sem criar nova aba ou duplicar fluxos operacionais.
+- A antiga previsao unica foi ampliada para horizontes cumulativos de 30, 60 e 90 dias.
+- A previsao considera cobrancas registradas em aberto, mensalidades futuras dos alunos ativos e somente despesas efetivamente cadastradas.
+- Incluidos indicadores compactos de receita no caixa, despesas pagas, ticket medio, taxa de inadimplencia e recuperacao de dividas.
+- A taxa de recuperacao considera pagamentos recebidos depois do vencimento em relacao ao saldo antigo ainda aberto.
+- Incluido grafico comparativo de receitas e despesas dos ultimos 12 meses.
+- Incluido rateio proporcional da receita recebida por modalidade, respeitando a composicao do plano do aluno.
+- Os novos valores tambem obedecem ao botao de privacidade do Financeiro.
+
+ARQUIVOS ALTERADOS
+- painel.html
+- assets/css/painel.css
+- assets/js/painel.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Sintaxe do JavaScript administrativo validada.
+- Smoke tests ampliados para os horizontes, indicadores, grafico anual e receita por modalidade.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-13 - FINANCEIRO ETAPA 4: RELATORIOS E REVISAO
+======================================================================
+- A tela de Relatorios foi simplificada para exibir primeiro somente periodo, datas, tipo e o botao Atualizar.
+- Incluidos atalhos para este mes, mes anterior, ultimos 30 dias, ultimos 90 dias e periodo personalizado.
+- Aluno, forma de pagamento e centro de custo foram movidos para Filtros avancados recolhiveis.
+- O texto Ticket medio do relatorio geral foi corrigido para Media por entrada, pois o calculo representa lancamentos e nao alunos.
+- O relatorio individual passou a contabilizar corretamente valores pagos e saldos de mensalidades parciais.
+- Pagamentos parciais vencidos agora entram na inadimplencia, na Central de Cobranca, nas prioridades e nos motivos de bloqueio.
+- Comprovantes agora podem ser emitidos para qualquer pagamento com valor efetivamente recebido, inclusive parcial.
+- As formulas de resultado, inadimplencia, recuperacao e rateio foram centralizadas em assets/js/finance-core.js.
+- Removido o codigo antigo da busca financeira que ja nao existia na interface.
+- Corrigida a grade do topo financeiro, que ainda reservava espaco para o campo removido.
+- Cache e parametros de versao atualizados para 20260713-finance-v1.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi executada nesta etapa.
+
+ARQUIVOS ALTERADOS
+- index.html
+- painel.html
+- prof.html
+- assets/css/painel.css
+- assets/js/finance-core.js
+- assets/js/painel.js
+- sw.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Testes unitarios cobrem pagamento parcial vencido, estorno, resultado, inadimplencia, recuperacao e rateio por modalidade.
+- Base demonstrativa de 50 alunos conferida sem valores invalidos ou divergencia entre entradas, saidas e resultado.
+- Sintaxe dos JavaScripts validada.
+- Smoke tests do repositorio e do pacote executados.
+- api.txt conferido como copia identica de apps-script/api.gs.
+
+
+======================================================================
+AJUSTE - 2026-07-13 - ACOES FINANCEIRAS SEM MENU OCULTO
+======================================================================
+- Removido o menu Outras acoes do topo do Financeiro.
+- Receber mensalidade, Nova despesa e Novo lancamento agora permanecem visiveis lado a lado.
+- Mantidos os mesmos formularios, identificadores e eventos, sem alterar o funcionamento das operacoes.
+- A grade foi ajustada para comportar os cinco controles do topo em notebook e quebrar em duas colunas em larguras menores.
+- Removidos os estilos sem uso do antigo menu recolhivel.
+- Cache do painel atualizado para 20260713-finance-v2.
+- Alteracao mantida somente em D:\PersonalPro, sem publicacao.
+
+VALIDACOES
+- Smoke tests atualizados para exigir as tres acoes visiveis.
+- Sintaxe e pacote completo validados.
+
+
+======================================================================
+PUBLICACAO - 2026-07-13 - GITHUB PAGES FINANCE-V2
+======================================================================
+- Versao financeira completa selecionada para publicacao em https://github.com/acecarmorj/personal.
+- Destino publico configurado em https://acecarmorj.github.io/personal/ pela branch main.
+- Escopo inclui Central de Cobranca, visao gerencial, relatorios revisados, pagamentos parciais e comandos financeiros visiveis.
+- Verificacao previa confirmou ausencia de credenciais privadas, arquivos temporarios e backups no pacote.
+- API mantida no schemaVersion 9; a publicacao do site nao reimplanta automaticamente o Google Apps Script.

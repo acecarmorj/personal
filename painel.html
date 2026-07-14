@@ -9,8 +9,8 @@
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="assets/css/painel.css?v=20260712-final-v4" rel="stylesheet"/>
-<link href="assets/css/login.css?v=20260713-login-v2" rel="stylesheet"/>
+<link href="assets/css/painel.css?v=20260713-finance-v2" rel="stylesheet"/>
+<link href="assets/css/login.css?v=20260713-finance-v2" rel="stylesheet"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 </head>
 <body>
@@ -81,6 +81,26 @@
 </article>
 <section class="overview-grid" id="metricGrid"></section>
 <section class="admin-daily-grid" id="adminDailyGrid"></section>
+<article class="dashboard-card weekly-overview-card">
+<div class="section-head weekly-overview-head">
+<div>
+<h2>Agenda semanal</h2>
+</div>
+<button class="ghost-button" id="manageWeeklyScheduleButton" type="button">Atualizar grade</button>
+</div>
+<div class="weekly-overview-layout">
+<section aria-label="Calendario semanal de atividades" class="weekly-calendar-panel">
+<div class="weekly-day-selector" id="weeklyDaySelector"></div>
+<div class="weekly-calendar" id="weeklyScheduleCalendar"></div>
+</section>
+<aside class="upcoming-classes-panel">
+<div class="upcoming-panel-head">
+<h3>Proximas aulas</h3>
+</div>
+<div class="upcoming-class-list" id="upcomingClassList"></div>
+</aside>
+</div>
+</article>
 <section class="insight-grid">
 <article class="dashboard-card insight-card attendance-card">
 <div class="section-head">
@@ -117,26 +137,6 @@
 <div class="student-mix" id="studentMix"></div>
 </article>
 </section>
-<article class="dashboard-card weekly-overview-card">
-<div class="section-head weekly-overview-head">
-<div>
-<h2>Agenda semanal</h2>
-</div>
-<button class="ghost-button" id="manageWeeklyScheduleButton" type="button">Atualizar grade</button>
-</div>
-<div class="weekly-overview-layout">
-<section aria-label="Calendario semanal de atividades" class="weekly-calendar-panel">
-<div class="weekly-day-selector" id="weeklyDaySelector"></div>
-<div class="weekly-calendar" id="weeklyScheduleCalendar"></div>
-</section>
-<aside class="upcoming-classes-panel">
-<div class="upcoming-panel-head">
-<h3>Proximas aulas</h3>
-</div>
-<div class="upcoming-class-list" id="upcomingClassList"></div>
-</aside>
-</div>
-</article>
 </section>
 <section class="main-section operation-section" data-main-panel="operation" hidden="" id="operationSection">
 <article class="dashboard-card operation-command-bar">
@@ -158,6 +158,7 @@
 <button class="filter-button active" data-filter="todos">Todos</button>
 <button class="filter-button" data-filter="ativos">Liberados</button>
 <button class="filter-button" data-filter="bloqueados">Bloqueados</button>
+<button class="filter-button filter-button-overdue" data-filter="inadimplentes">Inadimplentes</button>
 <button class="filter-button" data-filter="pendentes">Matricula pendente</button>
 </div>
 </div>
@@ -181,6 +182,7 @@
 <button class="ghost-button access-unlock-button" hidden="" id="unlockStudentAccessButton" type="button">Desbloquear acesso</button>
 </div>
 </div>
+<div class="student-access-alert" hidden="" id="studentAccessAlert" role="alert"></div>
 <div class="student-presence-summary" id="studentPresenceSummary"></div>
 </section>
 <div aria-label="Gestao do aluno" class="student-tabs" role="tablist">
@@ -634,14 +636,10 @@
 <span>Competencia</span>
 <input id="financeMonthFilter" type="month"/>
 </label>
-<label class="finance-command-field finance-command-student">
-<span>Aluno</span>
-<input autocomplete="off" id="financeQuickStudentSearch" list="financeQuickStudentList" placeholder="Nome, telefone ou codigo" type="search"/>
-<datalist id="financeQuickStudentList"></datalist>
-</label>
+<button aria-pressed="false" class="ghost-button finance-privacy-button" id="toggleFinanceValuesButton" type="button"><span class="privacy-eye" aria-hidden="true"><i></i></span><span id="financePrivacyLabel">Ocultar valores</span></button>
 <button class="primary-button finance-command-primary" id="quickReceivePaymentButton" type="button">Receber mensalidade</button>
-<button class="ghost-button" id="newExpenseButton" type="button">Nova despesa</button>
-<button class="ghost-button" id="newMovementButton" type="button">Novo lancamento</button>
+<button class="ghost-button finance-command-secondary" id="newExpenseButton" type="button">Nova despesa</button>
+<button class="ghost-button finance-command-secondary" id="newMovementButton" type="button">Novo lancamento</button>
 </div>
 </header>
 <nav aria-label="Modulos financeiros" class="finance-subnav">
@@ -654,17 +652,13 @@
 <section class="finance-panel active" data-finance-panel="summary">
 <section class="finance-overview-grid" id="financeMetricGrid"></section>
 <section class="finance-summary-layout">
-<article class="dashboard-card finance-chart-card">
+<article class="dashboard-card finance-priority-card">
 <div class="section-head">
 <div>
-<h2>Mensalidades: previsto x recebido</h2>
-</div>
-<div aria-label="Legenda do grafico" class="finance-legend">
-<span><i class="legend-dot paid"></i> Recebido</span>
-<span><i class="legend-dot expected"></i> Previsto</span>
+<h2>Acoes de hoje</h2>
 </div>
 </div>
-<div class="finance-chart" id="financeChart"></div>
+<div class="finance-priority-list" id="financePriorityList"></div>
 </article>
 <article class="dashboard-card finance-today-card">
 <div class="section-head">
@@ -676,22 +670,43 @@
 </article>
 </section>
 <section class="finance-summary-lower">
-<article class="dashboard-card finance-priority-card">
+<article class="dashboard-card finance-chart-card">
 <div class="section-head">
 <div>
-<h2>Pendencias prioritarias</h2>
+<h2>Evolucao de mensalidades</h2>
 </div>
+<div aria-label="Legenda do grafico" class="finance-legend"><span><i class="legend-dot paid"></i> Recebido</span><span><i class="legend-dot expected"></i> Previsto</span></div>
 </div>
-<div class="finance-priority-list" id="financePriorityList"></div>
+<div class="finance-chart" id="financeChart"></div>
 </article>
 <article class="dashboard-card finance-forecast-card">
 <div class="section-head">
 <div>
-<h2>Previsao dos proximos 30 dias</h2>
+<h2>Fluxo de caixa previsto</h2>
 </div>
 </div>
 <div class="finance-forecast" id="financeForecast"></div>
 </article>
+</section>
+<section class="finance-management-section">
+<header class="finance-management-heading">
+<div><span class="eyebrow">Visao gerencial</span><h2>Desempenho financeiro</h2></div>
+<span id="financeManagementReference">Competencia atual</span>
+</header>
+<section class="finance-management-metrics" id="financeManagementMetrics"></section>
+<section class="finance-management-grid">
+<article class="dashboard-card management-trend-card">
+<div class="section-head">
+<div><h2>Receitas e despesas em 12 meses</h2></div>
+<div aria-label="Legenda do grafico" class="management-legend"><span><i class="management-dot income"></i> Receitas</span><span><i class="management-dot expense"></i> Despesas</span></div>
+</div>
+<div class="management-trend-chart" id="financeManagementTrend"></div>
+</article>
+<article class="dashboard-card management-modality-card">
+<div class="section-head"><div><h2>Receita por modalidade</h2></div></div>
+<div class="management-modality-list" id="financeModalityRevenue"></div>
+</article>
+</section>
 </section>
 </section>
 <section class="finance-panel" data-finance-panel="payments" hidden="">
@@ -703,6 +718,18 @@
 <button class="ghost-button" id="generateMonthlyPaymentsButton" type="button">Gerar mensalidades do mes</button>
 </div>
 </header>
+<article class="dashboard-card collection-center-card">
+<div class="section-head collection-center-head"><div><h2>Central de cobranca</h2><p>Inadimplencia consolidada de todas as competencias.</p></div><span class="result-count" id="collectionUpdatedLabel">Atualizado agora</span></div>
+<section class="collection-metric-grid" id="collectionMetricGrid"></section>
+<div class="collection-toolbar">
+<div aria-label="Faixa de atraso" class="collection-aging-tabs" id="collectionAgingTabs" role="group"><button class="collection-aging-button active" data-collection-aging="todos" type="button">Todos</button><button class="collection-aging-button" data-collection-aging="1-7" type="button">1-7 dias</button><button class="collection-aging-button" data-collection-aging="8-15" type="button">8-15 dias</button><button class="collection-aging-button" data-collection-aging="16-30" type="button">16-30 dias</button><button class="collection-aging-button" data-collection-aging="31+" type="button">+30 dias</button></div>
+<details class="collection-advanced-filters"><summary>Filtros</summary><div><label>Plano<select id="collectionPlanFilter"><option value="todos">Todos os planos</option></select></label><label>Vencido de<input id="collectionDueStart" type="date"/></label><label>Vencido ate<input id="collectionDueEnd" type="date"/></label><button class="ghost-button" id="clearCollectionFilters" type="button">Limpar</button></div></details>
+</div>
+<section class="collection-content-grid">
+<div><div class="collection-list-title"><h3>Alunos para cobrar</h3><span id="collectionDebtorCount">0 alunos</span></div><div class="collection-debtor-list" id="collectionDebtorList"></div></div>
+<aside class="collection-upcoming-panel"><div class="collection-list-title"><h3>Vencem nos proximos 7 dias</h3><span id="collectionUpcomingCount">0</span></div><div class="collection-upcoming-list" id="collectionUpcomingList"></div></aside>
+</section>
+</article>
 <section class="finance-layout">
 <article class="dashboard-card finance-list-card">
 <div class="section-head finance-list-head">
@@ -850,15 +877,19 @@
 <div class="finance-module-actions"><button class="ghost-button" id="exportFinanceCsvButton" type="button">Exportar CSV</button><button class="primary-button" id="printFinanceReportButton" type="button">Imprimir / PDF</button></div>
 </header>
 <article class="dashboard-card report-filter-card">
-<div class="report-filters report-filters-final">
+<div class="report-filter-heading"><div><h3>Periodo do relatorio</h3><p id="reportActiveFiltersLabel">Este mes</p></div></div>
+<div class="report-filters report-primary-filters">
+<label>Periodo<select id="reportPeriodPreset"><option value="current-month">Este mes</option><option value="previous-month">Mes anterior</option><option value="last-30">Ultimos 30 dias</option><option value="last-90">Ultimos 90 dias</option><option value="custom">Personalizado</option></select></label>
 <label>Data inicial<input id="reportStartDate" type="date"/></label>
 <label>Data final<input id="reportEndDate" type="date"/></label>
-<label class="report-student-filter">Aluno<select id="reportStudentFilter"><option value="todos">Todos os alunos</option></select></label>
-<label>Tipo<select id="reportTypeFilter"><option value="todos">Entradas e saidas</option><option value="entrada">Entradas</option><option value="saida">Saidas</option></select></label>
-<label>Forma<select id="reportMethodFilter"><option value="todos">Todas</option><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select></label>
-<label>Centro de custo<select id="reportCostCenterFilter"><option value="todos">Todos</option><option value="geral">Geral</option><option value="musculacao">Musculacao</option><option value="natacao">Natacao</option><option value="lutas">Lutas</option><option value="aulas">Aulas coletivas</option><option value="administrativo">Administrativo</option></select></label>
+<label>Tipo<select id="reportTypeFilter"><option value="todos">Entradas e saidas</option><option value="entrada">Somente entradas</option><option value="saida">Somente saidas</option></select></label>
 <button class="primary-button" id="applyReportFiltersButton" type="button">Atualizar</button>
 </div>
+<details class="report-advanced-filters"><summary>Filtros avancados</summary><div>
+<label class="report-student-filter">Aluno<select id="reportStudentFilter"><option value="todos">Todos os alunos</option></select></label>
+<label>Forma de pagamento<select id="reportMethodFilter"><option value="todos">Todas as formas</option><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferencia</option></select></label>
+<label>Centro de custo<select id="reportCostCenterFilter"><option value="todos">Todos os centros</option><option value="geral">Geral</option><option value="musculacao">Musculacao</option><option value="natacao">Natacao</option><option value="lutas">Lutas</option><option value="aulas">Aulas coletivas</option><option value="administrativo">Administrativo</option></select></label>
+</div></details>
 </article>
 <section class="report-metric-grid" id="reportMetricGrid"></section>
 <article class="dashboard-card report-reconciliation-card" id="reportReconciliationCard"></article>
@@ -919,6 +950,15 @@
 <button class="ghost-button" id="cancelPaymentDialogButton" type="button">Cancelar</button>
 <button class="primary-button" id="paymentSubmitButton" type="submit">Confirmar recebimento</button>
 </footer>
+</form>
+</dialog>
+<dialog class="collection-contact-dialog" id="collectionContactDialog">
+<form class="collection-contact-form" id="collectionContactForm">
+<header><div><span>Cobranca</span><h2>Registrar contato</h2></div><button aria-label="Fechar" class="dialog-close-button" id="closeCollectionContactButton" type="button">×</button></header>
+<input name="studentId" type="hidden"/><input name="paymentId" type="hidden"/>
+<div class="collection-contact-context" id="collectionContactContext"></div>
+<div class="payment-dialog-grid"><label>Data do contato<input name="contactAt" required="" type="datetime-local"/></label><label>Canal<select name="contactType"><option value="whatsapp">WhatsApp</option><option value="telefone">Telefone</option><option value="presencial">Presencial</option><option value="email">E-mail</option></select></label><label>Promessa de pagamento<input name="promiseDate" type="date"/></label><label class="full">Observacao<textarea name="notes" required="" rows="4"></textarea></label></div>
+<footer><button class="ghost-button" id="cancelCollectionContactButton" type="button">Cancelar</button><button class="primary-button" type="submit">Salvar contato</button></footer>
 </form>
 </dialog>
 <dialog class="receipt-dialog" id="receiptDialog">
@@ -1056,11 +1096,11 @@ Restricoes fisicas
 <div class="student-credential-actions"><button class="ghost-button" id="copyStudentCredentialsButton" type="button">Copiar credenciais</button><button class="primary-button" id="finishStudentEnrollmentButton" type="button">Concluir</button></div>
 </section>
 </section><script src="assets/vendor/qrcode.min.js"></script>
-<script src="assets/js/app-config.js?v=20260712-final-v4"></script>
-<script src="assets/js/demo-data.js?v=20260712-final-v4"></script>
-<script src="assets/js/shared-data.js?v=20260712-final-v4"></script>
-<script src="assets/js/finance-core.js?v=20260712-final-v4"></script>
-<script src="assets/js/painel.js?v=20260712-final-v4"></script>
-<script src="assets/js/pwa.js?v=20260712-final-v4"></script>
+<script src="assets/js/app-config.js?v=20260713-finance-v2"></script>
+<script src="assets/js/demo-data.js?v=20260713-finance-v2"></script>
+<script src="assets/js/shared-data.js?v=20260713-finance-v2"></script>
+<script src="assets/js/finance-core.js?v=20260713-finance-v2"></script>
+<script src="assets/js/painel.js?v=20260713-finance-v2"></script>
+<script src="assets/js/pwa.js?v=20260713-finance-v2"></script>
 </body>
 </html>
