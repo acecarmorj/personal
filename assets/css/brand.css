@@ -1,0 +1,19 @@
+:root {
+  --brand-font-sans: "Sora", sans-serif;
+  --brand-font-mono: "DM Mono", monospace;
+  --brand-canvas: #e7e8e5;
+  --brand-canvas-deep: #d5d7d3;
+  --brand-surface: #fcfcf9;
+  --brand-surface-muted: #f1f2ee;
+  --brand-ink: #292b28;
+  --brand-graphite: #565954;
+  --brand-muted: #6e716d;
+  --brand-line: #d5d8d2;
+  --brand-gold: #d8b53d;
+  --brand-gold-strong: #c49a19;
+  --brand-gold-deep: #735a12;
+  --brand-gold-soft: #f2e7bd;
+  --brand-success: #66775f;
+  --brand-warning: #98731e;
+  --brand-danger: #a9534d;
+}

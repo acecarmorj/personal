@@ -1,13 +1,15 @@
-const CACHE_NAME = "profitness-shell-20260713-finance-v2";
+const CACHE_NAME = "profitness-shell-20260714-brand-harmony-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./painel.html",
   "./prof.html",
   "./manifest.webmanifest",
+  "./prof.webmanifest",
   "./assets/css/style.css",
   "./assets/css/painel.css",
   "./assets/css/prof.css",
+  "./assets/css/brand.css",
   "./assets/css/login.css",
   "./assets/js/app-config.js",
   "./assets/js/demo-data.js",
@@ -22,7 +24,8 @@ const APP_SHELL = [
   "./assets/images/pro-fitness-header-oficial.jpg",
   "./assets/images/pro-fitness-header-fino.jpg",
   "./assets/images/pro-fitness-logo-oficial.jpg",
-  "./assets/images/pf-app-icon.svg"
+  "./assets/images/pf-app-icon.svg",
+  "./assets/images/pf-prof-icon.svg"
 ];
 
 self.addEventListener("install", (event) => {

@@ -7093,6 +7093,224 @@ textarea {
   font-weight: 700;
 }
 
+.reconciliation-review-button {
+  min-height: 40px;
+  padding: 8px 15px;
+  white-space: nowrap;
+}
+
+.finance-review-dialog {
+  width: min(900px, calc(100vw - 40px));
+  max-height: calc(100vh - 40px);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 22px;
+  color: #252622;
+  background: #f7f6f1;
+  box-shadow: 0 30px 90px rgba(35, 36, 32, 0.3);
+}
+
+.finance-review-dialog::backdrop {
+  background: rgba(43, 44, 40, 0.48);
+  backdrop-filter: blur(4px);
+}
+
+.finance-review-shell {
+  max-height: calc(100vh - 40px);
+  padding: 22px;
+  display: grid;
+  gap: 16px;
+  overflow: auto;
+}
+
+.finance-review-header {
+  padding-bottom: 15px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #deddd6;
+}
+
+.finance-review-header > div {
+  display: grid;
+  gap: 4px;
+}
+
+.finance-review-header span {
+  color: #9a7500;
+  font-family: "DM Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.finance-review-header h2,
+.finance-review-header p {
+  margin: 0;
+}
+
+.finance-review-header h2 {
+  font-size: 1.55rem;
+}
+
+.finance-review-header p {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.finance-review-summary,
+.finance-review-values {
+  display: grid;
+  gap: 9px;
+}
+
+.finance-review-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.finance-review-summary > div,
+.finance-review-values > div {
+  padding: 11px 13px;
+  display: grid;
+  gap: 4px;
+  border: 1px solid #deddd6;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.finance-review-summary span,
+.finance-review-values span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.finance-review-summary strong {
+  font-size: 1.08rem;
+}
+
+.finance-review-list {
+  display: grid;
+  gap: 11px;
+}
+
+.finance-review-issue {
+  padding: 15px;
+  display: grid;
+  gap: 13px;
+  border: 1px solid rgba(190, 145, 0, 0.24);
+  border-left: 5px solid #d8a514;
+  border-radius: 15px;
+  background: #fffdf6;
+}
+
+.finance-review-issue > header,
+.finance-review-issue > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.finance-review-issue > header > div {
+  display: grid;
+  gap: 3px;
+}
+
+.finance-review-issue > header > div span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.finance-review-issue > header > div strong {
+  font-size: 1rem;
+}
+
+.finance-review-problem {
+  padding: 6px 9px;
+  border: 1px solid rgba(183, 116, 0, 0.22);
+  border-radius: 999px;
+  color: #805400;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: #fff2c8;
+  white-space: nowrap;
+}
+
+.finance-review-values {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.finance-review-values strong {
+  font-size: 0.9rem;
+}
+
+.finance-review-issue > footer {
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+.finance-review-issue > footer .small-button {
+  min-height: 38px;
+  padding: 7px 12px;
+}
+
+.finance-review-complete {
+  min-height: 190px;
+  padding: 30px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 7px;
+  border: 1px solid #d9ded8;
+  border-radius: 16px;
+  text-align: center;
+  background: #f7faf6;
+}
+
+.finance-review-complete span {
+  color: #53715a;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.finance-review-complete strong {
+  font-size: 1.15rem;
+}
+
+.finance-review-complete p,
+.finance-review-footer p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.finance-review-footer {
+  padding-top: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid #deddd6;
+}
+
+.finance-review-footer .ghost-button {
+  min-width: 110px;
+  min-height: 40px;
+}
+
+@media screen and (max-width: 900px) {
+  .finance-review-values {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .student-report-card {
   padding: 20px;
   display: grid;
@@ -8644,6 +8862,7 @@ form[aria-busy="true"] button[type="submit"]::after {
 
 /* Etapa 4: no painel administrativo, o selo nao cobre o logotipo do cabecalho. */
 body:has(#adminAppShell:not([hidden])) .environment-badge {
+  position: absolute;
   top: 22px;
   left: 32px;
   right: auto;
@@ -8778,6 +8997,234 @@ body:has(#adminAppShell:not([hidden])) .environment-badge {
   }
   .admin-enrollment-modal .student-form-sections {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Financeiro: periodo real e barra de acoes compacta. */
+.finance-command-bar {
+  padding: 10px 12px;
+}
+
+.finance-command-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.finance-command-period {
+  flex: 1 1 390px;
+  max-width: 450px;
+}
+
+.finance-period-range {
+  display: grid;
+  grid-template-columns: minmax(138px, 1fr) auto minmax(138px, 1fr);
+  align-items: center;
+  gap: 7px;
+}
+
+.finance-period-range label {
+  min-width: 0;
+}
+
+.finance-period-range > span {
+  color: #77766f;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.finance-command-field {
+  gap: 5px;
+  font-size: 0.76rem;
+}
+
+.finance-command-field input,
+.finance-command-controls > .primary-button,
+.finance-command-controls > .ghost-button {
+  min-height: 40px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+
+.finance-period-range input {
+  width: 100%;
+}
+
+.finance-command-primary,
+.finance-command-secondary {
+  flex: 0 0 auto;
+}
+
+.finance-privacy-button {
+  order: 99;
+  flex: 0 0 40px;
+  width: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  margin-left: auto;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.finance-privacy-button .privacy-eye {
+  width: 18px;
+  height: 11px;
+}
+
+@media screen and (max-width: 1080px) {
+  .finance-command-controls {
+    flex-wrap: wrap;
+  }
+
+  .finance-command-period {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
+
+/* Relatorios financeiros: situacao das mensalidades por faixa de atraso. */
+.report-payment-status-card {
+  grid-column: 1 / -1;
+  padding: 18px 21px;
+}
+
+.report-payment-status-card .section-head {
+  margin-bottom: 4px;
+}
+
+.report-payment-status-card .section-description {
+  margin-top: 4px;
+}
+
+.report-payment-status-chart {
+  min-height: 205px;
+  grid-template-columns: minmax(165px, 0.42fr) minmax(0, 1.58fr);
+  gap: 30px;
+}
+
+.payment-status-ring {
+  width: min(168px, 100%);
+  background: conic-gradient(
+    #7f8b69 0 var(--current-angle),
+    #d2ac43 var(--current-angle) var(--overdue30-angle),
+    #b75b54 var(--overdue30-angle) 360deg
+  );
+}
+
+.payment-status-ring.empty {
+  background: #d7d6d0;
+}
+
+.mix-dot.payment-current {
+  background: #7f8b69;
+}
+
+.mix-dot.payment-overdue30 {
+  background: #d2ac43;
+}
+
+.mix-dot.payment-overdue31 {
+  background: #b75b54;
+}
+
+.payment-status-legend {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
+}
+
+.payment-status-legend > div {
+  min-width: 0;
+  min-height: 104px;
+  padding: 14px;
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fbfbf8;
+}
+
+.payment-status-copy {
+  min-width: 0;
+  align-items: flex-start !important;
+}
+
+.payment-status-copy > span {
+  min-width: 0;
+  display: grid !important;
+  gap: 4px !important;
+}
+
+.payment-status-copy b {
+  color: #34352f;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.payment-status-copy small {
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+
+.payment-status-value {
+  margin-left: auto;
+  display: grid !important;
+  justify-items: end;
+  gap: 2px !important;
+}
+
+.payment-status-value strong {
+  color: #292a25;
+  font-size: 1.08rem;
+}
+
+.payment-status-value small {
+  color: var(--muted);
+  font-size: 0.58rem;
+}
+
+.print-payment-status {
+  display: none;
+}
+
+@media screen and (max-width: 1100px) {
+  .report-payment-status-chart {
+    grid-template-columns: 170px minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .payment-status-legend {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-status-legend > div {
+    min-height: 0;
+  }
+}
+
+@media print {
+  body.printing-finance-report .print-payment-status {
+    margin: 0 0 16px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  body.printing-finance-report .print-payment-status > div {
+    padding: 9px 11px;
+    display: grid;
+    gap: 3px;
+    border: 1px solid #d8d2bd;
+    border-radius: 7px;
+  }
+
+  body.printing-finance-report .print-payment-status span {
+    font-size: 9pt;
+  }
+
+  body.printing-finance-report .print-payment-status strong {
+    font-size: 11pt;
   }
 }
 
@@ -9080,4 +9527,1060 @@ body:has(#adminAppShell:not([hidden])) .environment-badge {
     min-height: 100vh;
     border-radius: 0;
   }
+}
+
+/* ======================================================================
+   2026-07-14 - POLIMENTO VISUAL FINAL DO PAINEL ADMINISTRATIVO
+   Camada exclusivamente estetica para notebook e desktop.
+   ====================================================================== */
+:root {
+  --canvas: var(--brand-canvas, #e7e8e5);
+  --canvas-deep: var(--brand-canvas-deep, #d5d7d3);
+  --surface: var(--brand-surface, #fcfcf9);
+  --surface-muted: var(--brand-surface-muted, #f1f2ee);
+  --ink: var(--brand-ink, #292b28);
+  --muted: var(--brand-muted, #6e716d);
+  --line: rgba(61, 66, 61, 0.13);
+  --line-strong: rgba(61, 66, 61, 0.21);
+  --forest: var(--brand-graphite, #565954);
+  --forest-soft: #6c6f69;
+  --primary: var(--brand-gold-strong, #c49a19);
+  --primary-deep: var(--brand-gold-deep, #735a12);
+  --lime: var(--brand-gold, #d8b53d);
+  --lime-ink: #292a26;
+  --warning: #98731e;
+  --danger: #a9534d;
+  --success: #66775f;
+  --radius-xl: 18px;
+  --radius-lg: 15px;
+  --radius-md: 11px;
+  --shadow-soft: 0 12px 34px rgba(51, 56, 51, 0.075);
+  --shadow-card: 0 5px 16px rgba(51, 56, 51, 0.06);
+}
+
+html {
+  background: var(--canvas);
+}
+
+body {
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 94% -8%, rgba(214, 181, 61, 0.17), transparent 30rem),
+    radial-gradient(circle at -6% 70%, rgba(116, 122, 115, 0.09), transparent 32rem),
+    linear-gradient(90deg, rgba(62, 68, 62, 0.018) 1px, transparent 1px) 0 0 / 34px 34px,
+    linear-gradient(rgba(62, 68, 62, 0.018) 1px, transparent 1px) 0 0 / 34px 34px,
+    var(--canvas);
+}
+
+.dashboard-shell {
+  width: min(100%, 1680px);
+}
+
+.admin-header.hybrid-app-header.official-banner-header {
+  height: 86px !important;
+  min-height: 86px !important;
+  border: 1px solid rgba(62, 65, 61, 0.2);
+  border-radius: 17px;
+  background: #555853 !important;
+  box-shadow: 0 10px 28px rgba(43, 47, 43, 0.13);
+}
+
+.admin-header.hybrid-app-header .official-header-banner {
+  filter: saturate(0.88) brightness(1.035) contrast(0.97);
+}
+
+.header-role-label {
+  right: 16px;
+  bottom: 10px;
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.94);
+  background: rgba(76, 79, 75, 0.78);
+  box-shadow: 0 4px 14px rgba(22, 24, 22, 0.16);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-shadow: none;
+  backdrop-filter: blur(5px);
+}
+
+body:has(#adminAppShell:not([hidden])) .environment-badge {
+  top: 18px;
+  left: 26px;
+  padding: 5px 8px;
+  border-color: rgba(94, 75, 15, 0.18);
+  color: #5f4a0c;
+  background: rgba(244, 226, 149, 0.94);
+  box-shadow: 0 5px 16px rgba(73, 62, 27, 0.11);
+}
+
+.admin-session-bar {
+  min-height: 40px;
+  padding: 6px 9px 6px 13px;
+  border: 1px solid rgba(62, 65, 61, 0.16);
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #666963, #555853);
+  box-shadow: 0 5px 15px rgba(46, 50, 46, 0.1);
+}
+
+.admin-session-bar span {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.admin-session-bar strong {
+  color: #fff;
+}
+
+.admin-session-bar .ghost-button {
+  min-height: 30px;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+.admin-session-bar .ghost-button:hover {
+  color: #292b28;
+  border-color: rgba(255, 255, 255, 0.48);
+  background: #f4f3ed;
+}
+
+.panel-navigation-shell {
+  gap: 8px;
+}
+
+.panel-navigation-shell .main-section-nav,
+.panel-utility-actions {
+  border: 1px solid #d7d9d4;
+  background: rgba(250, 250, 247, 0.92);
+  box-shadow: var(--shadow-card);
+}
+
+.panel-navigation-shell .main-section-nav {
+  gap: 3px;
+  padding: 4px;
+  border-radius: 13px;
+}
+
+.main-section-button {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #60635f;
+  font-weight: 720;
+  background: transparent;
+  box-shadow: none;
+}
+
+.main-section-button:hover {
+  color: #373936;
+  border-color: rgba(83, 88, 82, 0.1);
+  background: #f0f1ed;
+}
+
+.main-section-button.active,
+.finance-nav-button.active {
+  color: #2e302c;
+  border-color: rgba(148, 114, 13, 0.16);
+  background: linear-gradient(135deg, #e6cb69, #d2ad35);
+  box-shadow: 0 4px 10px rgba(137, 105, 12, 0.14);
+}
+
+.main-section-button span {
+  font-size: 0.85rem;
+  letter-spacing: -0.01em;
+}
+
+.panel-utility-actions {
+  gap: 4px;
+  padding: 4px;
+  border-radius: 13px;
+}
+
+.panel-utility-actions > .ghost-button,
+.panel-utility-actions .system-menu summary {
+  min-height: 42px;
+  border-color: transparent;
+  border-radius: 9px;
+  color: #555853;
+  background: transparent;
+  box-shadow: none;
+}
+
+.panel-utility-actions > .ghost-button:hover,
+.panel-utility-actions .system-menu summary:hover {
+  border-color: #d9dad5;
+  background: #eff0ec;
+}
+
+.global-student-search input {
+  min-height: 42px;
+  border-color: #d8dad5;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: inset 0 1px 2px rgba(49, 53, 49, 0.025);
+}
+
+.admin-sync-status {
+  min-height: 36px;
+  border: 1px solid #d9dbd6;
+  border-radius: 11px;
+  color: #676a66;
+  background: rgba(247, 248, 245, 0.88);
+  box-shadow: 0 3px 10px rgba(51, 56, 51, 0.035);
+}
+
+.admin-sync-now {
+  border-color: #d7d9d4;
+  color: #555853;
+  background: #fff;
+  box-shadow: none;
+}
+
+.primary-button,
+.finance-command-primary,
+#paymentHistory .payment-row-primary {
+  color: #292a26;
+  border-color: rgba(132, 101, 9, 0.17);
+  background: linear-gradient(135deg, #dec252, #cfa72b);
+  box-shadow: 0 5px 12px rgba(133, 103, 14, 0.14);
+}
+
+.primary-button:hover,
+.finance-command-primary:hover,
+#paymentHistory .payment-row-primary:hover {
+  color: #242520;
+  border-color: rgba(116, 87, 5, 0.25);
+  background: linear-gradient(135deg, #e5ca5b, #d5ae32);
+  box-shadow: 0 7px 16px rgba(133, 103, 14, 0.17);
+  transform: translateY(-1px);
+}
+
+.ghost-button,
+.filter-button,
+.student-tab,
+.finance-tab,
+.expense-status-button,
+.collection-aging-button {
+  border-color: #d8dad5;
+  color: #5c5f5a;
+  background: #f9f9f6;
+  box-shadow: none;
+}
+
+.ghost-button:hover,
+.filter-button:hover,
+.student-tab:hover,
+.finance-tab:hover,
+.expense-status-button:hover,
+.collection-aging-button:hover {
+  color: #30322f;
+  border-color: #c7cac4;
+  background: #eff0ec;
+  box-shadow: none;
+}
+
+.primary-button:focus-visible,
+.ghost-button:focus-visible,
+.filter-button:focus-visible,
+.student-tab:focus-visible,
+.finance-tab:focus-visible,
+.main-section-button:focus-visible,
+.dashboard-shell input:focus-visible,
+.dashboard-shell select:focus-visible,
+.dashboard-shell textarea:focus-visible {
+  outline: 3px solid rgba(200, 161, 36, 0.26);
+  outline-offset: 2px;
+}
+
+.section-head h2,
+.finance-module-head h2,
+.staff-report-hero h2,
+.settings-head h2 {
+  color: #2d2f2c;
+  letter-spacing: -0.027em;
+}
+
+.section-head h3 {
+  color: #343633;
+  letter-spacing: -0.02em;
+}
+
+.eyebrow,
+.header-kicker,
+.payment-dialog-kicker,
+.finance-review-header span {
+  color: #866815;
+}
+
+@media screen and (min-width: 1000px) {
+  .dashboard-shell {
+    padding: 14px 18px 26px;
+    gap: 10px;
+  }
+
+  .main-section,
+  .finance-panel.active,
+  .settings-section,
+  .staff-section {
+    gap: 11px;
+  }
+}
+
+/* Superficies e densidade */
+.dashboard-card,
+.metric-card,
+.admin-daily-card,
+.finance-metric-card,
+.management-metric-card,
+.staff-time-metric,
+.summary-card,
+.sub-card {
+  border-color: #d8dad5;
+  background-color: rgba(252, 252, 249, 0.96);
+  box-shadow: var(--shadow-card);
+}
+
+.dashboard-card {
+  border-radius: 16px;
+}
+
+.metric-card {
+  --metric-color: #c19a25;
+  --metric-soft: rgba(193, 154, 37, 0.12);
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 90% 10%, var(--metric-soft), transparent 6.5rem),
+    rgba(252, 252, 249, 0.97);
+}
+
+.metric-card::before {
+  width: 3px;
+}
+
+.metric-card.tone-green {
+  --metric-color: #73806d;
+  --metric-soft: rgba(115, 128, 109, 0.12);
+}
+
+.metric-card.tone-blue {
+  --metric-color: #737b77;
+  --metric-soft: rgba(115, 123, 119, 0.11);
+}
+
+.metric-card.tone-orange {
+  --metric-color: #ba9221;
+  --metric-soft: rgba(186, 146, 33, 0.13);
+}
+
+.metric-card.tone-rose {
+  --metric-color: #9a7772;
+  --metric-soft: rgba(154, 119, 114, 0.11);
+}
+
+.metric-icon {
+  border: 1px solid rgba(63, 68, 63, 0.055);
+  border-radius: 10px;
+}
+
+.metric-card > strong {
+  color: #2d2f2c;
+  letter-spacing: -0.052em;
+}
+
+.overview-lead.operational-bar,
+.finance-command-bar,
+.finance-module-head,
+.staff-report-hero,
+.staff-report-filters,
+.settings-head {
+  border-color: #d8dad5;
+  background: rgba(250, 250, 247, 0.95);
+  box-shadow: var(--shadow-card);
+}
+
+.overview-lead.operational-bar {
+  background:
+    linear-gradient(90deg, rgba(219, 185, 66, 0.12), transparent 38%),
+    rgba(250, 250, 247, 0.96);
+}
+
+.list-card {
+  border-color: #d8dad5;
+  background:
+    linear-gradient(180deg, rgba(216, 181, 61, 0.065), transparent 10rem),
+    rgba(250, 250, 247, 0.97);
+  box-shadow: var(--shadow-card);
+}
+
+.detail-card,
+.weekly-editor-card,
+.weekly-admin-list-card,
+.settings-card,
+.data-tools-card,
+.admin-quality-card {
+  background: rgba(252, 252, 249, 0.97);
+}
+
+.section-head {
+  margin-bottom: 12px;
+}
+
+.section-head h2 {
+  margin-top: 2px;
+  font-size: 1.12rem;
+}
+
+.section-head h3 {
+  margin-top: 2px;
+  font-size: 0.98rem;
+}
+
+.section-description,
+.staff-report-hero p,
+.finance-module-head p,
+.settings-head p {
+  color: #727570;
+}
+
+.overview-grid,
+.admin-daily-grid,
+.insight-grid,
+.settings-grid,
+.finance-overview-grid,
+.cash-metric-grid,
+.expense-metric-grid,
+.report-metric-grid,
+.staff-time-metrics {
+  gap: 9px;
+}
+
+.admin-daily-card,
+.finance-metric-card,
+.management-metric-card,
+.staff-time-metric {
+  border-radius: 13px;
+}
+
+.finance-metric-card,
+.staff-time-metric {
+  border-top-width: 3px;
+}
+
+.management-metric-card.success,
+.finance-metric-card.success,
+.staff-time-metric.success {
+  border-top-color: #74816d;
+}
+
+.management-metric-card.warning,
+.finance-metric-card.warning {
+  border-top-color: #c09a2c;
+}
+
+.management-metric-card.danger,
+.finance-metric-card.danger,
+.staff-time-metric.danger {
+  border-top-color: #a95b54;
+}
+
+.admin-quality-item {
+  border: 1px solid #d9ded7;
+  background: #eef2ec;
+}
+
+.admin-quality-item.warning {
+  border-color: #e4d7a7;
+  background: #f7f0d8;
+}
+
+/* Campos e formularios */
+.dashboard-shell input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.dashboard-shell select,
+.dashboard-shell textarea,
+.payment-dialog input,
+.payment-dialog select,
+.payment-dialog textarea,
+.collection-contact-dialog input,
+.collection-contact-dialog select,
+.collection-contact-dialog textarea,
+.admin-enrollment-modal input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.admin-enrollment-modal select,
+.admin-enrollment-modal textarea {
+  border-color: #d5d8d2;
+  border-radius: 10px;
+  color: #30322f;
+  background: #fff;
+  box-shadow: inset 0 1px 2px rgba(44, 48, 44, 0.025);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.dashboard-shell input::placeholder,
+.dashboard-shell textarea::placeholder,
+.admin-enrollment-modal input::placeholder,
+.admin-enrollment-modal textarea::placeholder {
+  color: #9a9d98;
+}
+
+.dashboard-shell input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):hover,
+.dashboard-shell select:hover,
+.dashboard-shell textarea:hover {
+  border-color: #c4c8c1;
+}
+
+.dashboard-shell input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus,
+.dashboard-shell select:focus,
+.dashboard-shell textarea:focus,
+.payment-dialog input:focus,
+.payment-dialog select:focus,
+.payment-dialog textarea:focus {
+  border-color: #b89934;
+  background: #fffefb;
+  box-shadow: 0 0 0 3px rgba(196, 154, 25, 0.11);
+}
+
+.form-grid label,
+.settings-inline-form label,
+.staff-report-filters label,
+.finance-filters label,
+.report-filters label,
+.finance-command-field,
+.cash-closing-form label {
+  color: #666964;
+  font-size: 0.78rem;
+  font-weight: 720;
+}
+
+.weekly-admin-filters,
+.finance-filters,
+.cash-filters,
+.expense-filters,
+.report-filter-card,
+.staff-report-filters,
+.collection-toolbar {
+  border-color: #dcddd8;
+  background: #f3f4f0;
+}
+
+/* Navegacao interna e filtros */
+.student-tabs,
+.finance-subnav {
+  border-color: #d7d9d4;
+  background: #eceeea;
+  box-shadow: inset 0 1px 2px rgba(54, 59, 54, 0.035);
+}
+
+.student-tab,
+.finance-tab {
+  color: #686b66;
+  background: transparent;
+}
+
+.student-tab.active,
+.finance-tab.active {
+  color: #fff;
+  border-color: #5f625d;
+  background: linear-gradient(135deg, #6c6f69, #5b5e59);
+  box-shadow: inset 0 -3px 0 #d2ad35, 0 3px 8px rgba(57, 61, 57, 0.13);
+}
+
+.list-card .filter-button.active,
+.filter-button-overdue.active,
+.expense-status-button.active,
+.collection-aging-button.active {
+  color: #41360f;
+  border-color: rgba(156, 121, 17, 0.24);
+  background: #eee1ac;
+  box-shadow: inset 0 0 0 1px rgba(195, 154, 25, 0.08);
+}
+
+.student-tab-panel > .module-grid:has(> :only-child),
+.student-tab-panel > .double-grid:has(> :only-child) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.student-tab-panel > .module-grid > :only-child,
+.student-tab-panel > .double-grid > :only-child {
+  grid-column: 1 / -1;
+}
+
+/* Listas e tabelas */
+.roster-item,
+.record-item,
+.timeline-item,
+.weekly-admin-item,
+.settings-list-item,
+.collection-debtor-item,
+.collection-upcoming-list article,
+.movement-item,
+.expense-item,
+.payment-table-row,
+.finance-table-row,
+.report-table-row,
+.staff-time-table-row {
+  border-color: #dfe1dc;
+  background: #fff;
+  box-shadow: none;
+}
+
+.roster-item:hover,
+.record-item:hover,
+.weekly-admin-item:hover,
+.payment-table-row:hover,
+.finance-table-row:hover,
+.movement-item:hover,
+.expense-item:hover,
+.report-table-row:hover {
+  border-color: #c9ccc6;
+  background: #f8f9f6;
+  box-shadow: 0 4px 11px rgba(51, 56, 51, 0.045);
+}
+
+.roster-item.selected {
+  border-color: rgba(171, 134, 24, 0.34);
+  background: linear-gradient(90deg, rgba(231, 207, 117, 0.26), #fff 72%);
+  box-shadow: inset 3px 0 0 #c7a02b;
+}
+
+#paymentHistory .payment-table-row:nth-child(even),
+.movement-list .movement-item:nth-child(even),
+.expense-list .expense-item:nth-child(even),
+.report-movement-table .report-table-row:nth-child(even),
+.staff-time-table-row:nth-child(odd) {
+  background: #f7f8f5;
+}
+
+.payment-table-header,
+.finance-table-header,
+.movement-table-header,
+.expense-table-header,
+.report-table-header {
+  padding: 8px 11px;
+  border: 1px solid #dfe1dc;
+  border-radius: 9px;
+  color: #696c67;
+  background: #eceeea;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.staff-time-table {
+  border-color: #d7d9d4;
+  border-radius: 12px;
+}
+
+.staff-time-table-head {
+  color: #fff;
+  background: #61645f;
+  letter-spacing: 0.035em;
+}
+
+.movement-item.entrada,
+.expense-item.expense-pago {
+  border-left-color: #778b70;
+}
+
+.movement-item.saida,
+.expense-item.expense-vencido {
+  border-left-color: #ad5c55;
+}
+
+.expense-item.expense-pendente {
+  border-left-color: #c39b2b;
+}
+
+/* Status com cores menos saturadas */
+.badge.success,
+.list-card .badge.success,
+.movement-type-pill.entrada,
+.cash-day-status.closed,
+.security-list .security-state.success {
+  color: #4f634b;
+  background: #e7eee4;
+}
+
+.badge.warning,
+.list-card .badge.warning,
+.cash-day-status,
+.security-list .security-state {
+  color: #765d17;
+  background: #f2e7bd;
+}
+
+.badge.danger,
+.list-card .badge.danger,
+.movement-type-pill.saida,
+.security-list .security-state.danger {
+  color: #884943;
+  background: #f1e2df;
+}
+
+.badge.neutral,
+.list-card .badge.neutral,
+.security-list .security-state.neutral {
+  color: #5f625e;
+  background: #e9ebe7;
+}
+
+.badge {
+  min-height: 23px;
+  padding: 4px 8px;
+  font-size: 0.63rem;
+  font-weight: 650;
+}
+
+.payment-status-ring {
+  background: conic-gradient(
+    #7d8a75 0 var(--current-angle),
+    #c5a44a var(--current-angle) var(--overdue30-angle),
+    #aa625c var(--overdue30-angle) 360deg
+  );
+}
+
+.mix-dot.payment-current {
+  background: #7d8a75;
+}
+
+.mix-dot.payment-overdue30 {
+  background: #c5a44a;
+}
+
+.mix-dot.payment-overdue31 {
+  background: #aa625c;
+}
+
+/* Graficos e paineis de apoio */
+.attendance-chart,
+.weekly-calendar-panel,
+.payment-status-legend > div,
+.finance-review-summary > div,
+.finance-review-values > div,
+.student-report-identification > div {
+  border-color: #dfe1dc;
+  background-color: #f8f9f6;
+}
+
+.attendance-chart {
+  background:
+    linear-gradient(rgba(91, 97, 91, 0.07) 1px, transparent 1px) 0 0 / 100% 25%,
+    #f8f9f6;
+}
+
+.management-trend-bars .income,
+.finance-chart .paid,
+.report-bar-row i,
+.management-modality-row > i::after {
+  background: linear-gradient(180deg, #d7b640, #b99020);
+}
+
+.management-trend-bars .expense {
+  background: linear-gradient(180deg, #858983, #5f625d);
+}
+
+.report-bar-row > div,
+.management-modality-row > i {
+  background: #e8eae6;
+}
+
+/* Janelas e destaques antes escuros */
+.payment-dialog,
+.collection-contact-dialog,
+.finance-review-dialog,
+.receipt-dialog,
+.admin-enrollment-modal .student-form-layout {
+  border: 1px solid rgba(75, 80, 75, 0.13);
+  background: #fafaf7;
+  box-shadow: 0 24px 68px rgba(44, 48, 44, 0.24);
+}
+
+.payment-dialog::backdrop,
+.collection-contact-dialog::backdrop,
+.finance-review-dialog::backdrop,
+.receipt-dialog::backdrop {
+  background: rgba(67, 71, 67, 0.46);
+}
+
+.dialog-close-button,
+.modal-close-button {
+  color: #555853;
+  background: #eceeea;
+}
+
+.dialog-close-button:hover,
+.modal-close-button:hover {
+  background: #e0e2dd;
+}
+
+.payment-dialog .payment-total-preview,
+.access-login-preview {
+  border: 1px solid #d5d8d2;
+  border-left: 4px solid #c6a02c;
+  color: #30322f;
+  background: #eceeea;
+}
+
+.payment-dialog .payment-total-preview span,
+.access-login-preview span {
+  color: #696c67;
+}
+
+.payment-dialog .payment-total-preview strong,
+.access-login-preview strong {
+  color: #3b3d39;
+}
+
+.enrollment-price-summary .final,
+.student-credential-card.password {
+  color: #373015;
+  border-color: #ded09b;
+  background: #eee1ac;
+}
+
+.finance-review-issue {
+  border-color: #e3d6a5;
+  border-left-color: #c7a02b;
+  background: #fbf9ef;
+}
+
+.finance-review-problem {
+  color: #745b16;
+  border-color: #dfcf91;
+  background: #f1e5b6;
+}
+
+.developer-credit {
+  color: #747772;
+}
+
+.developer-credit strong {
+  color: #50534f;
+}
+
+@media screen and (min-width: 1000px) {
+  .dashboard-card {
+    padding: 17px;
+  }
+
+  .overview-lead.operational-bar,
+  .finance-module-head,
+  .staff-report-hero,
+  .settings-head {
+    padding: 12px 16px;
+  }
+
+  .metric-card {
+    min-height: 130px;
+    padding: 13px 14px;
+  }
+
+  .metric-card > strong {
+    font-size: clamp(1.55rem, 2.2vw, 1.95rem);
+  }
+
+  .admin-daily-card {
+    padding: 10px 13px;
+  }
+
+  .insight-card {
+    min-height: 258px;
+    padding: 15px;
+  }
+
+  .settings-grid,
+  .finance-management-grid,
+  .footer-grid {
+    gap: 11px;
+  }
+}
+
+/* Acabamento do polimento visual: apoio claro e banner sem distorcao. */
+.admin-header.official-banner-header .official-header-banner {
+  object-fit: cover !important;
+  object-position: center 44% !important;
+}
+
+.upcoming-classes-panel {
+  border-color: #d6d9d3;
+  color: #343633;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(216, 181, 61, 0.14), transparent 10rem),
+    #eceee9;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.upcoming-panel-head h3,
+.upcoming-class-item h4 {
+  color: #343633;
+}
+
+.upcoming-classes-panel .live-indicator,
+.upcoming-class-item p {
+  color: #737671;
+}
+
+.upcoming-class-item {
+  border-color: #d9dcd6;
+  background: rgba(252, 252, 249, 0.92);
+}
+
+.upcoming-class-item > div:last-child > span {
+  color: #9a7818;
+}
+
+.finance-today-balance {
+  border: 1px solid #d4d7d1;
+  border-left: 4px solid #c6a02c;
+  color: #343633;
+  background:
+    radial-gradient(circle at 88% 20%, rgba(216, 181, 61, 0.15), transparent 7rem),
+    #eceee9;
+}
+
+.finance-today-balance span {
+  color: #737671;
+}
+
+.finance-today-balance strong {
+  color: #4d504b;
+}
+
+/* Barra institucional do painel: wordmark nativo, sem fotografia. */
+.admin-header.hybrid-app-header.official-banner-header.admin-wordmark-header {
+  height: 86px !important;
+  min-height: 86px !important;
+  padding: 0 17px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center;
+  gap: 18px;
+  border-color: rgba(18, 19, 18, 0.7);
+  background:
+    linear-gradient(90deg, rgba(216, 181, 61, 0.07), transparent 23%, transparent 77%, rgba(216, 181, 61, 0.055)),
+    linear-gradient(135deg, #0f100f, #1c1e1c 54%, #111211) !important;
+  box-shadow: 0 10px 28px rgba(31, 34, 31, 0.16);
+}
+
+.admin-wordmark-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.025) 35%, transparent 60%),
+    repeating-linear-gradient(90deg, transparent 0 119px, rgba(255, 255, 255, 0.012) 120px);
+}
+
+.admin-panel-brand {
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  align-items: center;
+}
+
+.admin-panel-logo {
+  width: 62px;
+  height: 62px;
+  padding: 5px;
+  display: grid;
+  place-items: center;
+  border-right: 1px solid rgba(216, 181, 61, 0.4);
+  background: #080908;
+}
+
+.admin-panel-logo img {
+  width: 52px;
+  height: 52px;
+  display: block;
+  object-fit: cover;
+  border-radius: 7px;
+}
+
+.admin-panel-wordmark {
+  width: min(88%, 850px);
+  min-width: 0;
+  margin: 0 auto;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+}
+
+.admin-panel-wordmark strong {
+  display: flex;
+  gap: 0.24em;
+  color: #f6f6f2;
+  font-size: clamp(2.15rem, 3.45vw, 3.15rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 0.86;
+  white-space: nowrap;
+  transform: scaleX(1.1);
+  transform-origin: center;
+}
+
+.admin-panel-wordmark strong span:last-child {
+  color: #e1bb32;
+}
+
+.admin-panel-wordmark i {
+  width: min(92%, 690px);
+  height: 3px;
+  margin-top: 8px;
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #d8b53d 12%, #e1bb32 88%, transparent);
+}
+
+.admin-panel-wordmark small {
+  margin-top: 4px;
+  color: #aeb1ac;
+  font-family: "DM Mono", monospace;
+  font-size: 0.54rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+}
+
+.admin-panel-wordmark small b {
+  margin: 0 0.45em;
+  color: #d8b53d;
+  font-weight: 500;
+}
+
+.admin-wordmark-header .header-role-label {
+  position: static;
+  z-index: 1;
+  justify-self: end;
+  margin: 0;
+  padding: 6px 10px;
+  border-color: rgba(216, 181, 61, 0.28);
+  color: #d9dbd6;
+  background: rgba(86, 89, 84, 0.35);
+  box-shadow: none;
+  text-shadow: none;
+}
+
+@media (max-width: 1180px) {
+  .admin-panel-wordmark strong {
+    font-size: clamp(2rem, 4vw, 2.7rem);
+    letter-spacing: 0.09em;
+  }
+
+  .admin-panel-wordmark {
+    width: 94%;
+  }
+}
+
+body:has(#adminAppShell:not([hidden])) .environment-badge {
+  top: 43px;
+  left: 108px;
+  padding: 4px 8px;
+  border-color: rgba(216, 181, 61, 0.32);
+  color: #dabb4a;
+  background: rgba(54, 56, 52, 0.86);
+  box-shadow: none;
 }

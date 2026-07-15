@@ -5,12 +5,13 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Pro Fitness | Painel de Gestao</title>
-<meta content="#f4c928" name="theme-color"/>
+<meta content="#d8b53d" name="theme-color"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="assets/css/painel.css?v=20260713-finance-v2" rel="stylesheet"/>
-<link href="assets/css/login.css?v=20260713-finance-v2" rel="stylesheet"/>
+<link href="assets/css/brand.css?v=20260714-brand-harmony-v2" rel="stylesheet"/>
+<link href="assets/css/painel.css?v=20260714-titlebar-v1" rel="stylesheet"/>
+<link href="assets/css/login.css?v=20260714-brand-harmony-v2" rel="stylesheet"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 </head>
 <body>
@@ -26,8 +27,11 @@
 </div>
 </section>
 <div class="dashboard-shell" hidden="" id="adminAppShell">
-<header aria-label="Pro Fitness Academia" class="admin-header photo-only-header hybrid-app-header official-banner-header">
-<img alt="Fachada e logotipo oficial da Pro Fitness Academia" class="official-header-banner" src="assets/images/pro-fitness-header-fino.jpg"/>
+<header aria-label="Pro Fitness Academia" class="admin-header hybrid-app-header official-banner-header admin-wordmark-header">
+<div class="admin-panel-brand">
+<span class="admin-panel-logo"><img alt="Simbolo da Pro Fitness Academia" src="assets/images/pro-fitness-logo-oficial.jpg"/></span>
+<span class="admin-panel-wordmark"><strong><span>PRO</span><span>FITNESS</span></strong><i aria-hidden="true"></i><small>ACADEMIA <b aria-hidden="true">/</b> CARMO-RJ</small></span>
+</div>
 <span class="header-role-label">ADMINISTRACAO</span>
 </header>
 <div class="admin-session-bar"><div><span>Sessao</span><strong id="adminCurrentUser">-</strong></div><button class="ghost-button" id="adminLogoutButton" type="button">Sair</button></div>
@@ -632,14 +636,19 @@
 <section class="main-section finance-section" data-main-panel="finance" hidden="" id="financeSection">
 <header class="dashboard-card finance-command-bar">
 <div class="finance-command-controls">
-<label class="finance-command-field finance-command-period">
-<span>Competencia</span>
-<input id="financeMonthFilter" type="month"/>
-</label>
-<button aria-pressed="false" class="ghost-button finance-privacy-button" id="toggleFinanceValuesButton" type="button"><span class="privacy-eye" aria-hidden="true"><i></i></span><span id="financePrivacyLabel">Ocultar valores</span></button>
+<input id="financeMonthFilter" type="hidden"/>
+<div aria-labelledby="financePeriodLabel" class="finance-command-field finance-command-period" role="group">
+<span id="financePeriodLabel">Periodo</span>
+<div class="finance-period-range">
+<label><span class="visually-hidden">Data inicial</span><input aria-label="Data inicial do periodo" id="financePeriodStart" type="date"/></label>
+<span aria-hidden="true">ate</span>
+<label><span class="visually-hidden">Data final</span><input aria-label="Data final do periodo" id="financePeriodEnd" type="date"/></label>
+</div>
+</div>
 <button class="primary-button finance-command-primary" id="quickReceivePaymentButton" type="button">Receber mensalidade</button>
 <button class="ghost-button finance-command-secondary" id="newExpenseButton" type="button">Nova despesa</button>
 <button class="ghost-button finance-command-secondary" id="newMovementButton" type="button">Novo lancamento</button>
+<button aria-label="Ocultar valores financeiros" aria-pressed="false" class="ghost-button finance-privacy-button" id="toggleFinanceValuesButton" title="Ocultar valores financeiros" type="button"><span class="privacy-eye" aria-hidden="true"><i></i></span></button>
 </div>
 </header>
 <nav aria-label="Modulos financeiros" class="finance-subnav">
@@ -691,7 +700,7 @@
 <section class="finance-management-section">
 <header class="finance-management-heading">
 <div><span class="eyebrow">Visao gerencial</span><h2>Desempenho financeiro</h2></div>
-<span id="financeManagementReference">Competencia atual</span>
+<span id="financeManagementReference">Periodo atual</span>
 </header>
 <section class="finance-management-metrics" id="financeManagementMetrics"></section>
 <section class="finance-management-grid">
@@ -734,7 +743,7 @@
 <article class="dashboard-card finance-list-card">
 <div class="section-head finance-list-head">
 <div>
-<h2>Mensalidades da competencia</h2>
+<h2>Mensalidades do periodo</h2>
 </div>
 <span class="result-count" id="financeResultCount">0 registros</span>
 </div>
@@ -894,6 +903,7 @@
 <section class="report-metric-grid" id="reportMetricGrid"></section>
 <article class="dashboard-card report-reconciliation-card" id="reportReconciliationCard"></article>
 <section class="report-chart-grid">
+<article class="dashboard-card report-chart-card report-payment-status-card"><div class="section-head"><div><h2>Situacao das mensalidades</h2><p class="section-description" id="reportPaymentStatusReference">Posicao na data final do relatorio.</p></div></div><div class="student-mix report-payment-status-chart" id="reportPaymentStatusChart"></div></article>
 <article class="dashboard-card report-chart-card"><div class="section-head"><div><h2>Resultado por categoria</h2></div></div><div class="report-bar-list" id="reportCategoryChart"></div></article>
 <article class="dashboard-card report-chart-card"><div class="section-head"><div><h2>Formas de pagamento</h2></div></div><div class="report-bar-list" id="reportMethodChart"></div></article>
 </section>
@@ -907,6 +917,7 @@
 <article class="dashboard-card report-table-card" id="printableFinanceReport">
 <div class="print-report-header"><div><strong>Pro Fitness Academia</strong><span id="reportDocumentTitle">Relatorio financeiro geral</span></div><span id="reportPeriodLabel"></span></div>
 <div class="print-report-summary" id="reportPrintSummary"></div>
+<div class="print-payment-status" id="reportPaymentStatusPrint"></div>
 <div class="section-head"><div><h2 id="reportMovementTitle">Movimentacoes do periodo</h2></div><span class="result-count" id="reportResultCount">0 registros</span></div>
 <div class="report-movement-table" id="reportMovementTable"></div>
 </article>
@@ -960,6 +971,17 @@
 <div class="payment-dialog-grid"><label>Data do contato<input name="contactAt" required="" type="datetime-local"/></label><label>Canal<select name="contactType"><option value="whatsapp">WhatsApp</option><option value="telefone">Telefone</option><option value="presencial">Presencial</option><option value="email">E-mail</option></select></label><label>Promessa de pagamento<input name="promiseDate" type="date"/></label><label class="full">Observacao<textarea name="notes" required="" rows="4"></textarea></label></div>
 <footer><button class="ghost-button" id="cancelCollectionContactButton" type="button">Cancelar</button><button class="primary-button" type="submit">Salvar contato</button></footer>
 </form>
+</dialog>
+<dialog class="finance-review-dialog" id="financeReviewDialog">
+<section class="finance-review-shell">
+<header class="finance-review-header">
+<div><span>Conferencia financeira</span><h2>Revisar pendencias</h2><p>Confira cada mensalidade antes de corrigir o vinculo com o caixa.</p></div>
+<button aria-label="Fechar revisao" class="dialog-close-button" data-close-finance-review type="button">&times;</button>
+</header>
+<div class="finance-review-summary" id="financeReviewSummary"></div>
+<div class="finance-review-list" id="financeReviewList"></div>
+<footer class="finance-review-footer"><p>As correcoes sao registradas no historico administrativo.</p><button class="ghost-button" data-close-finance-review type="button">Fechar</button></footer>
+</section>
 </dialog>
 <dialog class="receipt-dialog" id="receiptDialog">
 <section class="payment-receipt" id="printablePaymentReceipt">
@@ -1097,10 +1119,10 @@ Restricoes fisicas
 </section>
 </section><script src="assets/vendor/qrcode.min.js"></script>
 <script src="assets/js/app-config.js?v=20260713-finance-v2"></script>
-<script src="assets/js/demo-data.js?v=20260713-finance-v2"></script>
+<script src="assets/js/demo-data.js?v=20260714-finance-review-v1"></script>
 <script src="assets/js/shared-data.js?v=20260713-finance-v2"></script>
 <script src="assets/js/finance-core.js?v=20260713-finance-v2"></script>
-<script src="assets/js/painel.js?v=20260713-finance-v2"></script>
+<script src="assets/js/painel.js?v=20260714-panel-polish-v1"></script>
 <script src="assets/js/pwa.js?v=20260713-finance-v2"></script>
 </body>
 </html>

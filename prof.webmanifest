@@ -1,0 +1,23 @@
+{
+  "name": "Pro Fitness Equipe",
+  "short_name": "Pro Fitness",
+  "description": "Ambiente operacional da equipe Pro Fitness Academia de Carmo-RJ.",
+  "lang": "pt-BR",
+  "id": "./prof.html",
+  "start_url": "./prof.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f4f0",
+  "theme_color": "#d8b53d",
+  "categories": ["fitness", "productivity", "business"],
+  "icons": [
+    { "src": "assets/images/pf-prof-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "assets/images/pro-fitness-logo-oficial.jpg", "sizes": "225x225", "type": "image/jpeg", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Alunos", "short_name": "Alunos", "url": "./prof.html?view=alunos&source=shortcut" },
+    { "name": "Agenda", "short_name": "Agenda", "url": "./prof.html?view=agenda&source=shortcut" },
+    { "name": "Presença", "short_name": "Presença", "url": "./prof.html?view=ponto&source=shortcut" }
+  ]
+}

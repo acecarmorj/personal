@@ -1,10 +1,10 @@
 :root {
-  --login-ink: #191a18;
-  --login-muted: #686a64;
-  --login-yellow: #f4c928;
-  --login-yellow-deep: #dfa900;
-  --login-paper: #fbfbf8;
-  --login-line: #d9dad3;
+  --login-ink: var(--brand-ink, #191a18);
+  --login-muted: var(--brand-muted, #686a64);
+  --login-yellow: var(--brand-gold, #d8b53d);
+  --login-yellow-deep: var(--brand-gold-strong, #c49a19);
+  --login-paper: var(--brand-surface, #fbfbf8);
+  --login-line: var(--brand-line, #d9dad3);
 }
 
 /* Identidade compartilhada das tres telas de acesso. */
@@ -16,7 +16,7 @@
   display: grid !important;
   place-items: center !important;
   background:
-    radial-gradient(circle at 8% 12%, rgba(244, 201, 40, .2), transparent 25rem),
+    radial-gradient(circle at 8% 12%, rgba(216, 181, 61, .18), transparent 25rem),
     radial-gradient(circle at 92% 88%, rgba(31, 33, 30, .1), transparent 30rem),
     linear-gradient(135deg, #eeeee9 0%, #deded7 100%) !important;
 }
@@ -312,7 +312,7 @@
 .prof-auth-card .prof-auth-form input:focus,
 .admin-auth-card .admin-auth-form input:focus {
   border-color: #c49a00 !important;
-  box-shadow: 0 0 0 4px rgba(244, 201, 40, .18);
+  box-shadow: 0 0 0 4px rgba(216, 181, 61, .18);
 }
 
 .enrollment-panel .login-form button[type="submit"],
@@ -323,8 +323,8 @@
   border: 0 !important;
   border-radius: 13px !important;
   color: #171815 !important;
-  background: linear-gradient(135deg, #ffd633, var(--login-yellow)) !important;
-  box-shadow: 0 11px 24px rgba(207, 159, 0, .22);
+  background: linear-gradient(135deg, #e6ca64, var(--login-yellow)) !important;
+  box-shadow: 0 11px 24px rgba(148, 118, 27, .17);
   font-weight: 850;
   letter-spacing: -.01em;
   transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
@@ -508,4 +508,19 @@
     from { opacity: 0; transform: translateY(14px); }
     to { opacity: 1; transform: translateY(0); }
   }
+}
+
+/* 2026-07-14 - IDENTIDADE TIPOGRAFICA COMPARTILHADA */
+.login-hero,
+.admin-auth-card,
+.prof-auth-card,
+.enrollment-panel {
+  font-family: var(--brand-font-sans, "Sora", sans-serif);
+}
+
+.login-role-badge,
+.login-form-kicker,
+.login-form-brand small,
+.login-support {
+  font-family: var(--brand-font-mono, "DM Mono", monospace);
 }

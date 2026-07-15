@@ -3,14 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#f2c500" />
+    <meta name="theme-color" content="#d8b53d" />
     <meta name="description" content="Aplicativo do aluno da Pro Fitness Academia de Carmo-RJ." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Pro Fitness" />
     <title>Pro Fitness | App do Aluno</title>
+    <link rel="apple-touch-icon" href="assets/images/pro-fitness-logo-oficial.jpg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/style.css?v=20260713-finance-v1" />
-    <link rel="stylesheet" href="assets/css/login.css?v=20260713-finance-v1" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/brand.css?v=20260714-brand-harmony-v2" />
+    <link rel="stylesheet" href="assets/css/style.css?v=20260714-brand-harmony-v2" />
+    <link rel="stylesheet" href="assets/css/login.css?v=20260714-brand-harmony-v2" />
     <link rel="manifest" href="manifest.webmanifest" />
   </head>
 <body>
@@ -64,11 +69,11 @@
       </section>
 
       <section class="student-view" id="studentView" hidden>
-        <header class="student-photo-header official-banner-header" aria-label="Pro Fitness Academia">
-          <img class="official-header-banner" src="assets/images/pro-fitness-header-fino.jpg" alt="Fachada e logotipo oficial da Pro Fitness Academia" />
-          <span class="header-role-label">ALUNO</span>
-        </header>
         <header class="app-topbar">
+          <div class="compact-brand" aria-label="Pro Fitness Academia, Carmo-RJ">
+            <img class="brand-logo-small" src="assets/images/pro-fitness-logo-oficial.jpg" alt="" aria-hidden="true" />
+            <span><strong>PRO FITNESS</strong><small>Carmo-RJ</small></span>
+          </div>
           <div class="topbar-actions">
             <button class="sync-chip" id="studentSyncButton" type="button" aria-label="Sincronizar dados">
               <i id="studentSyncDot"></i><span id="studentSyncText">Dados locais</span>
@@ -80,16 +85,13 @@
         <main class="app-content">
           <section class="app-screen active" id="homeScreen" data-screen-panel="home">
             <div class="welcome-row">
-              <div><p id="homeGreeting">Ola</p><h1 id="homeStudentName">Aluno</h1></div>
+              <div><span class="home-eyebrow">SUA ROTINA DE HOJE</span><p id="homeGreeting">Olá</p><h1 id="homeStudentName">Aluno</h1></div>
               <span id="homeDateLabel"></span>
             </div>
-            <article class="access-pass" id="homeAccessPass">
-              <div class="access-copy"><span>ACESSO A ACADEMIA</span><strong id="homeAccessTitle">Verificando acesso</strong><p id="homeAccessReason">Aguarde a sincronizacao.</p><button id="openGateQrButton" type="button">Abrir meu QR</button></div>
-              <div class="access-pass-mark"><i></i><b>PF</b></div>
-            </article>
-            <section class="today-grid" id="homeSummary"></section>
             <article class="feature-card workout-next-card" id="homeWorkoutCard"></article>
             <article class="feature-card schedule-next-card" id="homeScheduleCard"></article>
+            <div class="section-heading home-insight-heading"><div><span class="section-kicker">SEUS NÚMEROS</span><h2>Resumo da semana</h2></div><button class="text-action" data-screen="evolution" type="button">Ver evolução</button></div>
+            <section class="today-grid" id="homeSummary"></section>
             <article class="notice-card" id="homePaymentAlert" hidden></article>
           </section>
 
@@ -103,6 +105,7 @@
           <section class="app-screen" id="agendaScreen" data-screen-panel="agenda">
             <div class="screen-heading"><h1>Agenda</h1><button class="icon-action" id="agendaTodayButton" type="button">Hoje</button></div>
             <div class="week-strip" id="agendaWeekStrip"></div>
+            <div class="agenda-day-heading"><div><span id="agendaSelectedWeekday">ATIVIDADES DO DIA</span><strong id="agendaSelectedDate">Hoje</strong></div><span id="agendaDayCount">0 atividades</span></div>
             <div class="content-stack" id="scheduleCards"></div>
             <div class="section-heading"><h2>Presencas</h2></div>
             <section class="metric-grid compact" id="presenceSummary"></section>
@@ -125,15 +128,27 @@
             <div class="history-list payment-history" id="paymentHistory"></div>
             <a class="whatsapp-action" id="paymentWhatsappButton" href="#" target="_blank" rel="noopener">Falar com a academia</a>
           </section>
+
+          <section class="app-screen" id="moreScreen" data-screen-panel="more">
+            <div class="screen-heading more-screen-heading"><div><span class="section-kicker">CONTA E SERVIÇOS</span><h1>Mais</h1></div></div>
+            <article class="more-profile-card" id="moreProfileCard"></article>
+            <nav class="more-link-list" aria-label="Outros recursos do aplicativo">
+              <button class="more-link" data-screen="evolution" type="button"><span class="more-link-icon evolution-glyph" aria-hidden="true"></span><span><strong>Minha evolução</strong><small>Frequência, cargas e avaliações</small></span><i aria-hidden="true">›</i></button>
+              <button class="more-link" data-screen="payments" type="button"><span class="more-link-icon payment-glyph" aria-hidden="true"></span><span><strong>Plano e mensalidade</strong><small>Vencimento e histórico de pagamentos</small></span><i aria-hidden="true">›</i></button>
+              <button class="more-link" id="openMoreProfileButton" type="button"><span class="more-link-icon profile-glyph" aria-hidden="true"></span><span><strong>Meus dados</strong><small>Cadastro, objetivo e acesso à conta</small></span><i aria-hidden="true">›</i></button>
+              <button class="more-link" id="installStudentAppButton" type="button"><span class="more-link-icon install-glyph" aria-hidden="true"></span><span><strong>Instalar Pro Fitness</strong><small id="installStudentAppHint">Adicionar à tela inicial deste celular</small></span><i aria-hidden="true">›</i></button>
+            </nav>
+            <article class="more-support-card"><span>PRECISA DE AJUDA?</span><strong>Fale com a equipe Pro Fitness</strong><p>A recepção pode ajudar com cadastro, plano e acesso.</p><a id="moreWhatsappButton" href="#" target="_blank" rel="noopener">Abrir WhatsApp</a></article>
+          </section>
           <footer class="developer-credit">Desenvolvido por <strong>@almir.lk</strong></footer>
         </main>
 
         <nav class="bottom-navigation" aria-label="Navegacao principal">
-          <button class="bottom-nav-item active" data-screen="home" type="button"><span class="nav-glyph home-glyph"></span><small>Inicio</small></button>
+          <button class="bottom-nav-item active" data-screen="home" type="button"><span class="nav-glyph home-glyph"></span><small>Início</small></button>
           <button class="bottom-nav-item" data-screen="workouts" type="button"><span class="nav-glyph workout-glyph"></span><small>Treino</small></button>
+          <button class="bottom-nav-item qr-nav-item" id="bottomGateQrButton" type="button" aria-label="Abrir QR Code de acesso"><span class="qr-nav-disc"><span class="nav-glyph qr-glyph"></span></span><small>QR</small></button>
           <button class="bottom-nav-item" data-screen="agenda" type="button"><span class="nav-glyph agenda-glyph"></span><small>Agenda</small></button>
-          <button class="bottom-nav-item" data-screen="evolution" type="button"><span class="nav-glyph evolution-glyph"></span><small>Evolucao</small></button>
-          <button class="bottom-nav-item" data-screen="payments" type="button"><span class="nav-glyph payment-glyph"></span><small>Mensalidade</small></button>
+          <button class="bottom-nav-item" data-screen="more" type="button"><span class="nav-glyph more-glyph"></span><small>Mais</small></button>
         </nav>
       </section>
     </div>
@@ -163,12 +178,14 @@
       <header class="session-header"><button class="session-back" id="closeWorkoutSessionButton" type="button">Sair</button><div><span id="sessionDivisionLabel">TREINO</span><strong id="sessionTitle">Seu treino</strong></div><time id="sessionTimer">00:00</time></header>
       <div class="session-progress"><i id="sessionProgressBar"></i></div>
       <main class="session-content" id="sessionExerciseList"></main>
+      <aside class="rest-timer-panel" id="restTimerPanel" hidden aria-live="polite"><div class="rest-timer-ring"><span id="restTimerValue">01:00</span></div><div><span>DESCANSO</span><strong id="restTimerExercise">Próxima série</strong></div><button id="skipRestTimerButton" type="button">Pular</button></aside>
       <footer class="session-footer"><span id="sessionSetCounter">0 de 0 series</span><button class="primary-action" id="finishWorkoutButton" type="button">Finalizar treino</button></footer>
     </dialog>
 
     <dialog class="student-dialog finish-dialog" id="finishWorkoutDialog">
       <button class="dialog-close" data-close-dialog="finishWorkoutDialog" type="button" aria-label="Fechar">&times;</button>
       <span class="section-kicker">CONCLUSAO</span><h2>Como foi o treino?</h2>
+      <div class="finish-workout-summary" id="finishWorkoutSummary"></div>
       <form id="finishWorkoutForm" class="student-form">
         <label>Dificuldade<select name="difficulty" required><option value="leve">Leve</option><option value="moderada" selected>Moderada</option><option value="alta">Alta</option></select></label>
         <label>Dor ou desconforto<select name="pain" required><option value="nenhuma" selected>Nenhuma</option><option value="leve">Leve</option><option value="moderada">Moderada</option><option value="forte">Forte</option></select></label>
@@ -180,11 +197,11 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="assets/vendor/qrcode.min.js"></script>
-    <script src="assets/js/app-config.js?v=20260713-finance-v1"></script>
-<script src="assets/js/demo-data.js?v=20260713-finance-v1"></script>
-    <script src="assets/js/finance-core.js?v=20260713-finance-v1"></script>
-    <script src="assets/js/shared-data.js?v=20260713-finance-v1"></script>
-    <script src="assets/js/app.js?v=20260713-finance-v1"></script>
-    <script src="assets/js/pwa.js?v=20260713-finance-v1"></script>
+    <script src="assets/js/app-config.js?v=20260714-student-soft-v1"></script>
+<script src="assets/js/demo-data.js?v=20260714-student-soft-v1"></script>
+    <script src="assets/js/finance-core.js?v=20260714-student-soft-v1"></script>
+    <script src="assets/js/shared-data.js?v=20260714-student-soft-v1"></script>
+    <script src="assets/js/app.js?v=20260714-student-soft-v1"></script>
+    <script src="assets/js/pwa.js?v=20260714-student-soft-v1"></script>
   </body>
 </html>

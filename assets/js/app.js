@@ -17,10 +17,13 @@
   let scannerActive = false;
   let detector = null;
   let workoutTimer = null;
+  let restTimer = null;
+  let restTimerEndsAt = 0;
   let gateCredential = null;
   let studentSyncPromise = null;
   let studentSyncTimer = null;
   let studentAuthTimer = null;
+  let deferredInstallPrompt = null;
 
   const STUDENT_SYNC_QUEUE_PREFIX = Store.storageKey("student-sync-queue-v2");
   const STUDENT_LAST_SYNC_PREFIX = Store.storageKey("student-last-sync-v2");
@@ -59,6 +62,21 @@
     return Number.isFinite(parsed) && parsed > 0 ? parsed : Number(fallback || 1);
   }
 
+  function parseRestSeconds(value) {
+    const normalized = String(value || "").trim().toLowerCase().replace(",", ".");
+    const clock = normalized.match(/^(\d{1,2}):(\d{2})$/);
+    if (clock) return Math.min(600, Number(clock[1]) * 60 + Number(clock[2]));
+    const amount = Number.parseFloat(normalized.match(/[\d.]+/)?.[0] || "0");
+    if (!Number.isFinite(amount) || amount <= 0) return 0;
+    const seconds = /min/.test(normalized) ? amount * 60 : amount;
+    return Math.min(600, Math.max(5, Math.round(seconds)));
+  }
+
+  function formatClock(totalSeconds) {
+    const safeSeconds = Math.max(0, Math.ceil(Number(totalSeconds || 0)));
+    return `${String(Math.floor(safeSeconds / 60)).padStart(2, "0")}:${String(safeSeconds % 60).padStart(2, "0")}`;
+  }
+
   function normalizeText(value) {
     return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
@@ -79,11 +97,78 @@
     return `${hours}h${String(remaining).padStart(2, "0")}`;
   }
 
+  function isStandaloneApp() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+
+  function renderInstallOption() {
+    const button = document.getElementById("installStudentAppButton");
+    const hint = document.getElementById("installStudentAppHint");
+    if (!button || !hint) return;
+    button.hidden = isStandaloneApp();
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    hint.textContent = deferredInstallPrompt
+      ? "Abrir em tela cheia direto do seu celular"
+      : isIOS
+        ? "No Safari: Compartilhar e Adicionar a Tela de Inicio"
+        : "Adicionar a tela inicial deste celular";
+  }
+
+  async function installStudentApp() {
+    if (isStandaloneApp()) {
+      showToast("O Pro Fitness ja esta aberto como aplicativo.");
+      renderInstallOption();
+      return;
+    }
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      renderInstallOption();
+      return;
+    }
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    showToast(isIOS
+      ? "No Safari, toque em Compartilhar e depois em Adicionar a Tela de Inicio."
+      : "No menu do navegador, escolha Instalar app ou Adicionar a tela inicial.");
+  }
+
   function showToast(message) {
     toast.textContent = message;
     toast.classList.add("visible");
     window.clearTimeout(showToast.timer);
     showToast.timer = window.setTimeout(() => toast.classList.remove("visible"), 2800);
+  }
+
+  function stopRestTimer() {
+    window.clearInterval(restTimer);
+    restTimer = null;
+    restTimerEndsAt = 0;
+    const panel = document.getElementById("restTimerPanel");
+    if (panel) panel.hidden = true;
+  }
+
+  function startRestTimer(seconds, nextExerciseName) {
+    stopRestTimer();
+    if (!seconds) return;
+    const panel = document.getElementById("restTimerPanel");
+    const value = document.getElementById("restTimerValue");
+    const exercise = document.getElementById("restTimerExercise");
+    if (!panel || !value || !exercise) return;
+    restTimerEndsAt = Date.now() + seconds * 1000;
+    exercise.textContent = nextExerciseName ? `Proxima: ${nextExerciseName}` : "Prepare a proxima serie";
+    panel.hidden = false;
+    const update = () => {
+      const remaining = Math.max(0, Math.ceil((restTimerEndsAt - Date.now()) / 1000));
+      value.textContent = formatClock(remaining);
+      panel.style.setProperty("--rest-progress", `${(remaining / seconds) * 100}%`);
+      if (remaining > 0) return;
+      stopRestTimer();
+      if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
+      showToast("Descanso concluido. Proxima serie!");
+    };
+    update();
+    restTimer = window.setInterval(update, 500);
   }
 
   function openDialog(dialog) {
@@ -211,6 +296,10 @@
 
   async function flushStudentSyncQueue(options) {
     const settings = options || {};
+    if (!authSession || authSession.account?.role !== "student") {
+      renderStudentSyncStatus("", "Entre para sincronizar");
+      return false;
+    }
     if (studentSyncPromise) return studentSyncPromise;
     studentSyncPromise = (async () => {
       if (Store.isLocalDemoSession(authSession)) {
@@ -263,7 +352,7 @@
   }
 
   async function refreshStudentFromRemote() {
-    if (Store.isLocalDemoSession(authSession) || !Store.isRemoteConfigured() || navigator.onLine === false || loadStudentSyncQueue().length) return false;
+    if (!authSession || authSession.account?.role !== "student" || Store.isLocalDemoSession(authSession) || !Store.isRemoteConfigured() || navigator.onLine === false || loadStudentSyncQueue().length) return false;
     const baseline = JSON.stringify(Store.loadData());
     try {
       renderStudentSyncStatus("syncing", "Atualizando dados");
@@ -560,7 +649,19 @@
       : session);
     persistState(nextState, { render: false });
     row?.classList.toggle("completed", completed);
+    row?.querySelector("[data-complete-set]")?.setAttribute("aria-pressed", String(completed));
     renderSessionProgress(exerciseSet.sessionId);
+    if (completed) {
+      const nextPending = sessionSets.find((item) => item.status !== "concluida");
+      if (nextPending) {
+        const workout = state.workouts.find((item) => item.id === exerciseSet.workoutId);
+        const exercise = getWorkoutExerciseItems(workout || {}).find((item) => item.id === exerciseSet.exerciseItemId || item.name === exerciseSet.exerciseName);
+        startRestTimer(parseRestSeconds(exercise?.rest), nextPending.exerciseName);
+      } else {
+        stopRestTimer();
+        showToast("Todas as series foram concluidas.");
+      }
+    }
   }
 
   function updateExerciseSetField(setId, field, value) {
@@ -575,18 +676,33 @@
     const workout = state.workouts.find((item) => item.id === session.workoutId);
     const items = getWorkoutExerciseItems(workout || {});
     const sets = Store.getWorkoutSessionSets(state, session.id);
+    const previousSession = Store.getStudentWorkoutSessions(state, session.studentId)
+      .filter((item) => item.id !== session.id && item.workoutId === session.workoutId && item.status === "concluida")
+      .sort((left, right) => String(right.endedAt || right.startedAt).localeCompare(String(left.endedAt || left.startedAt)))[0];
+    const previousSets = previousSession ? Store.getWorkoutSessionSets(state, previousSession.id) : [];
+    const findPreviousSet = (currentSet) => previousSets.find((item) => (
+      (currentSet.exerciseItemId && item.exerciseItemId === currentSet.exerciseItemId) || item.exerciseName === currentSet.exerciseName
+    ) && Number(item.setNumber) === Number(currentSet.setNumber));
+    const previousValue = (currentSet) => {
+      const previous = findPreviousSet(currentSet);
+      if (!previous) return "-";
+      const load = Number(previous.actualLoad || 0);
+      const reps = Number(previous.actualReps || 0);
+      return `${load ? `${load.toLocaleString("pt-BR")} kg` : "Livre"} x ${reps || "-"}`;
+    };
     document.getElementById("sessionDivisionLabel").textContent = `TREINO ${session.division || ""}`;
     document.getElementById("sessionTitle").textContent = session.workoutTitle || "Seu treino";
     document.getElementById("sessionExerciseList").innerHTML = items.length
       ? items.map((item, exerciseIndex) => {
           const itemSets = sets.filter((set) => set.exerciseItemId === item.id || (!set.exerciseItemId && set.exerciseName === item.name));
           return `<article class="session-exercise">
-            <div class="session-exercise-head"><span class="exercise-order">${exerciseIndex + 1}</span><div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.sets)} series &bull; ${escapeHtml(item.reps)} repeticoes &bull; intervalo ${escapeHtml(item.rest || "-")}${item.notes ? ` &bull; ${escapeHtml(item.notes)}` : ""}</p></div></div>
-            <div class="set-table">${itemSets.map((set) => `<div class="set-row ${set.status === "concluida" ? "completed" : ""}" data-set-row="${escapeHtml(set.id)}">
-              <span>${set.setNumber}</span>
-              <div class="set-field"><label>Repeticoes</label><input data-set-field="reps" inputmode="numeric" type="number" min="0" value="${Number(set.actualReps || 0)}" /></div>
-              <div class="set-field"><label>Carga (kg)</label><input data-set-field="load" inputmode="decimal" type="number" min="0" step="0.5" value="${Number(set.actualLoad || 0)}" /></div>
-              <button class="set-check" data-complete-set="${escapeHtml(set.id)}" type="button" aria-label="Marcar serie ${set.setNumber}"></button>
+            <div class="session-exercise-head"><span class="exercise-order">${exerciseIndex + 1}</span><div><span class="exercise-kicker">${escapeHtml(item.sets)} SERIES &bull; DESCANSO ${escapeHtml(item.rest || "-")}</span><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.notes || `${item.reps} repeticoes por serie`)}</p></div></div>
+            <div class="set-table"><div class="set-table-head"><span>Serie</span><span>Anterior</span><span>Reps</span><span>Kg</span><span>Feita</span></div>${itemSets.map((set) => `<div class="set-row ${set.status === "concluida" ? "completed" : ""}" data-set-row="${escapeHtml(set.id)}">
+              <span class="set-number">${set.setNumber}</span>
+              <span class="set-previous">${escapeHtml(previousValue(set))}</span>
+              <div class="set-field"><label>Repeticoes</label><input aria-label="Repeticoes da serie ${set.setNumber}" data-set-field="reps" inputmode="numeric" type="number" min="0" value="${Number(set.actualReps || 0)}" /></div>
+              <div class="set-field"><label>Carga em kg</label><input aria-label="Carga da serie ${set.setNumber} em quilos" data-set-field="load" inputmode="decimal" type="number" min="0" step="0.5" value="${Number(set.actualLoad || 0)}" /></div>
+              <button class="set-check" data-complete-set="${escapeHtml(set.id)}" type="button" aria-label="Marcar serie ${set.setNumber} como concluida" aria-pressed="${set.status === "concluida"}"></button>
             </div>`).join("")}</div>
           </article>`;
         }).join("")
@@ -617,6 +733,19 @@
     if (!session) return;
     renderWorkoutSession(session);
     openDialog(workoutSessionDialog);
+  }
+
+  function openFinishWorkout() {
+    const student = getCurrentStudent();
+    const session = getActiveWorkoutSession(student?.id);
+    if (!session) return;
+    const sets = Store.getWorkoutSessionSets(state, session.id);
+    const completed = sets.filter((item) => item.status === "concluida").length;
+    const remaining = Math.max(0, sets.length - completed);
+    const summary = document.getElementById("finishWorkoutSummary");
+    summary.className = `finish-workout-summary ${remaining ? "warning" : "complete"}`;
+    summary.innerHTML = `<span>${completed} de ${sets.length} series concluidas</span><strong>${remaining ? `${remaining} serie${remaining === 1 ? " ainda nao foi marcada" : "s ainda nao foram marcadas"}.` : "Treino completo. Excelente trabalho!"}</strong>`;
+    openDialog(finishWorkoutDialog);
   }
 
   function finishWorkout(event) {
@@ -661,13 +790,13 @@
     closeDialog(finishWorkoutDialog);
     closeDialog(workoutSessionDialog);
     window.clearInterval(workoutTimer);
+    stopRestTimer();
     event.currentTarget.reset();
     persistState(nextState, { message: `Treino finalizado: ${completedSets} series registradas.` });
     switchScreen("evolution");
   }
 
   function renderHome(student) {
-    const access = Store.getAccessState(state, student.id);
     const activeSession = getActiveWorkoutSession(student.id);
     const workouts = getActiveWorkouts(student.id);
     const sessions = Store.getStudentWorkoutSessions(state, student.id).filter((item) => item.status === "concluida");
@@ -686,11 +815,6 @@
     document.getElementById("homeDateLabel").textContent = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit", month: "short" }).format(new Date());
     document.getElementById("studentInitials").textContent = getInitials(student.name).toUpperCase();
 
-    const accessPass = document.getElementById("homeAccessPass");
-    accessPass.className = `access-pass ${Store.getStatusTone(access.status)}`;
-    document.getElementById("homeAccessTitle").textContent = access.label;
-    document.getElementById("homeAccessReason").textContent = access.reason;
-    document.getElementById("openGateQrButton").disabled = !access.allowsGate;
     document.getElementById("homeSummary").innerHTML = [
       ["Visitas na semana", weeklyVisits.length],
       ["Treinos concluidos", weeklySessions.length],
@@ -699,8 +823,12 @@
     ].map(([label, value]) => `<article class="today-card"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></article>`).join("");
 
     const nextWorkout = activeSession ? state.workouts.find((item) => item.id === activeSession.workoutId) : workouts[0];
+    const nextWorkoutItems = getWorkoutExerciseItems(nextWorkout);
+    const workoutDetail = activeSession
+      ? `${activeSession.completedSets} de ${activeSession.totalSets} series concluidas`
+      : `${nextWorkoutItems.length} exercicio${nextWorkoutItems.length === 1 ? "" : "s"}`;
     document.getElementById("homeWorkoutCard").innerHTML = nextWorkout
-      ? `<div class="feature-card-head"><div><span class="section-kicker">${activeSession ? "EM ANDAMENTO" : "PROXIMO TREINO"}</span><h2>${escapeHtml(nextWorkout.title)}</h2></div>${statusPill("ativo", `Treino ${nextWorkout.division || ""}`)}</div><p>${escapeHtml(getWorkoutExerciseItems(nextWorkout).slice(0, 3).map((item) => item.name).join(" • "))}${getWorkoutExerciseItems(nextWorkout).length > 3 ? " e mais" : ""}</p><button class="card-action" data-start-workout="${escapeHtml(nextWorkout.id)}" type="button">${activeSession ? "Continuar treino" : "Iniciar treino"}</button>`
+      ? `<div class="compact-workout-copy"><span class="section-kicker">${activeSession ? "TREINO EM ANDAMENTO" : "PROXIMO TREINO"}</span><h2>${escapeHtml(nextWorkout.title)}</h2><p>${escapeHtml(workoutDetail)}</p></div><button class="card-action compact-workout-action" data-start-workout="${escapeHtml(nextWorkout.id)}" type="button" aria-label="${activeSession ? "Continuar" : "Iniciar"} ${escapeHtml(nextWorkout.title)}">${activeSession ? "Continuar" : "Iniciar"}</button>`
       : '<div class="empty-state">Nenhum treino ativo liberado pelo professor.</div>';
   }
 
@@ -818,6 +946,11 @@
       return `<button class="week-day ${iso === selectedAgendaDate ? "active" : ""}" data-agenda-date="${iso}" type="button"><span>${new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(date).replace(".", "")}</span><strong>${date.getDate()}</strong></button>`;
     }).join("");
     const items = getAgendaItemsForDate(student, selectedAgendaDate);
+    document.getElementById("agendaSelectedWeekday").textContent = new Intl.DateTimeFormat("pt-BR", { weekday: "long" }).format(selected).toUpperCase();
+    document.getElementById("agendaSelectedDate").textContent = selectedAgendaDate === Store.todayISO()
+      ? "Hoje"
+      : new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long" }).format(selected);
+    document.getElementById("agendaDayCount").textContent = `${items.length} atividade${items.length === 1 ? "" : "s"}`;
     document.getElementById("scheduleCards").innerHTML = items.length
       ? items.map((item) => `<article class="agenda-card"><time class="agenda-time">${escapeHtml(Store.formatTime(item.effectiveTime))}</time><div><div class="history-row-head"><h3>${escapeHtml(item.effectiveTitle)}</h3>${statusPill(item.status || "marcada", item.status || "marcada")}</div><p>${escapeHtml(item.teacherName || "Professor a confirmar")} &bull; ${escapeHtml(item.location || (item.type === "online" ? "Online" : "Pro Fitness"))}${item.endTime ? ` &bull; ate ${escapeHtml(Store.formatTime(item.endTime))}` : ""}</p></div></article>`).join("")
       : '<div class="empty-state">Nenhuma atividade do seu plano neste dia.</div>';
@@ -960,8 +1093,20 @@
     const status = payment ? Finance.effectivePaymentStatus(payment, Store.todayISO()) : "sem-cobranca";
     const balance = payment ? Finance.outstandingAmount(payment) : 0;
     const displayedValue = payment ? (status === "pago" ? Finance.paidAmount(payment) : balance) : 0;
+    const paymentMetaItems = payment
+      ? [
+          ["Vencimento", Store.formatDate(payment.dueDate)],
+          ...(status === "pago"
+            ? [["Forma", payment.method || "Nao informada"]]
+            : [
+                ["Valor original", Store.currency(Finance.netAmount(payment))],
+                ["Pago", Store.currency(Finance.paidAmount(payment))],
+                ["Saldo", Store.currency(balance)]
+              ])
+        ]
+      : [];
     document.getElementById("paymentHero").innerHTML = payment
-      ? `<div class="payment-card-head"><div><span class="section-kicker">${escapeHtml(formatPaymentReference(payment.reference).toUpperCase())}</span><h2>${escapeHtml(getPaymentStatusLabel(status))}</h2></div>${statusPill(status, getPaymentStatusLabel(status))}</div><strong class="payment-value">${escapeHtml(Store.currency(displayedValue))}</strong><p>${status === "pago" ? "Pagamento confirmado pela academia." : "Valor restante desta mensalidade."}</p><div class="payment-meta-grid"><div><span>Vencimento</span><strong>${escapeHtml(Store.formatDate(payment.dueDate))}</strong></div><div><span>Forma</span><strong>${escapeHtml(status === "pago" ? payment.method || "Nao informada" : "Aguardando pagamento")}</strong></div><div><span>Valor original</span><strong>${escapeHtml(Store.currency(Finance.netAmount(payment)))}</strong></div><div><span>Pago</span><strong>${escapeHtml(Store.currency(Finance.paidAmount(payment)))}</strong></div></div>`
+      ? `<div class="payment-card-head"><span class="section-kicker">${escapeHtml(formatPaymentReference(payment.reference).toUpperCase())}</span>${statusPill(status, getPaymentStatusLabel(status))}</div><div class="payment-compact-main"><strong class="payment-value">${escapeHtml(Store.currency(displayedValue))}</strong><span>${status === "pago" ? "Confirmado pela academia" : "Saldo desta mensalidade"}</span></div><div class="payment-meta-grid">${paymentMetaItems.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}</div>`
       : '<span class="section-kicker">MENSALIDADE</span><h2>Sem cobranca cadastrada</h2><p>Procure a academia se esperava encontrar uma mensalidade aqui.</p>';
 
     const alert = getPaymentAlert(payment);
@@ -987,7 +1132,14 @@
   }
 
   function renderProfile(student) {
-    document.getElementById("profileCard").innerHTML = `<div class="profile-head"><span class="profile-avatar">${escapeHtml(getInitials(student.name).toUpperCase())}</span><div><span class="section-kicker">MEU PERFIL</span><h2>${escapeHtml(student.name)}</h2><p>${escapeHtml(student.plan || "Plano nao informado")}</p></div></div><div class="profile-data"><div><span>Telefone</span><strong>${escapeHtml(student.phone || "-")}</strong></div><div><span>E-mail</span><strong>${escapeHtml(student.email || "-")}</strong></div><div><span>Objetivo</span><strong>${escapeHtml(student.goal || "-")}</strong></div><div><span>Matricula</span><strong>${escapeHtml(student.enrollmentStatus || "-")}</strong></div></div>`;
+    const access = Store.getAccessState(state, student.id);
+    const enrollmentNumber = student.enrollmentNumber || authSession?.account?.login || "-";
+    document.getElementById("profileCard").innerHTML = `<div class="profile-head"><span class="profile-avatar">${escapeHtml(getInitials(student.name).toUpperCase())}</span><div><span class="section-kicker">MEU PERFIL</span><h2>${escapeHtml(student.name)}</h2><p>${escapeHtml(student.plan || "Plano nao informado")}</p></div></div><div class="profile-data"><div><span>Telefone</span><strong>${escapeHtml(student.phone || "-")}</strong></div><div><span>E-mail</span><strong>${escapeHtml(student.email || "-")}</strong></div><div><span>Objetivo</span><strong>${escapeHtml(student.goal || "-")}</strong></div><div><span>Matricula</span><strong>${escapeHtml(enrollmentNumber)}</strong></div></div>`;
+    document.getElementById("moreProfileCard").innerHTML = `<span class="more-profile-avatar">${escapeHtml(getInitials(student.name).toUpperCase())}</span><span class="more-profile-copy"><span>ALUNO PRO FITNESS</span><strong>${escapeHtml(student.name)}</strong><small>Matricula ${escapeHtml(enrollmentNumber)} &bull; ${escapeHtml(student.plan || "Plano nao informado")}</small></span><span class="more-profile-status ${access.blocked ? "blocked" : "ok"}">${escapeHtml(access.label)}</span>`;
+
+    const rules = getPaymentRules();
+    const message = encodeURIComponent(`Ola, sou ${student.name}. Preciso de ajuda com o aplicativo Pro Fitness.`);
+    document.getElementById("moreWhatsappButton").href = rules.whatsappNumber ? `https://wa.me/${rules.whatsappNumber}?text=${message}` : "#";
   }
 
   function renderGateQr(student) {
@@ -1013,9 +1165,16 @@
   }
 
   function switchScreen(screen) {
-    activeScreen = screen;
-    document.querySelectorAll("[data-screen-panel]").forEach((panel) => panel.classList.toggle("active", panel.dataset.screenPanel === screen));
-    document.querySelectorAll("[data-screen]").forEach((button) => button.classList.toggle("active", button.dataset.screen === screen));
+    const target = document.querySelector(`[data-screen-panel="${CSS.escape(screen)}"]`) ? screen : "home";
+    const navigationTarget = ["evolution", "payments"].includes(target) ? "more" : target;
+    activeScreen = target;
+    document.querySelectorAll("[data-screen-panel]").forEach((panel) => panel.classList.toggle("active", panel.dataset.screenPanel === target));
+    document.querySelectorAll(".bottom-nav-item[data-screen]").forEach((button) => {
+      const active = button.dataset.screen === navigationTarget;
+      button.classList.toggle("active", active);
+      if (active) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -1150,11 +1309,12 @@
       render();
     });
 
-    document.querySelectorAll("[data-screen]").forEach((button) => button.addEventListener("click", () => switchScreen(button.dataset.screen)));
     document.querySelectorAll("[data-close-dialog]").forEach((button) => button.addEventListener("click", () => closeDialog(document.getElementById(button.dataset.closeDialog))));
     document.getElementById("openProfileButton").addEventListener("click", () => openDialog(document.getElementById("profileDialog")));
+    document.getElementById("openMoreProfileButton").addEventListener("click", () => openDialog(document.getElementById("profileDialog")));
+    document.getElementById("installStudentAppButton").addEventListener("click", installStudentApp);
     document.getElementById("logoutButton").addEventListener("click", async () => { await Store.logoutRemote(); Store.clearStudentSession(); authSession = null; studentSession = null; closeDialog(document.getElementById("profileDialog")); render(); showToast("Sessao encerrada neste celular."); });
-    document.getElementById("openGateQrButton").addEventListener("click", async () => { openDialog(document.getElementById("gateQrDialog")); await refreshGateCredential(); });
+    document.getElementById("bottomGateQrButton").addEventListener("click", async () => { openDialog(document.getElementById("gateQrDialog")); await refreshGateCredential(); });
     document.getElementById("refreshGateQrButton").addEventListener("click", refreshGateCredential);
 
     document.getElementById("studentView").addEventListener("click", (event) => {
@@ -1179,8 +1339,9 @@
       if (!row || !event.target.dataset.setField) return;
       updateExerciseSetField(row.dataset.setRow, event.target.dataset.setField === "reps" ? "actualReps" : "actualLoad", event.target.value);
     });
-    document.getElementById("closeWorkoutSessionButton").addEventListener("click", () => { window.clearInterval(workoutTimer); closeDialog(workoutSessionDialog); render(); });
-    document.getElementById("finishWorkoutButton").addEventListener("click", () => openDialog(finishWorkoutDialog));
+    document.getElementById("closeWorkoutSessionButton").addEventListener("click", () => { window.clearInterval(workoutTimer); stopRestTimer(); closeDialog(workoutSessionDialog); render(); });
+    document.getElementById("finishWorkoutButton").addEventListener("click", openFinishWorkout);
+    document.getElementById("skipRestTimerButton").addEventListener("click", stopRestTimer);
     document.getElementById("finishWorkoutForm").addEventListener("submit", finishWorkout);
     document.getElementById("evolutionPeriod").addEventListener("change", () => { const student = getCurrentStudent(); if (student) renderEvolution(student); });
     document.getElementById("agendaTodayButton").addEventListener("click", () => { selectedAgendaDate = Store.todayISO(); const student = getCurrentStudent(); if (student) renderSchedule(student); });
@@ -1200,16 +1361,28 @@
       if (document.visibilityState === "visible" && await validateStudentSession()) flushStudentSyncQueue({ notify: false });
     });
     window.addEventListener("profitness:auth-invalid", (event) => handleStudentAuthInvalid(event.detail?.message));
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      renderInstallOption();
+    });
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      renderInstallOption();
+      showToast("Pro Fitness instalado com sucesso.");
+    });
     studentSyncTimer = window.setInterval(() => flushStudentSyncQueue({ notify: false }), STUDENT_SYNC_INTERVAL_MS);
     studentAuthTimer = window.setInterval(() => validateStudentSession(), 60000);
     window.addEventListener("beforeunload", () => {
       if (studentSyncTimer) window.clearInterval(studentSyncTimer);
       if (studentAuthTimer) window.clearInterval(studentAuthTimer);
       if (workoutTimer) window.clearInterval(workoutTimer);
+      if (restTimer) window.clearInterval(restTimer);
     });
   }
 
   attachEvents();
+  renderInstallOption();
   renderStudentSyncStatus();
   (async function initializeStudentApp() {
     Store.applyRuntimeEnvironment();
@@ -1222,9 +1395,17 @@
     }
     if (!(await validateStudentSession()) && authSession) return;
     syncState();
-    const flushed = await flushStudentSyncQueue({ notify: false });
+    if (authSession?.account?.role === "student" && !authSession.account.mustChangePassword && !studentSession && authSession.account.personId) {
+      try {
+        await activateAuthenticatedStudent(authSession);
+        syncState();
+      } catch (error) {
+        document.getElementById("studentLoginFeedback").textContent = error.message || "Nao foi possivel carregar os dados do aluno.";
+      }
+    }
+    const flushed = authSession ? await flushStudentSyncQueue({ notify: false }) : false;
     state = Store.loadData();
-    if (flushed && !loadStudentSyncQueue().length) await refreshStudentFromRemote();
+    if (authSession && flushed && !loadStudentSyncQueue().length) await refreshStudentFromRemote();
     render();
     renderStudentSyncStatus();
   })();

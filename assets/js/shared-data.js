@@ -1016,10 +1016,12 @@
         "Content-Type": "text/plain;charset=utf-8"
       }
     };
+    let requestToken = "";
 
     if (payload) {
       const authSession = loadAuthSession();
-      options.body = JSON.stringify({ ...payload, ...(authSession?.token ? { token: authSession.token } : {}) });
+      requestToken = String(authSession?.token || "");
+      options.body = JSON.stringify({ ...payload, ...(requestToken ? { token: requestToken } : {}) });
     }
 
     const data = await fetchJson(apiBaseUrl, options, 20000);
@@ -1029,9 +1031,15 @@
       error.code = data.errorCode || "REMOTE_ERROR";
       error.remoteStatus = data.status || 0;
       if (["INVALID_SESSION", "SESSION_EXPIRED", "ACCOUNT_INACTIVE", "AUTH_REQUIRED"].includes(String(error.code || ""))) {
-        clearAuthenticatedLocalData();
-        if (typeof window?.dispatchEvent === "function" && typeof window?.CustomEvent === "function") {
-          window.dispatchEvent(new window.CustomEvent("profitness:auth-invalid", { detail: { code: error.code, message: error.message } }));
+        const currentSession = loadAuthSession();
+        // Uma resposta antiga nunca deve apagar uma sessao criada enquanto a
+        // requisicao ainda estava em andamento.
+        const invalidatesCurrentSession = Boolean(requestToken) && (!currentSession || currentSession.token === requestToken);
+        if (invalidatesCurrentSession) {
+          clearAuthenticatedLocalData();
+          if (typeof window?.dispatchEvent === "function" && typeof window?.CustomEvent === "function") {
+            window.dispatchEvent(new window.CustomEvent("profitness:auth-invalid", { detail: { code: error.code, message: error.message } }));
+          }
         }
       }
       throw error;

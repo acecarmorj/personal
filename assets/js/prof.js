@@ -23,10 +23,12 @@
   const PROFESSOR_SYNC_RESOURCES = ["students", "assessments", "workouts", "schedule", "payments", "movements", "checkins", "staffTimeEntries"];
   const ACTIVE_PROFESSOR_KEY = Store.storageKey("active-professor-v1");
   const PROFESSOR_DEVICE_KEY = Store.storageKey("professor-device-v1");
+  const PROFESSOR_VIEWS = ["inicio", "alunos", "agenda", "ponto"];
+  const requestedProfessorView = new URLSearchParams(window.location.search).get("view");
 
   let state = Store.loadData();
   let authSession = Store.loadAuthSession();
-  let activeView = "inicio";
+  let activeView = PROFESSOR_VIEWS.includes(requestedProfessorView) ? requestedProfessorView : "inicio";
   let selectedStudentId = "";
   let activeStudentModule = "ficha";
   let studentEditing = false;
@@ -39,6 +41,7 @@
   let professorIdleTimer = null;
   let professorAuthTimer = null;
   let professorLastActivity = Date.now();
+  let deferredProfessorInstallPrompt = null;
 
   function professorAccountKey(prefix) {
     return `${prefix}-${authSession?.account?.id || "anonymous"}`;
@@ -67,6 +70,34 @@
       month: "2-digit",
       day: "2-digit"
     }).format(new Date());
+  }
+
+  function isStandaloneProfessorApp() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+
+  function renderProfessorInstallOption() {
+    const button = document.getElementById("installProfessorAppButton");
+    if (button) button.hidden = isStandaloneProfessorApp();
+  }
+
+  async function installProfessorApp() {
+    if (isStandaloneProfessorApp()) {
+      showToast("O Pro Fitness ja esta aberto como aplicativo.", "success");
+      renderProfessorInstallOption();
+      return;
+    }
+    if (deferredProfessorInstallPrompt) {
+      deferredProfessorInstallPrompt.prompt();
+      await deferredProfessorInstallPrompt.userChoice;
+      deferredProfessorInstallPrompt = null;
+      renderProfessorInstallOption();
+      return;
+    }
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    showToast(isIOS
+      ? "No Safari, toque em Compartilhar e depois em Adicionar a Tela de Inicio."
+      : "No menu do navegador, escolha Instalar app ou Adicionar a tela inicial.", "warning");
   }
 
   function dayDifference(fromDate, toDate) {
@@ -217,8 +248,8 @@
     const labels = {
       syncing: "Sincronizando",
       online: Store.isRemoteConfigured() ? "Dados sincronizados" : "Dados deste aparelho",
-      pending: navigator.onLine === false ? "Sem internet — salvo no tablet" : "Envio pendente",
-      offline: "Sem internet — salvo no tablet",
+      pending: navigator.onLine === false ? "Sem internet — salvo no aparelho" : "Envio pendente",
+      offline: "Sem internet — salvo no aparelho",
       error: "API indisponível — dados locais",
       local: "Dados deste aparelho"
     };
@@ -310,7 +341,7 @@
       if (settings.notify !== false) {
         showToast(error?.code === "SYNC_CONFLICT"
           ? "Ha uma versao mais recente na planilha. A alteracao ficou pendente para conferencia."
-          : "Dados salvos no tablet. O envio será repetido automaticamente.", "warning");
+          : "Dados salvos neste aparelho. O envio será repetido automaticamente.", "warning");
       }
       return false;
     }).finally(() => {
@@ -640,6 +671,71 @@
     `;
   }
 
+  function agendaTimeToMinutes(value) {
+    const match = String(value || "").match(/^(\d{1,2}):(\d{2})/);
+    return match ? Number(match[1]) * 60 + Number(match[2]) : 0;
+  }
+
+  function currentProfessorMinutes() {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23"
+    }).formatToParts(new Date());
+    const hour = Number(parts.find((part) => part.type === "hour")?.value || 0);
+    const minute = Number(parts.find((part) => part.type === "minute")?.value || 0);
+    return hour * 60 + minute;
+  }
+
+  function renderHomeAgendaFlow(agenda) {
+    if (!agenda.length) {
+      return `
+        <section class="agenda-now-summary empty">
+          <span class="agenda-now-state"><i></i>Agenda livre</span>
+          <strong>Nenhuma atividade hoje</strong>
+          <p>Use a agenda para incluir um atendimento ou consultar a grade semanal.</p>
+        </section>
+      `;
+    }
+
+    const now = currentProfessorMinutes();
+    const available = agenda.filter((item) => !["cancelada", "falta"].includes(item.status));
+    const enriched = available.map((item) => {
+      const start = agendaTimeToMinutes(item.time);
+      const explicitEnd = item.endTime ? agendaTimeToMinutes(item.endTime) : 0;
+      return { ...item, startMinutes: start, endMinutes: explicitEnd > start ? explicitEnd : start + 60 };
+    });
+    const current = enriched.find((item) => item.startMinutes <= now && now < item.endMinutes && item.status !== "realizada");
+    const next = enriched.find((item) => item.startMinutes > now && item.status !== "realizada");
+    const focus = current || next || null;
+    const mode = current ? "now" : next ? "next" : "complete";
+    const queue = focus
+      ? enriched.filter((item) => item.startMinutes > focus.startMinutes).slice(0, 3)
+      : [...enriched].sort((left, right) => right.startMinutes - left.startMinutes).slice(0, 3);
+    const stateLabel = mode === "now" ? "Acontecendo agora" : mode === "next" ? "Próxima atividade" : "Agenda concluída";
+    const summary = focus
+      ? `
+          <div class="agenda-now-main">
+            <time>${escapeHtml(focus.time)}${focus.endTime ? `<small>até ${escapeHtml(focus.endTime)}</small>` : ""}</time>
+            <span><strong>${escapeHtml(focus.title)}</strong><small>${escapeHtml(focus.detail || "Atividade programada")}</small></span>
+          </div>
+        `
+      : `
+          <strong>${agenda.length} ${agenda.length === 1 ? "atividade programada" : "atividades programadas"}</strong>
+          <p>Nenhuma atividade restante para hoje.</p>
+        `;
+    const queueLabel = mode === "complete" ? "Últimas atividades" : "A seguir";
+
+    return `
+      <section class="agenda-now-summary ${mode}">
+        <span class="agenda-now-state"><i></i>${stateLabel}</span>
+        ${summary}
+      </section>
+      ${queue.length ? `<div class="agenda-next-list"><span class="agenda-next-label">${queueLabel}</span>${queue.map((item) => agendaRowMarkup(item, true)).join("")}</div>` : ""}
+    `;
+  }
+
   function renderAgenda() {
     const agenda = getTodayAgenda();
     const compact = document.getElementById("todayAgendaList");
@@ -647,7 +743,7 @@
     const markup = agenda.length
       ? agenda.map((item) => agendaRowMarkup(item, false)).join("")
       : '<div class="empty-state">Nenhuma atividade agendada para hoje.</div>';
-    compact.innerHTML = agenda.length ? agenda.slice(0, 6).map((item) => agendaRowMarkup(item, true)).join("") : markup;
+    compact.innerHTML = renderHomeAgendaFlow(agenda);
     full.innerHTML = markup;
 
     document.getElementById("profAgendaDate").textContent = new Intl.DateTimeFormat("pt-BR", {
@@ -1674,14 +1770,15 @@ function startNewProfessorStudent() {
       : "Nenhuma restrição cadastrada";
 
     const presenceButton = document.getElementById("profPresenceButton");
-    presenceButton.textContent = inside ? "Registrar saída" : "Registrar entrada";
+    document.getElementById("profPresenceButtonLabel").textContent = inside ? "Saída" : "Entrada";
+    presenceButton.setAttribute("aria-label", inside ? "Registrar saída do aluno" : "Registrar entrada do aluno");
     presenceButton.classList.toggle("exit", inside);
 
     const currentPayment = getPaymentForReference(student.id, todayLocalISO().slice(0, 7));
     const receiveButton = document.getElementById("profReceivePaymentButton");
-    receiveButton.textContent = getEffectivePaymentStatus(currentPayment) === "pago"
-      ? "Pagamento do mês"
-      : "Receber mensalidade";
+    const paymentPaid = getEffectivePaymentStatus(currentPayment) === "pago";
+    document.getElementById("profReceivePaymentButtonLabel").textContent = paymentPaid ? "Pagamento" : "Receber";
+    receiveButton.setAttribute("aria-label", paymentPaid ? "Consultar pagamento do mês" : "Receber mensalidade");
 
     fillStudentForm(student);
     setStudentEditing(false);
@@ -1846,9 +1943,13 @@ function startNewProfessorStudent() {
   }
 
   function getProfessorUsers() {
-    const professors = (state.users || [])
+    const personId = String(authSession?.account?.personId || "");
+    const eligibleProfessors = (state.users || [])
       .filter((user) => ["professor", "instrutor"].includes(normalizeText(user.role)) && normalizeText(user.status || "ativo") !== "inativo")
       .sort((left, right) => String(left.name || "").localeCompare(String(right.name || ""), "pt-BR"));
+    const professors = personId
+      ? eligibleProfessors.filter((professor) => String(professor.id) === personId)
+      : eligibleProfessors;
     return professors.length
       ? professors
       : [{ id: authSession?.account?.personId || "USR-PROF-TEMP", name: authSession?.account?.login || "Professor Pro Fitness", email: "", role: "professor", status: "ativo" }];
@@ -1977,6 +2078,9 @@ function startNewProfessorStudent() {
   }
 
   function setView(viewName) {
+    if (!PROFESSOR_VIEWS.includes(viewName)) {
+      viewName = "inicio";
+    }
     activeView = viewName;
     document.querySelectorAll("[data-view]").forEach((view) => {
       const active = view.dataset.view === viewName;
@@ -1992,6 +2096,13 @@ function startNewProfessorStudent() {
         button.removeAttribute("aria-current");
       }
     });
+    const currentUrl = new URL(window.location.href);
+    if (viewName === "inicio") {
+      currentUrl.searchParams.delete("view");
+    } else {
+      currentUrl.searchParams.set("view", viewName);
+    }
+    window.history.replaceState(null, "", currentUrl.href);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -2024,8 +2135,13 @@ function startNewProfessorStudent() {
     }
 
     const button = document.getElementById("refreshProfessorData");
+    const main = document.querySelector(".prof-main");
     const refreshBaseline = JSON.stringify(Store.loadData());
+    let refreshSucceeded = false;
     button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    button.setAttribute("aria-label", "Atualizando dados");
+    main.setAttribute("aria-busy", "true");
     renderProfessorSyncStatus("syncing", "Atualizando dados");
 
     try {
@@ -2060,6 +2176,7 @@ function startNewProfessorStudent() {
           renderProfessorSyncStatus("online");
         }
       }
+      refreshSucceeded = true;
     } catch (error) {
       state = Store.loadData();
       renderProfessorSyncStatus(getProfessorPendingCount() ? "pending" : isProfessorOnline() ? "error" : "offline");
@@ -2068,9 +2185,15 @@ function startNewProfessorStudent() {
       }
     } finally {
       button.disabled = false;
+      button.removeAttribute("aria-busy");
+      button.setAttribute("aria-label", "Atualizar dados");
+      main.removeAttribute("aria-busy");
       renderAll();
       if (selectedStudentId && document.getElementById("studentPreviewDialog").open) {
         renderStudentWorkspace(selectedStudentId);
+      }
+      if (manual && refreshSucceeded) {
+        showToast("Dados atualizados.", "success");
       }
     }
   }
@@ -2082,7 +2205,14 @@ function startNewProfessorStudent() {
     document.getElementById("profAppShell").hidden = !logged;
     if (logged) {
       const profile = getProfessorUsers()[0];
-      document.getElementById("profCurrentUser").textContent = profile?.name || authSession?.account?.login || "Professor";
+      const displayName = profile?.name || authSession?.account?.login || "Professor";
+      const firstName = displayName.replace(/^prof\.?\s*/i, "").split(" ")[0] || "Professor";
+      document.getElementById("profCurrentUser").textContent = displayName;
+      document.getElementById("profHomeFirstName").textContent = firstName;
+      document.getElementById("profHomeDate").textContent = new Intl.DateTimeFormat("pt-BR", {
+        weekday: "long", day: "2-digit", month: "long", timeZone: "America/Sao_Paulo"
+      }).format(new Date());
+      renderProfessorInstallOption();
       professorLastActivity = Date.now();
     }
   }
@@ -2269,6 +2399,37 @@ function startNewProfessorStudent() {
     renderSearchResults("");
   });
   document.getElementById("refreshProfessorData").addEventListener("click", () => refreshData({ manual: true }));
+  document.getElementById("installProfessorAppButton").addEventListener("click", installProfessorApp);
+  const professorHeaderMenu = document.getElementById("profHeaderMenu");
+  const professorHeaderMenuSummary = professorHeaderMenu.querySelector("summary");
+  const studentActionsMore = document.getElementById("studentActionsMore");
+  professorHeaderMenu.addEventListener("toggle", () => {
+    professorHeaderMenuSummary.setAttribute("aria-expanded", String(professorHeaderMenu.open));
+  });
+  professorHeaderMenu.querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", () => {
+      professorHeaderMenu.open = false;
+    });
+  });
+  studentActionsMore.querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", () => {
+      studentActionsMore.open = false;
+    });
+  });
+  document.addEventListener("click", (event) => {
+    if (professorHeaderMenu.open && !professorHeaderMenu.contains(event.target)) {
+      professorHeaderMenu.open = false;
+    }
+    if (studentActionsMore.open && !studentActionsMore.contains(event.target)) {
+      studentActionsMore.open = false;
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && professorHeaderMenu.open) {
+      professorHeaderMenu.open = false;
+      professorHeaderMenuSummary.focus();
+    }
+  });
   document.getElementById("pendingSyncText").addEventListener("click", () => flushProfessorSyncQueue({ notify: true }));
   document.getElementById("activeProfessorSelect").addEventListener("change", (event) => {
     localStorage.setItem(ACTIVE_PROFESSOR_KEY, event.currentTarget.value);
@@ -2438,7 +2599,7 @@ function startNewProfessorStudent() {
 
   window.addEventListener("offline", () => {
     renderProfessorSyncStatus("offline");
-    showToast("Sem internet. As alterações continuarão salvas neste tablet.", "warning");
+    showToast("Sem internet. As alterações continuarão salvas neste aparelho.", "warning");
   });
 
   document.addEventListener("visibilitychange", async () => {
@@ -2447,6 +2608,16 @@ function startNewProfessorStudent() {
     }
   });
   window.addEventListener("profitness:auth-invalid", (event) => handleProfessorAuthInvalid(event.detail?.message));
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredProfessorInstallPrompt = event;
+    renderProfessorInstallOption();
+  });
+  window.addEventListener("appinstalled", () => {
+    deferredProfessorInstallPrompt = null;
+    renderProfessorInstallOption();
+    showToast("Pro Fitness instalado com sucesso.", "success");
+  });
 
   professorAutoSyncTimer = window.setInterval(() => {
     if (authSession && !hasProfessorUnsavedEditor()) {
@@ -2472,6 +2643,7 @@ function startNewProfessorStudent() {
   });
 
   Store.applyRuntimeEnvironment();
+  renderProfessorInstallOption();
   setView(activeView);
   (async function initializeProfessorPanel() {
     if (authSession?.account?.role !== "professor") {

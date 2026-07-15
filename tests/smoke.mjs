@@ -280,7 +280,7 @@ for (const [htmlFile, jsFile] of htmlPairs) {
   assert.deepEqual(missing, [], `${jsFile} referencia IDs ausentes: ${missing.join(", ")}`);
 }
 
-for (const cssFile of ["assets/css/style.css", "assets/css/painel.css", "assets/css/prof.css"]) {
+for (const cssFile of ["assets/css/brand.css", "assets/css/style.css", "assets/css/painel.css", "assets/css/prof.css", "assets/css/login.css"]) {
   const css = read(cssFile);
   assert.equal((css.match(/\{/g) || []).length, (css.match(/\}/g) || []).length, `${cssFile} possui chaves desbalanceadas`);
 }
@@ -293,6 +293,21 @@ const studentJs = read("assets/js/app.js");
 const studentHtml = read("index.html");
 const professorJs = read("assets/js/prof.js");
 const professorHtml = read("prof.html");
+const studentCss = read("assets/css/style.css");
+const professorCss = read("assets/css/prof.css");
+const brandCss = read("assets/css/brand.css");
+const sharedJs = read("assets/js/shared-data.js");
+for (const html of [studentHtml, professorHtml, panelHtml]) {
+  assert.match(html, /assets\/css\/brand\.css\?v=20260714-brand-harmony-v2/, "Todos os modulos devem carregar os tokens compartilhados da marca");
+  assert.match(html, /family=DM\+Mono[^\"]*family=Sora/, "Todos os modulos devem carregar Sora e DM Mono");
+  assert.match(html, /content="#d8b53d" name="theme-color"|name="theme-color" content="#d8b53d"/, "Todos os modulos devem usar o dourado suave no tema do navegador");
+}
+assert.doesNotMatch(studentHtml, /Barlow\+Condensed|Manrope/, "Aluno nao deve restaurar a tipografia divergente");
+assert.match(brandCss, /--brand-font-sans:\s*"Sora"/, "Tokens devem definir Sora como fonte principal");
+assert.match(brandCss, /--brand-font-mono:\s*"DM Mono"/, "Tokens devem definir DM Mono para rotulos tecnicos");
+assert.match(brandCss, /--brand-gold:\s*#d8b53d/, "Tokens devem preservar o dourado suave aprovado");
+assert.match(studentCss, /--font-display:\s*var\(--brand-font-sans/, "Aluno deve herdar a tipografia principal compartilhada");
+assert.match(professorCss, /font-family:\s*var\(--font-mono\)/, "Professor deve usar DM Mono nos rotulos operacionais");
 assert.match(panelHtml, /data-panel="ficha"[\s\S]*?<h3>Resumo<\/h3>/, "Painel administrativo deve possuir resumo de consulta");
 for (const label of ["Painel", "Alunos", "Grade", "Equipe", "Financeiro", "Config"]) {
   assert.match(panelHtml, new RegExp(`<span>${label}<\\/span>`), `Navegacao administrativa deve exibir ${label}`);
@@ -303,8 +318,21 @@ assert.match(professorHtml, /id="newProfessorStudent"/, "Painel do professor dev
 assert.match(professorHtml, /id="toggleStaffClockButton"/, "Painel do professor deve registrar entrada e saida");
 assert.match(professorHtml, /id="profLoginForm"/, "Tablet deve exigir login individual do professor");
 assert.match(professorHtml, /id="profLockView"/, "Tablet deve possuir bloqueio por inatividade");
+assert.match(professorHtml, /class="prof-view-hero"/, "Professor deve possuir inicio operacional com hierarquia visual");
+assert.match(professorHtml, /id="installProfessorAppButton"/, "Professor deve poder instalar o aplicativo no aparelho");
+assert.match(professorHtml, /id="profHeaderMenu"/, "Acoes secundarias do professor devem ficar em menu compacto");
+assert.match(professorHtml, /class="prof-nav-icon"/, "Navegacao do professor deve usar icones SVG consistentes");
+assert.match(professorHtml, /Agora e a seguir/, "Inicio do professor deve priorizar a agenda operacional");
+assert.match(professorHtml, /id="studentActionsMore"/, "Ficha do aluno deve agrupar acoes secundarias");
+assert.match(professorHtml, /prof\.webmanifest/, "Professor deve possuir manifesto PWA proprio");
+assert.doesNotMatch(professorHtml, /class="prof-photo-header/, "Professor autenticado nao deve repetir o cabecalho fotografico");
+assert.match(professorHtml, /class="prof-session-logo"[\s\S]*pro-fitness-logo-oficial\.jpg/, "Professor deve usar o logotipo oficial no cabecalho funcional");
+assert.doesNotMatch(professorHtml + professorJs, /profCurrentInitials/, "Cabecalho do professor nao deve manter avatar textual obsoleto");
 assert.match(professorJs, /fetchProfessorBootstrap/, "Professor nao deve baixar snapshot administrativo");
 assert.doesNotMatch(professorJs, /Store\.fetchRemoteSnapshot/, "Tablet nao deve chamar exportacao integral");
+assert.match(professorJs, /eligibleProfessors\.filter\(\(professor\) => String\(professor\.id\) === personId\)/, "Professor ativo deve permanecer vinculado a conta autenticada");
+assert.match(professorCss, /orientation:\s*landscape[\s\S]*min-width:\s*900px[\s\S]*grid-template-columns:\s*92px/, "Tablet horizontal deve usar trilho lateral compacto");
+assert.match(professorCss, /max-width:\s*899px[\s\S]*position:\s*fixed[\s\S]*grid-template-columns:\s*repeat\(4/, "Celular e tablet vertical devem usar navegacao inferior");
 assert.match(panelHtml, /id="staffTimePrintableReport"/, "Painel administrativo deve exibir o relatorio de presenca e permanencia");
 assert.doesNotMatch(professorHtml, /Caixa diario|Despesas da academia|Relatorios e resultados/, "Painel do professor nao deve expor modulos financeiros administrativos");
 assert.match(panelHtml, /id="adminSyncStatus"/, "Painel deve mostrar status de sincronizacao");
@@ -337,10 +365,22 @@ assert.match(studentJs, /flushStudentSyncQueue/, "App do aluno deve reenviar pen
 assert.match(studentJs, /STUDENT_SYNC_RESOURCES = \["workoutSessions", "exerciseSets"\]/, "Fila do aluno deve sincronizar somente sessoes e series");
 assert.doesNotMatch(studentJs, /catch\(\(\) => null\)/, "App do aluno nao deve ignorar falhas de sincronizacao");
 assert.doesNotMatch(studentJs, /syncSnapshotChanges/, "App do aluno deve usar fila incremental propria");
-for (const screen of ["home", "workouts", "agenda", "evolution", "payments"]) {
+for (const screen of ["home", "workouts", "agenda", "evolution", "payments", "more"]) {
   assert.match(studentHtml, new RegExp(`data-screen="${screen}"`), `App do aluno deve possuir navegacao ${screen}`);
 }
 assert.match(studentHtml, /id="workoutSessionDialog"/, "App deve possuir execucao de treino em tela dedicada");
+assert.match(studentHtml, /id="bottomGateQrButton"/, "Navegacao inferior deve destacar o QR de acesso");
+assert.doesNotMatch(studentHtml, /id="homeAccessPass"|id="openGateQrButton"/, "Inicio nao deve repetir o acesso que ja existe no QR central");
+assert.doesNotMatch(studentHtml, /class="student-photo-header/, "Area autenticada do aluno deve usar apenas o cabecalho funcional");
+assert.match(studentHtml, /class="brand-logo-small"/, "Cabecalho funcional deve usar o logotipo oficial da academia");
+assert.match(studentHtml, /id="restTimerPanel"/, "Treino deve possuir cronometro de descanso");
+assert.match(studentHtml, /id="installStudentAppButton"/, "Aluno deve poder adicionar o app a tela inicial");
+assert.match(studentJs, /function parseRestSeconds/, "Descanso deve interpretar o intervalo prescrito pelo professor");
+assert.match(studentJs, /<span>Anterior<\/span>/, "Execucao deve mostrar a carga e repeticoes anteriores");
+assert.match(studentJs, /class="compact-workout-copy"/, "Proximo treino deve usar uma faixa compacta");
+assert.match(studentJs, /class="payment-compact-main"/, "Mensalidade atual deve usar resumo discreto");
+assert.match(studentJs, /!authSession \|\| authSession\.account\?\.role !== "student"/, "Sincronizacao do aluno nao deve iniciar sem autenticacao");
+assert.match(studentCss, /\.student-view \.bottom-navigation[\s\S]*safe-area-inset-bottom/, "Navegacao do aluno deve respeitar a area segura do celular");
 assert.match(studentHtml, /id="studentLoginForm"/, "App do aluno deve pedir matricula e senha");
 assert.match(studentHtml, /id="studentPasswordChangeForm"/, "App deve exigir troca da senha temporaria");
 assert.doesNotMatch(studentHtml, /id="restoreDemoButton"/, "App publicado nao deve expor restauracao de demonstracao");
@@ -370,18 +410,28 @@ assert.match(read("assets/css/prof.css"), /#profAppShell\[hidden\]/, "Aplicativo
 assert.match(professorJs, /function formatNumber\(/, "Resultados do professor devem formatar cargas sem erro de execucao");
 assert.match(read("assets/js/app-config.js"), /environmentLabel:\s*"Demonstracao"/, "Selo demo deve usar rotulo curto");
 
-assert.match(read("assets/js/shared-data.js"), /function loginDemoLocal/, "Store deve oferecer login demonstrativo local");
-assert.match(read("assets/js/shared-data.js"), /clearAuthenticatedLocalData/, "Sessao invalida deve limpar dados locais");
-assert.match(read("assets/js/shared-data.js"), /validateAuthSessionRemote/, "Interfaces devem validar revogacao e expiracao no servidor");
+assert.match(sharedJs, /function loginDemoLocal/, "Store deve oferecer login demonstrativo local");
+assert.match(sharedJs, /clearAuthenticatedLocalData/, "Sessao invalida deve limpar dados locais");
+assert.match(sharedJs, /validateAuthSessionRemote/, "Interfaces devem validar revogacao e expiracao no servidor");
+assert.match(sharedJs, /invalidatesCurrentSession/, "Resposta atrasada nao deve apagar uma sessao criada depois da requisicao");
 assert.match(professorJs, /unlockSessionRemote/, "Desbloqueio do tablet nao deve criar uma nova sessao");
 assert.match(studentJs + professorJs + panelJs, /setFormBusy/, "Logins devem bloquear duplo clique e mostrar processamento");
-assert.match(read("assets/js/shared-data.js"), /LOCAL_DEMO_ACCOUNTS/, "Credenciais demo devem ser limitadas ao ambiente demo");
+assert.match(sharedJs, /LOCAL_DEMO_ACCOUNTS/, "Credenciais demo devem ser limitadas ao ambiente demo");
 assert.doesNotMatch(professorHtml, /profDemoLoginButton|Acessar como professor demonstrativo/, "Login do professor nao deve exibir botao de demonstracao");
 assert.doesNotMatch(panelHtml, /adminDemoLoginButton|Acessar demonstracao administrativa/, "Login administrativo nao deve exibir botao de demonstracao");
-assert.match(read("assets/js/shared-data.js"), /getLocalDemoAccounts\(\)\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
-assert.match(read("assets/js/shared-data.js"), /localDemoRuntimeSnapshot/, "Base demonstrativa grande deve permanecer somente em memoria");
-assert.doesNotMatch(read("assets/js/shared-data.js"), /localStorage\.setItem\(LOCAL_DEMO_MASTER_KEY/, "Base demonstrativa completa nao deve ser duplicada no localStorage");
-assert.match(read("sw.js"), /profitness-shell-20260713-finance-v2/, "Service worker deve invalidar o cache dos comandos financeiros visiveis");
+assert.match(sharedJs, /getLocalDemoAccounts\(\)\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
+assert.match(sharedJs, /localDemoRuntimeSnapshot/, "Base demonstrativa grande deve permanecer somente em memoria");
+assert.doesNotMatch(sharedJs, /localStorage\.setItem\(LOCAL_DEMO_MASTER_KEY/, "Base demonstrativa completa nao deve ser duplicada no localStorage");
+assert.match(read("sw.js"), /profitness-shell-20260714-brand-harmony-v2/, "Service worker deve invalidar o cache da identidade compartilhada");
+assert.match(read("sw.js"), /\.\/assets\/css\/brand\.css/, "Service worker deve disponibilizar os tokens de marca offline");
+assert.match(professorJs, /renderHomeAgendaFlow/, "Agenda inicial deve interpretar agora, proxima atividade e encerramento");
+assert.match(professorJs, /aria-busy/, "Atualizacao do professor deve comunicar estado de carregamento");
+const professorManifest = JSON.parse(read("prof.webmanifest"));
+assert.equal(professorManifest.start_url, "./prof.html?source=pwa", "PWA da equipe deve abrir no professor");
+assert.equal(professorManifest.theme_color, "#d8b53d", "PWA da equipe deve usar o dourado suave compartilhado");
+assert.equal(JSON.parse(read("manifest.webmanifest")).theme_color, "#d8b53d", "PWA do aluno deve usar o dourado suave compartilhado");
+assert.equal(professorManifest.shortcuts.length, 3, "PWA da equipe deve oferecer tres atalhos operacionais");
+assert.ok(exists("assets/images/pf-prof-icon.svg"), "Icone instalavel do professor deve estar no pacote");
 
 assert.match(panelHtml, /Matricular novo aluno/, "Painel deve oferecer matricula administrativa direta");
 assert.match(panelHtml, /unlockStudentAccessButton/, "Ficha administrativa deve oferecer desbloqueio de acesso");
@@ -443,9 +493,15 @@ assert.ok(panelHtml.indexOf("Agenda semanal") < panelHtml.indexOf("Frequencia no
 for (const html of [studentHtml, professorHtml, panelHtml]) {
   assert.match(html, /assets\/images\/pro-fitness-fachada\.png/, "Todos os logins devem destacar a foto da academia");
   assert.match(html, /assets\/css\/login\.css/, "Todos os logins devem compartilhar a mesma identidade visual");
-  assert.match(html, /assets\/images\/pro-fitness-header-fino\.jpg/, "Todos os modulos internos devem usar o mesmo cabecalho fino");
   assert.match(html, /Desenvolvido por <strong>@almir\.lk<\/strong>/, "Todos os modulos devem exibir o credito do desenvolvedor");
 }
+assert.match(panelHtml, /admin-wordmark-header/, "Administracao deve manter a barra institucional compacta");
+assert.match(studentHtml, /assets\/images\/pro-fitness-logo-oficial\.jpg/, "Aluno deve usar o logotipo oficial no cabecalho compacto");
+assert.match(studentJs, /more-profile-status \$\{access\.blocked \? "blocked" : "ok"\}/, "Perfil resumido deve distinguir acesso liberado e bloqueado");
+assert.match(studentCss, /PERFIL CLARO E TREINOS EM AMARELO-PALHA/, "Aluno deve usar perfil claro e treinos com amarelo suave");
+assert.match(studentCss, /\.student-view \.segmented-filter button\.active \{[\s\S]*?background: linear-gradient\(145deg, #777c76, #656a64\)/, "Filtro de treinos do aluno deve destacar a selecao em cinza");
+assert.match(studentCss, /\.student-view \.week-day\.active \{[\s\S]*?background: linear-gradient\(145deg, #777c76, #656a64\)/, "Agenda do aluno deve destacar o dia ativo em cinza");
+assert.match(professorCss, /PROFESSOR EM CINZA-CONCRETO/, "Professor deve usar a composicao clara inspirada na fachada");
 assert.ok(exists("assets/css/login.css"), "O desenho compartilhado do login deve estar no pacote");
 assert.match(read("assets/css/login.css"), /\.login-hero-photo/, "Login deve possuir tratamento fotografico responsivo");
 assert.match(read("assets/css/login.css"), /\.login-developer-credit/, "Credito do login deve permanecer legivel");
@@ -591,7 +647,7 @@ await validateDemoLoginWithSmallStorage("painel.html", "admin.demo", "admin");
 }
 
 if (packageMode) {
-  const allowedRootFiles = new Set(["index.html", "painel.html", "prof.html", "api.txt", "HISTORICO_DESENVOLVIMENTO.txt", "manifest.webmanifest", "sw.js"]);
+  const allowedRootFiles = new Set(["index.html", "painel.html", "prof.html", "api.txt", "HISTORICO_DESENVOLVIMENTO.txt", "manifest.webmanifest", "prof.webmanifest", "sw.js"]);
   const allowedRootDirectories = new Set([".github", "apps-script", "assets", "docs", "tests", "tools"]);
   for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     if (entry.isFile()) assert.ok(allowedRootFiles.has(entry.name), `Arquivo indevido na raiz: ${entry.name}`);
@@ -600,7 +656,7 @@ if (packageMode) {
   assert.equal(exists(".git"), false, "ZIP final nao deve conter .git");
   assert.equal(exists("backups"), false, "ZIP final nao deve conter backups");
 }
-assert.match(read("HISTORICO_DESENVOLVIMENTO.txt"), /ULTIMA ATUALIZACAO: 13\/07\/2026/);
+assert.match(read("HISTORICO_DESENVOLVIMENTO.txt"), /ULTIMA ATUALIZACAO: 14\/07\/2026/);
 assert.match(read("docs/estrutura-planilha.md"), /presenceSource/);
 assert.match(read("docs/sheets-api-setup.md"), /schemaVersion: 9/);
 const demoTool = read("tools/generate-demo-data.mjs");
@@ -615,5 +671,21 @@ assert.equal(officialDemo.snapshot.students[0].enrollmentNumber, "000001", "Matr
 assert.ok(officialDemo.snapshot.workoutSessions.some((session) => session.status === "interrompida" && session.pain === "moderada"), "Demo deve possuir treino interrompido com dor");
 assert.ok(officialDemo.snapshot.payments.some((payment) => payment.status === "parcial"), "Demo deve possuir pagamento parcial");
 assert.ok(officialDemo.snapshot.payments.some((payment) => payment.status === "estornado"), "Demo deve possuir pagamento estornado");
+const demoWaterExpenses = officialDemo.snapshot.expenses.filter((expense) => expense.description === "Conta de agua");
+assert.deepEqual(demoWaterExpenses.map((expense) => expense.amount), [612.4, 684.7, 731.2], "Contas de agua ficticias devem preservar os tres valores aprovados");
+assert.equal(officialDemo.snapshot.expenses.some((expense) => expense.category === "aluguel" || expense.description === "Aluguel"), false, "Demo nao deve possuir despesa de aluguel");
+demoWaterExpenses.forEach((expense) => {
+  const movement = officialDemo.snapshot.movements.find((item) => item.expenseId === expense.id && item.status !== "estornado");
+  assert.equal(movement?.amount, expense.amount, `Conta de agua ${expense.id} deve corresponder a saida do caixa`);
+});
+assert.match(read("painel.html"), /id="financeReviewDialog"/, "Painel deve possuir a janela de revisao financeira");
+assert.match(read("assets/js/painel.js"), /financial-reconciliation-repaired/, "Correcao financeira deve gerar registro de auditoria");
+assert.match(read("painel.html"), /painel\.css\?v=20260714-titlebar-v1/, "Painel deve invalidar o cache da nova barra institucional");
+assert.match(read("painel.html"), /painel\.js\?v=20260714-panel-polish-v1/, "Painel deve invalidar o cache da correcao de rolagem");
+assert.match(read("assets/css/painel.css"), /POLIMENTO VISUAL FINAL DO PAINEL ADMINISTRATIVO/, "Painel deve preservar a camada final de acabamento visual");
+assert.ok(read("assets/js/painel.js").includes("financeSearchFilter?.focus({ preventScroll: true });"), "A aba Mensalidades nao deve deslocar a pagina ao focar o filtro");
+assert.match(read("painel.html"), /class="admin-panel-brand"/, "Painel deve usar o cabecalho institucional em HTML");
+assert.doesNotMatch(read("painel.html"), /class="official-header-banner"/, "Painel nao deve restaurar a fotografia na barra superior");
+assert.match(read("assets/css/painel.css"), /Barra institucional do painel/, "Painel deve preservar o acabamento da nova barra superior");
 
 console.log(`Smoke tests (${packageMode ? "pacote" : "repositorio"}): OK`);

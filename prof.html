@@ -4,14 +4,21 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
-<meta content="#111111" name="theme-color"/>
+<meta content="#d8b53d" name="theme-color"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="yes" name="mobile-web-app-capable"/>
+<meta content="default" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="Pro Fitness Equipe" name="apple-mobile-web-app-title"/>
+<meta content="Pro Fitness Equipe" name="application-name"/>
 <title>Pro Fitness | Painel do Professor</title>
+<link href="assets/images/pro-fitness-logo-oficial.jpg" rel="apple-touch-icon"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="assets/css/prof.css?v=20260713-finance-v1" rel="stylesheet"/>
-<link href="assets/css/login.css?v=20260713-finance-v1" rel="stylesheet"/>
-<link href="manifest.webmanifest" rel="manifest"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="assets/css/brand.css?v=20260714-brand-harmony-v2" rel="stylesheet"/>
+<link href="assets/css/prof.css?v=20260714-brand-harmony-v2" rel="stylesheet"/>
+<link href="assets/css/login.css?v=20260714-brand-harmony-v2" rel="stylesheet"/>
+<link href="prof.webmanifest?v=20260714-prof-polish-v1" rel="manifest"/>
 </head>
 <body>
 <div class="environment-badge" data-environment-badge hidden></div>
@@ -21,34 +28,43 @@
 <img class="login-hero-photo" src="assets/images/pro-fitness-fachada.png" alt="Fachada da Pro Fitness Academia em Carmo, Rio de Janeiro"/>
 <div class="login-hero-copy"><span class="login-role-badge">Equipe Pro Fitness</span><p>Pro Fitness Academia <i></i> Carmo-RJ</p><h1>Planeje.<br/>Acompanhe.<br/>Transforme.</h1><small>Seu espaço de trabalho para orientar cada evolução.</small></div>
 </header>
-<div class="prof-auth-card" id="profLoginCard"><div class="login-form-brand" aria-hidden="true"><img src="assets/images/pro-fitness-logo-oficial.jpg" alt=""/><span><strong>PRO FITNESS</strong><small>ACADEMIA</small></span></div><span class="login-form-kicker">Tablet da equipe</span><h1>Identifique-se</h1><p class="login-form-intro">Cada atividade ficará vinculada ao professor autenticado.</p><form id="profLoginForm" class="prof-auth-form"><label>Usuário<input name="login" autocomplete="username" required/></label><label>Senha<input type="password" name="password" autocomplete="current-password" required/></label><button class="primary-action" type="submit">Entrar no ambiente</button></form><p id="profLoginFeedback" class="prof-auth-feedback" aria-live="polite"></p><p class="login-support">Dificuldade de acesso? Fale com a administração.</p><p class="login-developer-credit">Desenvolvido por <strong>@almir.lk</strong></p></div>
+<div class="prof-auth-card" id="profLoginCard"><div class="login-form-brand" aria-hidden="true"><img src="assets/images/pro-fitness-logo-oficial.jpg" alt=""/><span><strong>PRO FITNESS</strong><small>ACADEMIA</small></span></div><span class="login-form-kicker">Celular e tablet da equipe</span><h1>Identifique-se</h1><p class="login-form-intro">Cada atividade ficará vinculada ao professor autenticado.</p><form id="profLoginForm" class="prof-auth-form"><label>Usuário<input name="login" autocomplete="username" required/></label><label>Senha<input type="password" name="password" autocomplete="current-password" required/></label><button class="primary-action" type="submit">Entrar no ambiente</button></form><p id="profLoginFeedback" class="prof-auth-feedback" aria-live="polite"></p><p class="login-support">Dificuldade de acesso? Fale com a administração.</p><p class="login-developer-credit">Desenvolvido por <strong>@almir.lk</strong></p></div>
 <div class="prof-auth-card" id="profPasswordChangeCard" hidden><div class="login-form-brand" aria-hidden="true"><img src="assets/images/pro-fitness-logo-oficial.jpg" alt=""/><span><strong>PRO FITNESS</strong><small>ACADEMIA</small></span></div><span class="login-form-kicker">Primeiro acesso</span><h1>Criar nova senha</h1><p class="password-rule">Minimo de 8 caracteres, com letra e numero.</p><form id="profPasswordChangeForm" class="prof-auth-form"><label>Senha temporaria<input type="password" name="currentPassword" required/></label><label>Nova senha<input type="password" name="newPassword" minlength="8" required/></label><label>Confirmar senha<input type="password" name="confirmPassword" minlength="8" required/></label><button class="primary-action" type="submit">Salvar nova senha</button></form><button class="text-button" id="cancelProfPasswordChange" type="button">Cancelar</button><p id="profPasswordChangeFeedback" class="prof-auth-feedback" aria-live="polite"></p></div>
 </div>
 </section>
 <section class="prof-auth-view prof-lock-view" id="profLockView" hidden><div class="prof-auth-card prof-lock-card"><img class="lock-brand-logo" src="assets/images/pro-fitness-logo-oficial.jpg" alt="Pro Fitness"/><h1 id="profLockName">Professor</h1><form id="profUnlockForm" class="prof-auth-form"><label>Senha<input type="password" name="password" autocomplete="current-password" required/></label><button class="primary-action" type="submit">Desbloquear</button></form><button class="text-button" id="profSwitchUserButton" type="button">Trocar professor</button><p id="profUnlockFeedback" class="prof-auth-feedback" aria-live="polite"></p></div></section>
 <div class="prof-shell" id="profAppShell" hidden>
-<header aria-label="Pro Fitness Academia" class="prof-photo-header hybrid-app-header official-banner-header">
-<img class="official-header-banner" src="assets/images/pro-fitness-header-fino.jpg" alt="Fachada e logotipo oficial da Pro Fitness Academia"/>
-<span class="header-role-label">PROFESSOR</span>
-</header>
-<main class="prof-main">
-<div class="prof-session-bar" aria-live="polite">
+<header class="prof-session-bar" aria-label="Sessao do professor" aria-live="polite">
 <div class="prof-session-identity">
+<img class="prof-session-logo" src="assets/images/pro-fitness-logo-oficial.jpg" alt="Pro Fitness Academia"/>
+<span class="prof-session-copy">
 <strong id="profCurrentUser">-</strong>
 <span class="prof-sync-summary"><i class="connection-dot" id="connectionDot"></i><span id="connectionText">Carregando dados</span></span>
 <button class="sync-pending" hidden id="pendingSyncText" title="Tentar enviar novamente" type="button"></button>
 <span class="prof-last-sync" id="lastSyncText"></span>
+</span>
 </div>
 <div class="prof-session-actions">
-<button id="profLockButton" type="button">Bloquear</button>
-<button id="profLogoutButton" type="button">Trocar</button>
-<button aria-label="Atualizar dados" class="status-refresh" id="refreshProfessorData" type="button"><span aria-hidden="true">↻</span><span class="refresh-label">Atualizar</span></button>
+<button aria-label="Atualizar dados" class="status-refresh prof-header-primary" id="refreshProfessorData" type="button"><svg aria-hidden="true" class="prof-header-icon" viewBox="0 0 24 24"><path d="M20 6v5h-5"></path><path d="M18.2 16.5A8 8 0 1 1 19.5 9"></path></svg><span class="refresh-label">Atualizar</span></button>
+<details class="prof-header-menu" id="profHeaderMenu">
+<summary aria-expanded="false" aria-haspopup="menu" aria-label="Mais opções" title="Mais opções"><svg aria-hidden="true" class="prof-header-icon" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg></summary>
+<div class="prof-header-menu-panel" role="menu">
+<button id="installProfessorAppButton" role="menuitem" type="button"><svg aria-hidden="true" class="prof-menu-icon" viewBox="0 0 24 24"><path d="M12 3v11"></path><path d="m8 10 4 4 4-4"></path><path d="M5 18v2h14v-2"></path></svg><span class="prof-menu-copy"><strong>Instalar aplicativo</strong><small>Adicionar à tela inicial</small></span></button>
+<button id="profLockButton" role="menuitem" type="button"><svg aria-hidden="true" class="prof-menu-icon" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg><span class="prof-menu-copy"><strong>Bloquear tela</strong><small>Manter o professor conectado</small></span></button>
+<button id="profLogoutButton" role="menuitem" type="button"><svg aria-hidden="true" class="prof-menu-icon" viewBox="0 0 24 24"><path d="M14 5V3H5v18h9v-2"></path><path d="M10 12h10M17 9l3 3-3 3"></path></svg><span class="prof-menu-copy"><strong>Trocar professor</strong><small>Encerrar esta sessão</small></span></button>
 </div>
+</details>
 </div>
+</header>
+<main class="prof-main">
 <section class="prof-view active" data-view="inicio" id="profHomeView">
+<header class="prof-view-hero">
+<div><span class="prof-view-eyebrow">OPERAÇÃO DE HOJE</span><h1>Olá, <strong id="profHomeFirstName">Professor</strong></h1><p>Alunos, agenda e atividades prioritárias em uma visão rápida.</p></div>
+<time id="profHomeDate">Hoje</time>
+</header>
 <section class="quick-search-panel">
 <div class="search-field-wrap">
-<span aria-hidden="true">⌕</span>
+<svg aria-hidden="true" class="prof-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
 <input autocomplete="off" id="profStudentSearch" placeholder="Nome, telefone, plano ou código" type="search"/>
 <button hidden="" id="clearProfessorSearch" type="button">Limpar</button>
 </div>
@@ -82,10 +98,10 @@
 </article>
 <article class="prof-card agenda-card">
 <div class="prof-card-head">
-<h2>Agenda de hoje</h2>
+<div><span class="prof-card-eyebrow">ROTINA OPERACIONAL</span><h2>Agora e a seguir</h2></div>
 <button class="text-button" data-open-view="agenda" type="button">Ver agenda</button>
 </div>
-<div class="compact-list" id="todayAgendaList"></div>
+<div class="home-agenda-flow" id="todayAgendaList"></div>
 </article>
 </section>
 </section>
@@ -96,7 +112,7 @@
 <div class="prof-view-title-actions"><span id="profStudentCount">0 alunos</span><button class="compact-primary-action" id="newProfessorStudent" type="button">Novo aluno</button></div></div>
 <div class="sticky-search">
 <div class="search-field-wrap">
-<span aria-hidden="true">⌕</span>
+<svg aria-hidden="true" class="prof-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
 <input autocomplete="off" id="profStudentsListSearch" placeholder="Pesquisar aluno" type="search"/>
 </div>
 </div>
@@ -111,7 +127,7 @@
 </section>
 <section class="prof-view" data-view="ponto" hidden="" id="profTimeView">
 <div class="view-title-row">
-<h1>Presença</h1>
+<div><h1>Presença</h1><p class="presence-disclaimer">Registro operacional de presença e permanência na academia, sem finalidade de controle trabalhista.</p></div>
 <span id="profTimeDate"></span>
 </div>
 <article class="prof-card staff-clock-card">
@@ -136,19 +152,19 @@
 </main>
 <nav aria-label="Navegação do painel do professor" class="prof-bottom-nav">
 <button aria-current="page" class="active" data-prof-view="inicio" type="button">
-<span aria-hidden="true">⌂</span>
+<svg aria-hidden="true" class="prof-nav-icon" viewBox="0 0 24 24"><path d="m3.5 10 8.5-7 8.5 7"></path><path d="M5.5 9v11h13V9"></path><path d="M9.5 20v-6h5v6"></path></svg>
 <strong>Início</strong>
 </button>
 <button data-prof-view="alunos" type="button">
-<span aria-hidden="true">◎</span>
+<svg aria-hidden="true" class="prof-nav-icon" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"></circle><path d="M3.5 20v-1.5A5.5 5.5 0 0 1 9 13a5.5 5.5 0 0 1 5.5 5.5V20"></path><path d="M15.5 5.2a3.5 3.5 0 0 1 0 5.6M17 13.5a5.5 5.5 0 0 1 3.5 5.1V20"></path></svg>
 <strong>Alunos</strong>
 </button>
 <button data-prof-view="agenda" type="button">
-<span aria-hidden="true">▣</span>
+<svg aria-hidden="true" class="prof-nav-icon" viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="15" rx="3"></rect><path d="M8 3v5M16 3v5M3.5 10h17"></path><path d="m8 15 2 2 5-5"></path></svg>
 <strong>Agenda</strong>
 </button>
 <button data-prof-view="ponto" type="button">
-<span aria-hidden="true">◷</span>
+<svg aria-hidden="true" class="prof-nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3.5 2"></path></svg>
 <strong>Presenca</strong>
 </button>
 </nav>
@@ -181,12 +197,17 @@
 <span>SAÚDE E RESTRIÇÕES</span>
 <strong id="profStudentRestrictionsSummary">Nenhuma restrição cadastrada</strong>
 </section><nav aria-label="Ações rápidas do aluno" class="student-quick-actions">
-<button class="student-action primary" id="profPresenceButton" type="button">Registrar entrada</button>
-<button class="student-action payment-action" id="profReceivePaymentButton" type="button">Receber mensalidade</button>
-<button class="student-action" data-prof-student-action="treino" type="button">Novo treino</button>
-<button class="student-action" data-prof-student-action="avaliacao" type="button">Nova avaliação</button>
-<button class="student-action" data-prof-student-action="agenda" type="button">Abrir agenda</button>
-<button class="student-action" id="editProfessorStudent" type="button">Editar ficha</button>
+<button aria-label="Registrar entrada do aluno" class="student-action primary" id="profPresenceButton" type="button"><svg aria-hidden="true" class="student-action-icon" viewBox="0 0 24 24"><path d="M13 5h6v14h-6"></path><path d="M4 12h11M11 8l4 4-4 4"></path></svg><span id="profPresenceButtonLabel">Entrada</span></button>
+<button aria-label="Receber mensalidade" class="student-action payment-action" id="profReceivePaymentButton" type="button"><svg aria-hidden="true" class="student-action-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M3 10h18M7 15h3"></path></svg><span id="profReceivePaymentButtonLabel">Receber</span></button>
+<button aria-label="Criar novo treino" class="student-action" data-prof-student-action="treino" type="button"><svg aria-hidden="true" class="student-action-icon" viewBox="0 0 24 24"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"></path></svg><span>Treino</span></button>
+<details class="student-actions-more" id="studentActionsMore">
+<summary aria-label="Mais ações do aluno"><svg aria-hidden="true" class="student-action-icon" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg><span>Mais</span></summary>
+<div class="student-actions-menu" role="menu">
+<button data-prof-student-action="avaliacao" role="menuitem" type="button">Nova avaliação</button>
+<button data-prof-student-action="agenda" role="menuitem" type="button">Abrir agenda</button>
+<button id="editProfessorStudent" role="menuitem" type="button">Editar ficha</button>
+</div>
+</details>
 </nav><section class="student-detail-section">
 <div class="student-detail-head">
 <h3>Ficha</h3>
@@ -531,11 +552,11 @@
 </form>
 </dialog>
 <div aria-live="polite" class="prof-toast" hidden="" id="profToast" role="status"></div>
-<script src="assets/js/app-config.js?v=20260713-finance-v1"></script>
-<script src="assets/js/demo-data.js?v=20260713-finance-v1"></script>
-<script src="assets/js/shared-data.js?v=20260713-finance-v1"></script>
-<script src="assets/js/finance-core.js?v=20260713-finance-v1"></script>
-<script src="assets/js/prof.js?v=20260713-finance-v1"></script>
-<script src="assets/js/pwa.js?v=20260713-finance-v1"></script>
+<script src="assets/js/app-config.js?v=20260714-prof-polish-v1"></script>
+<script src="assets/js/demo-data.js?v=20260714-prof-polish-v1"></script>
+<script src="assets/js/shared-data.js?v=20260714-prof-polish-v1"></script>
+<script src="assets/js/finance-core.js?v=20260714-prof-polish-v1"></script>
+<script src="assets/js/prof.js?v=20260714-prof-polish-v1"></script>
+<script src="assets/js/pwa.js?v=20260714-prof-polish-v1"></script>
 </body>
 </html>

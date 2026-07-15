@@ -1,7 +1,7 @@
 PRO FITNESS ACADEMIA - HISTORICO DE DESENVOLVIMENTO
 =====================================================
 
-ULTIMA ATUALIZACAO: 13/07/2026
+ULTIMA ATUALIZACAO: 14/07/2026
 
 ATENCAO OBRIGATORIA PARA QUALQUER IA OU DESENVOLVEDOR
 -----------------------------------------------------
@@ -2105,3 +2105,438 @@ PUBLICACAO - 2026-07-13 - GITHUB PAGES FINANCE-V2
 - Escopo inclui Central de Cobranca, visao gerencial, relatorios revisados, pagamentos parciais e comandos financeiros visiveis.
 - Verificacao previa confirmou ausencia de credenciais privadas, arquivos temporarios e backups no pacote.
 - API mantida no schemaVersion 9; a publicacao do site nao reimplanta automaticamente o Google Apps Script.
+
+
+======================================================================
+ATUALIZACAO - 2026-07-14 - EXPERIENCIA MOBILE DO ALUNO E PROFESSOR
+======================================================================
+- Redesenho restrito aos modulos Aluno (index.html) e Professor (prof.html), sem alteracao visual ou funcional do painel administrativo.
+- A direcao visual foi refinada a partir de referencias de aplicativos fitness profissionais, preservando a identidade preta, amarela e cinza da Pro Fitness.
+- O aluno passou a usar uma experiencia mobile-first com largura controlada, cartoes legiveis, animacoes discretas e areas seguras de iPhone e Android.
+- A pagina inicial do aluno agora prioriza a rotina do dia, o proximo treino, a proxima atividade e os indicadores semanais.
+- A navegacao inferior do aluno foi reorganizada em Inicio, Treino, QR central, Agenda e Mais.
+- O QR de acesso recebeu destaque central e permanece disponivel sem ocupar uma tela fixa da navegacao.
+- Criada a area Mais com evolucao, plano e mensalidade, dados pessoais, instalacao do aplicativo e suporte.
+- A execucao de treino passou a mostrar o resultado anterior de cada serie, repeticoes, carga usada e confirmacao individual.
+- Incluido cronometro automatico de descanso conforme o intervalo prescrito, com opcao de pular e aviso por vibracao quando suportado.
+- A finalizacao do treino informa series pendentes antes de encerrar e preserva os registros existentes.
+- Agenda, presencas, evolucao e pagamentos foram ajustados para leitura rapida em celular, sem rolagem horizontal.
+- Aluno e professor receberam suporte explicito para instalacao como PWA, inclusive orientacao manual no iPhone quando o prompt nativo nao estiver disponivel.
+- O professor passou a ter uma pagina inicial operacional com saudacao, pesquisa de aluno, indicadores, presentes e agenda do dia.
+- No tablet horizontal, o professor usa um trilho lateral compacto; no tablet vertical e no celular, usa navegacao inferior fixa.
+- A ficha do aluno abre em tela cheia no celular e conserva as areas Ficha, Treinos, Resultados, Avaliacoes, Agenda e Acesso.
+- A faixa de sessao do professor foi compactada para uma unica linha no celular, com identidade, sincronizacao, instalacao e atualizacao.
+- O registro do professor permanece descrito exclusivamente como presenca e permanencia operacional, sem finalidade de controle trabalhista.
+- Corrigido o vinculo da identidade do professor: nome, iniciais e registros agora sempre usam o personId da conta autenticada, inclusive apos recarregar.
+- Corrigida uma corrida de autenticacao do aluno: respostas antigas e sem token nao podem mais apagar uma sessao criada enquanto a requisicao estava em andamento.
+- A sincronizacao do aluno agora so inicia depois de existir uma conta de aluno autenticada.
+- O login demonstrativo do aluno 000001 / Demo1234 foi validado antes e depois de recarregar a pagina.
+- O login demonstrativo do professor prof.rafael / Demo1234 foi validado antes e depois de recarregar a pagina.
+- O cache instalavel e os parametros dos recursos foram atualizados para 20260714-mobile-v2.
+- Nenhuma alteracao foi feita em apps-script/api.gs ou api.txt.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada nesta etapa.
+
+ARQUIVOS ALTERADOS
+- index.html
+- prof.html
+- assets/css/style.css
+- assets/css/prof.css
+- assets/js/app.js
+- assets/js/prof.js
+- assets/js/shared-data.js
+- assets/js/pwa.js
+- sw.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Testes visuais reais executados em 390 x 844, 820 x 1180 e 1180 x 820.
+- Inicio, treinos, cronometro, agenda, evolucao, pagamentos e area Mais do aluno conferidos sem estouro horizontal.
+- Inicio, alunos, agenda, presenca e ficha detalhada do professor conferidos sem estouro horizontal.
+- Navegacao inferior e trilho lateral conferidos nos respectivos pontos de quebra.
+- Persistencia das sessoes de aluno e professor conferida apos recarregamento.
+- Sintaxe de app.js, prof.js e shared-data.js validada.
+- Smoke tests ampliados para navegacao, PWA, descanso, serie anterior, responsividade, identidade do professor e corrida de autenticacao.
+- api.txt confirmado identico a apps-script/api.gs.
+
+
+======================================================================
+AJUSTE - 2026-07-14 - ALUNO MAIS CLARO E COMPACTO
+======================================================================
+- Ajuste restrito ao aplicativo do aluno, conforme revisao visual em celular.
+- Removido o cabecalho fotografico da area autenticada; a fotografia da academia permanece somente na tela de login.
+- O cabecalho funcional passou a ser o unico cabecalho interno e agora usa o logotipo oficial no lugar do bloco PF.
+- Removido da pagina inicial o card Acesso a academia, que repetia a funcao do QR central.
+- A validacao de mensalidade, bloqueio e liberacao continua sendo executada ao abrir o QR pela navegacao inferior.
+- O proximo treino foi reduzido de um card escuro de 185 px para uma faixa de concreto claro com 86 px.
+- Removidas da faixa as repeticoes Treino A, lista extensa de exercicios e botao grande.
+- A faixa mostra somente estado, titulo, quantidade de exercicios e a acao compacta Iniciar ou Continuar.
+- A mensalidade atual deixou de usar o card preto com valor gigante e passou a usar superficie clara e discreta.
+- Quando a mensalidade esta paga, o resumo mostra apenas referencia, status, valor, vencimento e forma de pagamento.
+- Valor original, valor pago e saldo continuam disponiveis quando a cobranca esta pendente ou parcial.
+- Os demais componentes do aluno, incluindo agenda, evolucao, treino em execucao e cronometro, foram preservados.
+- Cache atualizado para 20260714-student-compact-v1.
+- Nenhuma alteracao foi feita no painel administrativo, no professor ou na API.
+- Nenhuma publicacao foi realizada.
+
+ARQUIVOS ALTERADOS
+- index.html
+- assets/css/style.css
+- assets/js/app.js
+- assets/js/pwa.js
+- sw.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Cabecalho, inicio e mensalidade conferidos visualmente em 390 x 844.
+- Confirmada a ausencia do card duplicado de acesso e do cabecalho fotografico interno.
+- Confirmado o QR central como unico atalho de acesso.
+- Confirmada a ausencia de rolagem horizontal.
+- Login demonstrativo e persistencia da sessao preservados.
+- Smoke tests atualizados para exigir a nova estrutura compacta.
+
+
+======================================================================
+AJUSTE - 2026-07-14 - PROFESSOR EM CINZA-CONCRETO
+======================================================================
+- Ajuste restrito ao aplicativo do professor, sem alteracoes no painel administrativo, no aluno ou na API.
+- Removido o cabecalho fotografico da area autenticada; a foto da academia permanece somente na tela de login.
+- A faixa de sessao passou a ser o cabecalho unico do aplicativo e usa o logotipo oficial no lugar do avatar PF.
+- Nome do professor, estado de sincronizacao, instalacao, bloqueio, troca de usuario e atualizacao foram preservados.
+- A pagina inicial deixou de usar o grande destaque preto e adotou cinza-concreto inspirado na fachada da academia.
+- O card de presenca e permanencia passou para uma superficie clara, mantendo contraste de estado, horario e acao.
+- O registro continua descrito exclusivamente como presenca operacional, sem finalidade de controle trabalhista.
+- A ficha detalhada do aluno recebeu cabecalho claro sem remover treinos, resultados, avaliacoes, agenda, acesso ou recebimento.
+- A navegacao inferior de celular e tablet vertical passou a usar base clara com destaque amarelo discreto.
+- O trilho lateral do tablet horizontal tambem passou para cinza arquitetonico claro.
+- O selo Demonstracao foi reposicionado entre o cabecalho e o conteudo para nao cobrir logo ou nome do professor.
+- Removida a funcao de iniciais que ficou obsoleta depois da adocao do logotipo oficial.
+- Cache atualizado para 20260714-prof-concrete-v1.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.
+ARQUIVOS ALTERADOS
+- prof.html
+- assets/css/prof.css
+- assets/js/prof.js
+- assets/js/pwa.js
+- sw.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Login demonstrativo validado com prof.rafael / Demo1234.
+- Inicio, presenca e ficha detalhada do aluno conferidos visualmente em 390 x 844.
+- Inicio e navegacao inferior conferidos em tablet vertical de 820 x 1180.
+- Inicio e trilho lateral conferidos em tablet horizontal de 1180 x 820.
+- Cabecalho entre 62 e 64 px, logo oficial, identidade do professor e sincronizacao confirmados.
+- Confirmada a ausencia do cabecalho fotografico interno e de rolagem horizontal em todos os tamanhos.
+- Sintaxe de prof.js, smoke tests do repositorio e smoke tests do pacote validados.
+- api.txt confirmado identico a apps-script/api.gs.
+
+
+======================================================================
+EVOLUCAO - 2026-07-14 - ACABAMENTO PROFISSIONAL DO APP DO PROFESSOR
+======================================================================
+- Trabalho dividido e validado em quatro fases, restrito ao aplicativo do professor.
+
+FASE 1 - ICONES E SISTEMA VISUAL
+- Substituidos os quatro icones artesanais da navegacao por SVGs com o mesmo tamanho, espessura e acabamento.
+- As buscas da pagina inicial e da lista de alunos tambem receberam o mesmo padrao de icones.
+- Padronizados foco de teclado, resposta ao toque, raios dos cards e raios das linhas operacionais.
+- A navegacao continua inferior no celular e tablet vertical e lateral no tablet horizontal.
+
+FASE 2 - CABECALHO SIMPLIFICADO
+- O cabecalho passou a mostrar diretamente somente identidade, sincronizacao e atualizacao.
+- Instalar aplicativo, bloquear tela e trocar professor foram agrupados em um menu Mais.
+- O menu possui descricoes, icones, fechamento ao clicar fora e suporte a tecla Esc.
+- Todas as acoes e identificadores anteriores foram preservados.
+
+FASE 3 - AGENDA E FICHA OPERACIONAL
+- A agenda inicial passou a se chamar Agora e a seguir.
+- Os horarios sao interpretados para informar Acontecendo agora, Proxima atividade, Agenda concluida ou Agenda livre.
+- Quando existe atividade atual ou futura, titulo, horario, termino, professor e local recebem prioridade visual.
+- A ficha do aluno passou a manter Entrada, Receber e Treino como acoes diretas.
+- Nova avaliacao, Abrir agenda e Editar ficha foram agrupados no menu Mais da ficha.
+- A barra de acoes da ficha permanece visivel durante a rolagem sem cobrir os dados.
+- Todas as seis acoes anteriores continuam disponiveis.
+
+FASE 4 - MICROINTERACOES E PWA
+- Atualizar dados agora informa aria-busy, gira o icone e exibe uma linha discreta de progresso.
+- Toasts de sucesso e alerta foram redesenhados com superficies claras, icone e animacao curta.
+- Adicionadas respostas de toque e transicoes curtas, respeitando prefers-reduced-motion.
+- Criado prof.webmanifest exclusivo com o nome Pro Fitness Equipe e cores da fachada.
+- Criado assets/images/pf-prof-icon.svg, inspirado na marca oficial para instalacao do app.
+- O PWA recebeu atalhos para Alunos, Agenda e Presenca.
+- O parametro view da URL agora abre diretamente o modulo solicitado pelos atalhos.
+- Cache atualizado para 20260714-prof-polish-v1.
+- Removido o desfoque do menu do cabecalho apos identificar artefato de composicao em navegador sem GPU.
+
+ARQUIVOS ALTERADOS
+- prof.html
+- prof.webmanifest
+- assets/images/pf-prof-icon.svg
+- assets/css/prof.css
+- assets/js/prof.js
+- assets/js/pwa.js
+- sw.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Login demonstrativo validado com prof.rafael / Demo1234.
+- Inicio, menu do cabecalho e ficha operacional conferidos em 390 x 844.
+- Inicio e navegacao inferior conferidos em 820 x 1180.
+- Inicio e trilho lateral conferidos em 1180 x 820.
+- Confirmados quatro icones SVG e ausencia dos icones antigos no HTML.
+- Confirmados tres itens no menu do cabecalho, tres acoes diretas e tres acoes secundarias na ficha.
+- Atalho PWA da Agenda validado com abertura direta do modulo correto.
+- Confirmada a ausencia de rolagem horizontal em todos os tamanhos.
+- Sintaxe de prof.js, pwa.js e sw.js validada.
+- Smoke tests do repositorio e do pacote finalizados com sucesso.
+- prof.html e prof.webmanifest confirmados com resposta HTTP 200 no servidor local.
+- api.txt confirmado identico a apps-script/api.gs.
+- Nenhuma alteracao foi feita no index.html, painel.html, apps-script/api.gs ou api.txt.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.
+
+
+======================================================================
+AJUSTE - 2026-07-14 - PERFIL E TREINOS MAIS SUAVES NO APP DO ALUNO
+======================================================================
+- Ajuste restrito ao aplicativo do aluno, sem alteracoes no painel administrativo, no professor ou na API.
+- O resumo do aluno na tela Mais deixou o fundo escuro e passou a usar cinza-claro inspirado na fachada.
+- Avatar, nome, matricula, plano e status de acesso foram preservados com maior legibilidade.
+- O status do perfil agora recebe classes semanticas para diferenciar acesso liberado e bloqueado.
+- Os cards de treino passaram a usar superficie marfim e cinza-claro no lugar do amarelo intenso.
+- A divisao do treino passou a usar amarelo-palha e o botao Iniciar treino usa dourado fosco.
+- Os filtros Todos, A e B deixaram o preto e passaram a usar cinza medio em degrade.
+- O dia ativo do seletor semanal tambem deixou o preto e passou a usar o mesmo cinza medio.
+- Cache atualizado para 20260714-student-soft-v1.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.
+
+ARQUIVOS ALTERADOS
+- index.html
+- assets/css/style.css
+- assets/js/app.js
+- assets/js/pwa.js
+- sw.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Login demonstrativo validado com 000001 / Demo1234.
+- Telas Mais, Treinos e Agenda conferidas visualmente em 390 x 844.
+- Perfil claro, status semantico, amarelo-palha e selecoes em cinza confirmados no navegador.
+- Confirmada a ausencia de rolagem horizontal nas tres telas.
+- Sintaxe de app.js e sw.js validada.
+- Smoke tests do repositorio e do pacote finalizados com sucesso.
+- api.txt confirmado identico a apps-script/api.gs.
+
+
+======================================================================
+AJUSTE - 2026-07-14 - PERIODO E CONTROLES COMPACTOS NO FINANCEIRO
+======================================================================
+- Ajuste restrito ao painel administrativo e somente na area Financeiro.
+- O filtro geral Competencia foi substituido por Periodo, com data inicial e data final.
+- Resumo, indicadores gerenciais e lista de mensalidades agora respeitam o intervalo selecionado.
+- Intervalos com mais de um mes exibem cada cobranca como um registro separado.
+- As comparacoes dos indicadores usam o periodo imediatamente anterior; meses completos comparam com o mes calendario anterior.
+- O titulo da lista passou a ser Mensalidades do periodo e o contador passou a informar registros.
+- Recebimentos de mensalidades ausentes preservam a competencia correta de cada linha.
+- Receber mensalidade, Nova despesa e Novo lancamento foram reduzidos e padronizados em 40 px de altura.
+- O controle de privacidade passou a exibir somente o icone de olho, sem texto visivel.
+- O olho foi movido para o ultimo lugar, alinhado ao canto direito da barra.
+- Titulo, dicas e aria-label do olho continuam alternando entre mostrar e ocultar valores.
+- O selo DEMONSTRACAO deixou de ficar fixo durante a rolagem e nao cobre mais o titulo Periodo.
+- Cache de painel.css e painel.js atualizado para 20260714-finance-period-v1.
+
+ARQUIVOS ALTERADOS
+- painel.html
+- assets/css/painel.css
+- assets/js/painel.js
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Sintaxe de painel.js e finance-core.js validada.
+- Smoke tests do repositorio finalizados com sucesso.
+- Barra conferida visualmente em 1440 x 900.
+- Confirmados seis controles com 40 px de altura, sem sobreposicoes e sem rolagem horizontal.
+- Confirmado que o olho nao possui texto visivel e e o ultimo elemento da barra.
+- Periodo de 01/05/2026 a 31/07/2026 validado com 150 registros de mensalidade.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.
+
+
+======================================================================
+AJUSTE - 2026-07-14 - GRAFICO DE SITUACAO DAS MENSALIDADES
+======================================================================
+- Adicionado aos Relatorios Financeiros um grafico inspirado no card Situacao dos alunos.
+- O grafico considera alunos ativos e usa a data final do relatorio como data de referencia.
+- Cada aluno aparece uma unica vez, classificado pela mensalidade aberta com maior atraso.
+- As faixas sao Em dia, Vencidas ate 30 dias e Atrasadas +30 dias.
+- Em dia significa que o aluno nao possui debito vencido na data analisada.
+- O grafico mostra total de alunos, quantidade por faixa e percentual correspondente.
+- As cores foram suavizadas com cinza-esverdeado, dourado e vermelho discreto.
+- O filtro individual de aluno tambem atualiza o grafico.
+- Um resumo com as mesmas quatro informacoes foi incluido na impressao/PDF do relatorio geral.
+- Cache de painel.css e painel.js atualizado para 20260714-finance-report-status-v1.
+
+ARQUIVOS ALTERADOS
+- painel.html
+- assets/css/painel.css
+- assets/js/painel.js
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Sintaxe de painel.js validada.
+- Smoke tests do repositorio finalizados com sucesso.
+- Grafico conferido visualmente em 1440 x 900.
+- Demonstracao validada com 45 alunos: 35 em dia, 1 vencido ate 30 dias e 9 atrasados acima de 30 dias.
+- Confirmado que as faixas totalizam os 45 alunos analisados.
+- Confirmada ausencia de rolagem horizontal.
+- Confirmados quatro itens no resumo destinado a impressao/PDF.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.
+
+
+======================================================================
+AJUSTE - 2026-07-14 - REVISAO DA CONFERENCIA E CONTAS DE AGUA
+======================================================================
+- O selo passivo Revisar da conferencia financeira foi substituido pelo botao Revisar pendencias.
+- O botao abre uma janela dedicada com aluno, competencia, data, valor recebido, valor vinculado ao caixa e quantidade de movimentos ativos.
+- A janela identifica entrada ausente, valor diferente e movimento duplicado.
+- Cada pendencia permite abrir a mensalidade original ou executar a correcao indicada.
+- Entradas ausentes sao criadas, valores divergentes sao sincronizados e duplicidades sao consolidadas.
+- Toda correcao exige confirmacao e gera um registro financial-reconciliation-repaired no historico administrativo.
+- O resumo e a janela sao atualizados imediatamente depois da correcao.
+- O separador antigo da conferencia foi substituido por um caractere ASCII estavel.
+- Os tres alugueis ficticios foram substituidos por contas de agua.
+- Valores definidos: R$ 612,40 em maio, R$ 684,70 em junho e R$ 731,20 em julho de 2026.
+- Fornecedor, categoria, centro de custo e recorrencia dos exemplos foram ajustados para Conta de agua, Utilidades, Geral e REC-AGUA.
+- As saidas de caixa vinculadas foram atualizadas com os mesmos valores das despesas.
+- O fallback demo-data.js foi regenerado a partir do demo.json.
+- Os testes agora impedem a volta de aluguel aos dados ficticios e conferem os vinculos das contas de agua.
+- Cache de painel.css, painel.js e demo-data.js atualizado para 20260714-finance-review-v1.
+
+ARQUIVOS ALTERADOS
+- painel.html
+- assets/css/painel.css
+- assets/js/painel.js
+- assets/data/demo.json
+- assets/js/demo-data.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Sintaxe de painel.js e demo-data.js validada.
+- Smoke tests do repositorio finalizados com sucesso.
+- Confirmadas tres contas de agua entre R$ 300 e R$ 800 e nenhuma despesa ficticia de aluguel.
+- Confirmada a correspondencia exata entre cada conta de agua e sua saida de caixa.
+- Revisao conferida visualmente em 1440 x 900, sem rolagem horizontal.
+- Uma entrada ausente foi simulada no navegador temporario e corrigida pelo novo botao.
+- A diferenca passou de -R$ 89,90 para R$ 0,00 e o card mudou para Valores conferidos.
+- Confirmado um novo registro de auditoria depois da correcao.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.
+
+
+======================================================================
+AJUSTE - 2026-07-14 - POLIMENTO VISUAL FINAL DO PAINEL
+======================================================================
+- Realizado um pente-fino exclusivamente visual em todas as abas do painel administrativo.
+- A paleta foi suavizada para cinza-concreto, branco quente, grafite medio e dourado menos saturado.
+- Cabecalho, barra de sessao, navegacao principal e controles utilitarios receberam alturas, espacamentos, bordas e sombras consistentes.
+- O banner superior deixou de ser distorcido e foi reenquadrado para manter PRO FITNESS inteiro e centralizado.
+- Cartoes, indicadores, formularios, filtros, tabelas, listas, modais, graficos e estados foram padronizados.
+- Blocos que ainda estavam escuros, incluindo Proximas aulas e Resultado do dia, foram convertidos para superficies claras.
+- Abas internas e filtros ativos usam grafite medio e dourado discreto, preservando contraste sem excesso de preto.
+- Modulos com apenas um cartao passaram a aproveitar toda a largura disponivel, eliminando areas vazias desnecessarias.
+- A densidade do painel foi refinada para uso diario em computador e notebook, sem alterar dados, calculos ou permissoes.
+- Corrigido o deslocamento vertical ao abrir Mensalidades: o foco automatico do filtro agora preserva a posicao de rolagem.
+- Cache de painel.css e painel.js atualizado para 20260714-panel-polish-v1.
+
+ARQUIVOS ALTERADOS
+- painel.html
+- assets/css/painel.css
+- assets/js/painel.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Todas as abas principais e todos os cinco modulos financeiros foram conferidos em 1440 x 900.
+- Painel, Alunos, Grade, Equipe, Financeiro e Config foram conferidos em 1366 x 768.
+- Confirmada ausencia de rolagem horizontal, botoes cortados e inconsistencias de altura na navegacao.
+- O letreiro PRO FITNESS permaneceu completo nas duas resolucoes testadas.
+- O teste de Mensalidades preservou a rolagem em 640 px antes e depois do clique.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.
+
+
+======================================================================
+AJUSTE - 2026-07-14 - BARRA INSTITUCIONAL DO PAINEL
+======================================================================
+- A fotografia da fachada foi removida exclusivamente do cabecalho interno do painel administrativo.
+- A barra superior passou a usar uma faixa grafite-preta continua, sem imagem esticada.
+- O simbolo oficial da Pro Fitness foi posicionado no lado esquerdo em um bloco proprio.
+- O nome PRO FITNESS passou a ser composto em HTML e CSS, com maior largura, letras brancas e douradas e sublinhado discreto.
+- A identificacao Academia / Carmo-RJ foi adicionada abaixo do nome com baixa interferencia visual.
+- A etiqueta Administracao foi mantida no canto direito e integrada a nova paleta.
+- O selo Demonstracao foi reposicionado depois do logotipo para nao cobrir a marca.
+- O cabecalho continua compacto, com 86 px de altura, e permanece nitido em diferentes larguras.
+- Cache de painel.css atualizado para 20260714-titlebar-v1.
+
+ARQUIVOS ALTERADOS
+- painel.html
+- assets/css/painel.css
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Cabecalho conferido visualmente em 1440 x 900 e 1366 x 768.
+- Nome medido com 439 px no desktop e 416 px no notebook.
+- Confirmada ausencia de recorte, colisao com a etiqueta Administracao e rolagem horizontal.
+- Confirmado que o selo Demonstracao nao cobre mais o logotipo.
+- Smoke tests do repositorio finalizados com sucesso.
+- Estrutura do CSS validada com 1.771 blocos balanceados.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.
+
+
+======================================================================
+AJUSTE - 2026-07-14 - IDENTIDADE VISUAL COMPARTILHADA DOS TRES MODULOS
+======================================================================
+- Criado assets/css/brand.css como fonte unica dos tokens visuais da Pro Fitness.
+- Os tokens compartilhados definem Sora, DM Mono, cinzas, superficies, bordas, estados e o dourado oficial suave.
+- Aluno, Professor e Painel passaram a carregar o mesmo arquivo de identidade antes de seus estilos especificos.
+- O aplicativo do Aluno deixou de usar Manrope e Barlow Condensed e passou a usar Sora em toda a interface.
+- O Aluno passou a usar DM Mono em rotulos tecnicos, indicadores, filtros e informacoes operacionais.
+- O titulo Resumo da semana foi compactado para permanecer em uma linha no celular.
+- O Professor manteve Sora e passou a usar DM Mono nos rotulos operacionais e tecnicos.
+- Os amarelos mais saturados do Aluno e do Professor foram substituidos pelo dourado #d8b53d aprovado no Painel.
+- O Painel passou a consumir os mesmos tokens centrais sem alterar o visual aprovado.
+- As tres telas de login agora usam Sora, DM Mono e o mesmo dourado suave.
+- As cores de tema do navegador e dos dois manifestos PWA foram padronizadas em #d8b53d.
+- O service worker passou a armazenar brand.css e recebeu o cache profitness-shell-20260714-brand-harmony-v2.
+- As folhas compartilhadas receberam a versao de cache 20260714-brand-harmony-v2.
+- Estruturas e navegacoes especificas de celular, tablet e desktop foram preservadas.
+
+ARQUIVOS ALTERADOS
+- index.html
+- prof.html
+- painel.html
+- assets/css/brand.css
+- assets/css/style.css
+- assets/css/prof.css
+- assets/css/painel.css
+- assets/css/login.css
+- manifest.webmanifest
+- prof.webmanifest
+- sw.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Login e tela autenticada do Aluno conferidos em 390 x 844.
+- Login e tela autenticada do Professor conferidos em 390 x 844.
+- Professor em tablet conferido em 1024 x 768.
+- Login e tela autenticada do Painel conferidos em 1366 x 768.
+- Confirmadas Sora como fonte principal, DM Mono nos rotulos tecnicos e #d8b53d como dourado central nos tres modulos.
+- Confirmada ausencia de rolagem horizontal em todas as resolucoes testadas.
+- Smoke tests do repositorio finalizados com sucesso.
+- Sintaxe do service worker validada.
+- Estrutura das cinco folhas CSS validada sem chaves desbalanceadas.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.
