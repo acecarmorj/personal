@@ -2614,3 +2614,9 @@ VALIDACOES
 - Simulacao isolada confirmou R$ 50,00 + R$ 95,00 = R$ 145,00, com dois movimentos totalizando exatamente R$ 145,00.
 - O reenvio da segunda parcela foi reconhecido como idempotente e manteve dois movimentos, sem criar um terceiro lancamento.
 - API publica validada apos a implantacao com retorno ok e schemaVersion 9.
+
+PUBLICACAO NO GITHUB
+- Correcao funcional publicada na branch main pelo commit ebe1369 (Corrige recebimentos parciais e duplicidades).
+- Workflow Publish PersonalPro numero 29878371905 concluido com sucesso.
+- GitHub Pages confirmou prof.html, painel.html e sw.js com a versao de cache 20260721-finance-receipts-v1.
+- Logins publicados do Aluno em 390 x 844, Professor em 1024 x 768 e Administrador em 1440 x 900 foram validados sem erros ou rolagem horizontal.
