@@ -1,4 +1,4 @@
-const CACHE_NAME = "profitness-shell-20260714-brand-harmony-v2";
+const CACHE_NAME = "profitness-shell-20260721-mobile-boundary-v1";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -422,7 +422,7 @@ assert.doesNotMatch(panelHtml, /adminDemoLoginButton|Acessar demonstracao admini
 assert.match(sharedJs, /getLocalDemoAccounts\(\)\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
 assert.match(sharedJs, /localDemoRuntimeSnapshot/, "Base demonstrativa grande deve permanecer somente em memoria");
 assert.doesNotMatch(sharedJs, /localStorage\.setItem\(LOCAL_DEMO_MASTER_KEY/, "Base demonstrativa completa nao deve ser duplicada no localStorage");
-assert.match(read("sw.js"), /profitness-shell-20260714-brand-harmony-v2/, "Service worker deve invalidar o cache da identidade compartilhada");
+assert.match(read("sw.js"), /profitness-shell-20260721-mobile-boundary-v1/, "Service worker deve invalidar o cache da contencao mobile");
 assert.match(read("sw.js"), /\.\/assets\/css\/brand\.css/, "Service worker deve disponibilizar os tokens de marca offline");
 assert.match(professorJs, /renderHomeAgendaFlow/, "Agenda inicial deve interpretar agora, proxima atividade e encerramento");
 assert.match(professorJs, /aria-busy/, "Atualizacao do professor deve comunicar estado de carregamento");
@@ -495,6 +495,12 @@ for (const html of [studentHtml, professorHtml, panelHtml]) {
   assert.match(html, /assets\/css\/login\.css/, "Todos os logins devem compartilhar a mesma identidade visual");
   assert.match(html, /Desenvolvido por <strong>@almir\.lk<\/strong>/, "Todos os modulos devem exibir o credito do desenvolvedor");
 }
+for (const html of [studentHtml, professorHtml]) {
+  assert.match(html, /maximum-scale=1(?:\.0)?/, "Aluno e professor devem limitar o zoom para manter a experiencia de aplicativo");
+  assert.match(html, /user-scalable=no/, "Aluno e professor nao devem permitir zoom por pinca");
+}
+assert.match(studentCss, /html\s*\{[\s\S]*?overflow-x:\s*clip/, "Aluno deve conter o deslocamento horizontal na raiz");
+assert.match(professorCss, /html\s*\{[\s\S]*?overflow-x:\s*clip/, "Professor deve conter o deslocamento horizontal na raiz");
 assert.match(panelHtml, /admin-wordmark-header/, "Administracao deve manter a barra institucional compacta");
 assert.match(studentHtml, /assets\/images\/pro-fitness-logo-oficial\.jpg/, "Aluno deve usar o logotipo oficial no cabecalho compacto");
 assert.match(studentJs, /more-profile-status \$\{access\.blocked \? "blocked" : "ok"\}/, "Perfil resumido deve distinguir acesso liberado e bloqueado");
@@ -656,7 +662,7 @@ if (packageMode) {
   assert.equal(exists(".git"), false, "ZIP final nao deve conter .git");
   assert.equal(exists("backups"), false, "ZIP final nao deve conter backups");
 }
-assert.match(read("HISTORICO_DESENVOLVIMENTO.txt"), /ULTIMA ATUALIZACAO: 14\/07\/2026/);
+assert.match(read("HISTORICO_DESENVOLVIMENTO.txt"), /ULTIMA ATUALIZACAO: 21\/07\/2026/);
 assert.match(read("docs/estrutura-planilha.md"), /presenceSource/);
 assert.match(read("docs/sheets-api-setup.md"), /schemaVersion: 9/);
 const demoTool = read("tools/generate-demo-data.mjs");

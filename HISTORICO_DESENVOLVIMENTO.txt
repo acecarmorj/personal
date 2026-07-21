@@ -1,7 +1,7 @@
 PRO FITNESS ACADEMIA - HISTORICO DE DESENVOLVIMENTO
 =====================================================
 
-ULTIMA ATUALIZACAO: 14/07/2026
+ULTIMA ATUALIZACAO: 21/07/2026
 
 ATENCAO OBRIGATORIA PARA QUALQUER IA OU DESENVOLVEDOR
 -----------------------------------------------------
@@ -2539,4 +2539,35 @@ VALIDACOES
 - Smoke tests do repositorio finalizados com sucesso.
 - Sintaxe do service worker validada.
 - Estrutura das cinco folhas CSS validada sem chaves desbalanceadas.
+- Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.
+
+
+======================================================================
+CORRECAO - 2026-07-21 - CONTENCAO MOBILE DO ALUNO E PROFESSOR
+======================================================================
+- Correcao restrita aos aplicativos do Aluno e do Professor; o Painel administrativo desktop nao foi alterado.
+- O Aluno permanece destinado a celulares e o Professor permanece responsivo para celulares e tablets.
+- O zoom por pinca foi desativado nos dois aplicativos para preservar a aparencia de aplicativo instalado.
+- As raizes HTML e BODY passaram a limitar sua largura a viewport e a bloquear deslocamento horizontal elastico.
+- Trilhos internos de agenda, filtros e abas continuam com rolagem horizontal propria quando necessaria.
+- A largura minima fixa de 320 px foi removida da raiz para evitar vazamento em viewports reduzidas.
+- Cache atualizado para profitness-shell-20260721-mobile-boundary-v1.
+
+ARQUIVOS ALTERADOS
+- index.html
+- prof.html
+- assets/css/style.css
+- assets/css/prof.css
+- sw.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- 58 combinacoes de telas autenticadas foram medidas apos a correcao em celulares de 320 a 430 px.
+- Professor tambem foi medido em tablets de 768 x 1024 e 1024 x 768.
+- Foram realizadas 60 verificacoes dos dialogos e editores, sem transbordamento interno ou recorte lateral.
+- Capturas finais do Aluno em 390 x 844 e do Professor em 768 x 1024 confirmaram botoes, bordas e navegacao completos.
+- Smoke tests, sintaxe JavaScript e balanceamento dos dois arquivos CSS foram validados.
+- O teste automatizado passou a impedir a volta do zoom por pinca e da raiz sem contencao horizontal.
+- Nenhuma alteracao foi feita em painel.html, assets/css/painel.css, apps-script/api.gs ou api.txt.
 - Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.

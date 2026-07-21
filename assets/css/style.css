@@ -29,7 +29,12 @@
 }
 
 html {
-  min-width: 320px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
@@ -37,9 +42,14 @@ html {
 }
 
 body {
-  min-width: 320px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 100vh;
   margin: 0;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
   background:
     radial-gradient(circle at 110% -10%, rgba(216, 181, 61, 0.2), transparent 34%),
     linear-gradient(180deg, #f8f7f3 0%, var(--paper) 100%);
