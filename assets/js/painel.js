@@ -3544,14 +3544,15 @@ function getFinancialReconciliation(studentId) {
       pointCount += 1;
       problems.push("missing");
     }
-    if (movements.length > 1) {
+    const movementAmount = sumFinance(movements);
+    const expectedAmount = getPaymentPaidAmount(payment);
+    // Varios movimentos podem representar recebimentos parciais legitimos.
+    if (movements.length > 1 && movementAmount > expectedAmount + 0.01) {
       const duplicates = movements.length - 1;
       duplicateCount += duplicates;
       pointCount += duplicates;
       problems.push("duplicate");
     }
-    const movementAmount = sumFinance(movements);
-    const expectedAmount = getPaymentPaidAmount(payment);
     if (movements.length && Math.abs(movementAmount - expectedAmount) > 0.01) {
       mismatchCount += 1;
       pointCount += 1;

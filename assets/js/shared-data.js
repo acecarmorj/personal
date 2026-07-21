@@ -1449,19 +1449,61 @@
   async function receivePaymentRemote(payment) {
     if (isLocalDemoSession()) {
       const snapshot = StoreSafeDemoSnapshot();
-      const normalized = createPaymentRecord({ ...payment, id: payment.id || uid("PG"), updatedAt: new Date().toISOString(), source: "demonstracao-local" });
-      const index = snapshot.payments.findIndex((item) => String(item.id) === String(normalized.id));
+      const receiptId = String(payment.receiptId || uid("REC"));
+      const processedMovement = (snapshot.movements || []).find((item) => String(item.id) === receiptId);
+      const existingIndex = snapshot.payments.findIndex((item) => String(item.id) === String(payment.id)
+        || (String(item.studentId) === String(payment.studentId) && String(item.reference) === String(payment.reference)));
+      const existing = existingIndex >= 0 ? snapshot.payments[existingIndex] : null;
+      if (processedMovement) {
+        if (!existing || String(processedMovement.paymentId) !== String(existing.id) || String(processedMovement.studentId) !== String(payment.studentId)) {
+          throw new Error("Identificador de recebimento ja utilizado em outra operacao.");
+        }
+        return {
+          payment: clone(existing),
+          movement: clone(processedMovement),
+          student: snapshot.students.find((item) => String(item.id) === String(payment.studentId)) || null,
+          receivedNow: Number(processedMovement.amount || 0),
+          idempotent: true
+        };
+      }
+      if (existing && ["pago", "cancelado", "estornado"].includes(String(existing.status))) {
+        throw new Error("Este pagamento ja possui registro definitivo. Ajustes devem ser feitos pela administracao.");
+      }
+      const roundCurrency = (value) => Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+      const amount = roundCurrency(payment.amount ?? existing?.amount ?? 0);
+      const discount = Math.max(0, roundCurrency(payment.discount ?? existing?.discount ?? 0));
+      const fine = Math.max(0, roundCurrency(payment.fine ?? existing?.fine ?? 0));
+      const netAmount = Math.max(0, roundCurrency(amount - discount + fine));
+      const existingPaid = Math.max(0, roundCurrency(existing?.paidAmount || 0));
+      const receivedNow = Math.max(0, roundCurrency(payment.receivedNow ?? (existing ? Number(payment.paidAmount || 0) - existingPaid : payment.paidAmount || netAmount)));
+      const paidAmount = roundCurrency(existingPaid + receivedNow);
+      if (amount <= 0 || netAmount <= 0 || receivedNow <= 0 || existingPaid > netAmount || paidAmount > netAmount + 0.009) {
+        throw new Error("Valores do recebimento sao invalidos ou excedem o saldo da mensalidade.");
+      }
+      const normalized = createPaymentRecord({
+        ...existing,
+        ...payment,
+        id: existing?.id || payment.id || uid("PG"),
+        amount,
+        discount,
+        fine,
+        netAmount,
+        paidAmount: Math.min(netAmount, paidAmount),
+        status: paidAmount + 0.009 < netAmount ? "parcial" : "pago",
+        updatedAt: new Date().toISOString()
+      });
+      const index = existingIndex >= 0 ? existingIndex : snapshot.payments.findIndex((item) => String(item.id) === String(normalized.id));
       if (index >= 0) snapshot.payments[index] = normalized; else snapshot.payments.unshift(normalized);
       const student = snapshot.students.find((item) => String(item.id) === String(normalized.studentId));
       const movement = createMovementRecord({
-        id: uid("MOV"), date: normalized.paidAt || todayISO(), time: formatTime(new Date().toISOString()), type: "entrada", category: "mensalidade",
-        description: `Mensalidade ${normalized.reference} - ${student?.name || "Aluno"}`, amount: normalized.paidAmount || normalized.netAmount || normalized.amount,
+        id: receiptId, date: normalized.paidAt || todayISO(), time: formatTime(new Date().toISOString()), type: "entrada", category: "mensalidade",
+        description: `Mensalidade ${normalized.reference} - ${student?.name || "Aluno"}`, amount: receivedNow,
         method: normalized.method || "pix", account: "caixa-principal", studentId: normalized.studentId, paymentId: normalized.id, status: "confirmado",
-        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), source: "demonstracao-local"
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
       });
       snapshot.movements.unshift(movement);
       saveData(snapshot);
-      return { payment: clone(normalized), movement: clone(movement), student: student ? { id: student.id, name: student.name, plan: student.plan } : null };
+      return { payment: clone(normalized), movement: clone(movement), student: student ? { id: student.id, name: student.name, plan: student.plan } : null, receivedNow, idempotent: false };
     }
     const data = await requestRemote("POST", { action: "receivePayment", data: payment });
     return data.data || {};

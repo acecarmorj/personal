@@ -2571,3 +2571,46 @@ VALIDACOES
 - O teste automatizado passou a impedir a volta do zoom por pinca e da raiz sem contencao horizontal.
 - Nenhuma alteracao foi feita em painel.html, assets/css/painel.css, apps-script/api.gs ou api.txt.
 - Nenhuma publicacao no GitHub ou reimplantacao da API foi realizada.
+
+
+======================================================================
+CORRECAO - 2026-07-21 - RECEBIMENTOS PARCIAIS ATOMICOS E IDEMPOTENTES
+======================================================================
+- Corrigido o recebimento de mensalidades pelo Professor para trabalhar com o valor recebido na operacao atual, sem substituir incorretamente o total ja pago.
+- O formulario do tablet agora mostra o saldo anterior ao recebimento e sugere somente o valor restante da mensalidade.
+- Pagamentos em duas ou mais partes passam a acumular corretamente o campo paidAmount ate o limite liquido da mensalidade.
+- Cada parcela gera um movimento proprio no caixa com apenas o valor recebido naquela operacao, preservando data e forma de pagamento.
+- A API passou a bloquear valores nulos, negativos ou superiores ao saldo restante.
+- O endpoint receivePayment passou a usar LockService para serializar confirmacoes simultaneas.
+- Cada envio recebe um receiptId estavel; repeticoes da mesma requisicao retornam o resultado ja processado sem duplicar pagamento ou movimento.
+- O botao de confirmacao fica ocupado durante o envio e impede toques duplos no mesmo dispositivo.
+- Mensalidades ja pagas ficam somente para consulta no Professor, sem permitir uma nova confirmacao.
+- A conferencia financeira do Painel passou a aceitar varios movimentos parciais quando a soma coincide com o total pago.
+- Duplicidades reais continuam sendo identificadas quando os movimentos ultrapassam o valor recebido da mensalidade.
+- Cache do Professor, Painel e service worker atualizado para 20260721-finance-receipts-v1.
+
+API E PLANILHA
+- Codigo enviado pelo Clasp ao projeto Apps Script oficial vinculado.
+- Criada a versao imutavel 20: Pro Fitness v20 - recebimentos parciais atomicos e idempotentes.
+- A implantacao publica existente foi atualizada para a versao 20, preservando a URL AKfycbxv5kc71SaSMhe10SQR0kqQQO11aFNInVAJFmH1zTif5SqefNDnZ1F60xBN_VrU0lFGIw.
+- A migracao automatica foi executada e o endpoint publico confirmou schemaVersion 9, environment demo e configured true.
+- api.txt permanece uma copia byte a byte de apps-script/api.gs.
+
+ARQUIVOS ALTERADOS
+- api.txt
+- apps-script/api.gs
+- assets/js/painel.js
+- assets/js/prof.js
+- assets/js/shared-data.js
+- painel.html
+- prof.html
+- sw.js
+- tests/smoke.mjs
+- HISTORICO_DESENVOLVIMENTO.txt
+
+VALIDACOES
+- Smoke tests do repositorio concluidos com sucesso na copia temporaria e novamente em D:\PersonalPro.
+- Sintaxe de api.gs, shared-data.js, prof.js, painel.js e sw.js validada.
+- Simulacao isolada confirmou R$ 50,00 + R$ 95,00 = R$ 145,00, com dois movimentos totalizando exatamente R$ 145,00.
+- O reenvio da segunda parcela foi reconhecido como idempotente e manteve dois movimentos, sem criar um terceiro lancamento.
+- API publica validada apos a implantacao com retorno ok e schemaVersion 9.

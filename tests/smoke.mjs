@@ -47,7 +47,7 @@ const apiContext = {
     getUuid: () => "12345678-1234-1234-1234-123456789abc"
   }
 };
-vm.runInNewContext(`${apiSource}\nthis.__apiTest = { SHEETS, CURRENT_SCHEMA_VERSION, getSnapshotResourceNames, buildConfigSnapshotMetadata, validateCompleteSnapshot, normalizePartialSnapshot, hasDeleteConflict, resolveResourceName, derivePasswordCredential, constantTimeEqual, getSessionPolicy, sanitizeSession, getAccountPermissions, hasPermission, authorizeGenericOperation, normalizeLogin };`, apiContext);
+vm.runInNewContext(`${apiSource}\nthis.__apiTest = { SHEETS, CURRENT_SCHEMA_VERSION, getSnapshotResourceNames, buildConfigSnapshotMetadata, validateCompleteSnapshot, normalizePartialSnapshot, hasDeleteConflict, resolveResourceName, derivePasswordCredential, constantTimeEqual, getSessionPolicy, sanitizeSession, getAccountPermissions, hasPermission, authorizeGenericOperation, normalizeLogin, calculatePaymentReceipt };`, apiContext);
 const api = apiContext.__apiTest;
 assert.equal(api.CURRENT_SCHEMA_VERSION, 9, "schemaVersion da API deve ser 9");
 
@@ -105,6 +105,33 @@ assert.equal(api.hasPermission(adminAccount, "staff.presence.read"), true, "Admi
 assert.throws(() => api.authorizeGenericOperation(professorAccount, "payments", "read"), /permissao/i, "Professor nao pode listar pagamentos pelo CRUD geral");
 assert.equal(api.normalizeLogin(" 000123 "), "000123", "Login deve preservar zeros a esquerda da matricula");
 
+const firstPartialReceipt = JSON.parse(JSON.stringify(api.calculatePaymentReceipt(null, {
+  amount: 145,
+  discount: 0,
+  fine: 0,
+  receivedNow: 50
+}, 145)));
+assert.equal(firstPartialReceipt.receivedNow, 50);
+assert.equal(firstPartialReceipt.paidAmount, 50);
+assert.equal(firstPartialReceipt.status, "parcial");
+const finalPartialReceipt = JSON.parse(JSON.stringify(api.calculatePaymentReceipt({
+  amount: 145,
+  netAmount: 145,
+  paidAmount: 50,
+  status: "parcial"
+}, { amount: 145, receivedNow: 95 }, 145)));
+assert.equal(finalPartialReceipt.receivedNow, 95);
+assert.equal(finalPartialReceipt.paidAmount, 145);
+assert.equal(finalPartialReceipt.status, "pago");
+const legacyFinalReceipt = JSON.parse(JSON.stringify(api.calculatePaymentReceipt({
+  amount: 145,
+  netAmount: 145,
+  paidAmount: 50,
+  status: "parcial"
+}, { amount: 145, paidAmount: 145 }, 145)));
+assert.equal(legacyFinalReceipt.receivedNow, 95, "Cliente anterior deve converter total informado em saldo recebido");
+assert.throws(() => api.calculatePaymentReceipt({ amount: 145, netAmount: 145, paidAmount: 50, status: "parcial" }, { amount: 145, receivedNow: 100 }, 145), /excedem o saldo/i);
+
 const originalConfig = {
   id: "CFG-TEST",
   plans: [{ id: "P1", name: "Plano teste", monthlyFee: 99 }],
@@ -154,6 +181,9 @@ assert.match(apiSource, /action === "studentbootstrap"/, "API deve fornecer paco
 assert.match(apiSource, /\["workoutSessions", "exerciseSets"\]/, "Aluno deve alterar somente sessoes e series proprias");
 assert.match(apiSource, /action === "professorbootstrap"/, "Professor deve receber pacote operacional proprio");
 assert.match(apiSource, /action === "receivepayment"/, "Recebimento do professor deve usar endpoint dedicado");
+const receivePaymentBlock = apiSource.slice(apiSource.indexOf("function receiveStudentPayment("), apiSource.indexOf("function upsertOwnStaffPresence("));
+assert.match(receivePaymentBlock, /LockService\.getScriptLock\(\)/, "Recebimento do professor deve usar trava atomica");
+assert.match(receivePaymentBlock, /id: receiptId/, "Cada recebimento deve possuir identificador idempotente no caixa");
 assert.match(apiSource, /action === "staffpresenceupsert"/, "Presenca do professor deve validar a conta autenticada");
 assert.match(apiSource, /ensureApiReady/, "API deve usar verificacao leve nas requisicoes comuns");
 assert.match(apiSource, /buildAuditLogEntry/, "API deve gerar log tecnico reduzido");
@@ -422,7 +452,7 @@ assert.doesNotMatch(panelHtml, /adminDemoLoginButton|Acessar demonstracao admini
 assert.match(sharedJs, /getLocalDemoAccounts\(\)\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
 assert.match(sharedJs, /localDemoRuntimeSnapshot/, "Base demonstrativa grande deve permanecer somente em memoria");
 assert.doesNotMatch(sharedJs, /localStorage\.setItem\(LOCAL_DEMO_MASTER_KEY/, "Base demonstrativa completa nao deve ser duplicada no localStorage");
-assert.match(read("sw.js"), /profitness-shell-20260721-mobile-boundary-v1/, "Service worker deve invalidar o cache da contencao mobile");
+assert.match(read("sw.js"), /profitness-shell-20260721-finance-receipts-v1/, "Service worker deve invalidar o cache da correcao financeira");
 assert.match(read("sw.js"), /\.\/assets\/css\/brand\.css/, "Service worker deve disponibilizar os tokens de marca offline");
 assert.match(professorJs, /renderHomeAgendaFlow/, "Agenda inicial deve interpretar agora, proxima atividade e encerramento");
 assert.match(professorJs, /aria-busy/, "Atualizacao do professor deve comunicar estado de carregamento");
@@ -687,7 +717,10 @@ demoWaterExpenses.forEach((expense) => {
 assert.match(read("painel.html"), /id="financeReviewDialog"/, "Painel deve possuir a janela de revisao financeira");
 assert.match(read("assets/js/painel.js"), /financial-reconciliation-repaired/, "Correcao financeira deve gerar registro de auditoria");
 assert.match(read("painel.html"), /painel\.css\?v=20260714-titlebar-v1/, "Painel deve invalidar o cache da nova barra institucional");
-assert.match(read("painel.html"), /painel\.js\?v=20260714-panel-polish-v1/, "Painel deve invalidar o cache da correcao de rolagem");
+assert.match(read("painel.html"), /painel\.js\?v=20260721-finance-receipts-v1/, "Painel deve invalidar o cache da correcao financeira");
+assert.match(read("prof.html"), /Valor recebido agora/, "Professor deve informar somente o valor recebido nesta operacao");
+assert.match(read("assets\/js\/prof.js"), /payment\.receivedNow = receivedNow/, "Professor deve enviar o valor incremental para a API");
+assert.match(read("assets\/js\/painel.js"), /movements\.length > 1 && movementAmount > expectedAmount/, "Conferencia deve aceitar varios recebimentos parciais que totalizam a mensalidade");
 assert.match(read("assets/css/painel.css"), /POLIMENTO VISUAL FINAL DO PAINEL ADMINISTRATIVO/, "Painel deve preservar a camada final de acabamento visual");
 assert.ok(read("assets/js/painel.js").includes("financeSearchFilter?.focus({ preventScroll: true });"), "A aba Mensalidades nao deve deslocar a pagina ao focar o filtro");
 assert.match(read("painel.html"), /class="admin-panel-brand"/, "Painel deve usar o cabecalho institucional em HTML");

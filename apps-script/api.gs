@@ -1065,36 +1065,93 @@ function getProfessorPaymentContext(studentId, reference) {
   };
 }
 
+function roundCurrency(value) {
+  return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+}
+
+function calculatePaymentReceipt(existingPayment, payload, suggestedAmount) {
+  const existing = existingPayment || null;
+  const data = payload || {};
+  const hasValue = (value) => value !== undefined && value !== null && value !== "";
+  const amount = roundCurrency(hasValue(data.amount) ? data.amount : existing && existing.amount || suggestedAmount);
+  const discount = Math.max(0, roundCurrency(hasValue(data.discount) ? data.discount : existing && existing.discount || 0));
+  const fine = Math.max(0, roundCurrency(hasValue(data.fine) ? data.fine : existing && existing.fine || 0));
+  const netAmount = Math.max(0, roundCurrency(amount - discount + fine));
+  const existingPaid = Math.max(0, roundCurrency(existing && hasValue(existing.paidAmount)
+    ? existing.paidAmount
+    : existing && existing.status === "pago" ? existing.netAmount || netAmount : 0));
+  const legacyPaidAmount = Math.max(0, roundCurrency(data.paidAmount));
+  const receivedNow = Math.max(0, roundCurrency(hasValue(data.receivedNow)
+    ? data.receivedNow
+    : existing ? legacyPaidAmount - existingPaid : legacyPaidAmount || netAmount));
+  const paidAmount = roundCurrency(existingPaid + receivedNow);
+
+  if (amount <= 0 || netAmount <= 0 || receivedNow <= 0 || existingPaid > netAmount || paidAmount > netAmount + 0.009) {
+    const error = new Error("Valores do recebimento sao invalidos ou excedem o saldo da mensalidade.");
+    error.code = "INVALID_PAYMENT";
+    throw error;
+  }
+
+  return {
+    amount: amount,
+    discount: discount,
+    fine: fine,
+    netAmount: netAmount,
+    existingPaid: existingPaid,
+    receivedNow: receivedNow,
+    paidAmount: Math.min(netAmount, paidAmount),
+    status: paidAmount + 0.009 < netAmount ? "parcial" : "pago"
+  };
+}
+
 function receiveStudentPayment(account, payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    return receiveStudentPaymentUnlocked(account, payload || {});
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function receiveStudentPaymentUnlocked(account, payload) {
   const context = getProfessorPaymentContext(payload.studentId, payload.reference);
+  const receiptId = String(payload.receiptId || "").trim() || Utilities.getUuid();
+  const processedMovement = readSheet("movements").find((movement) => String(movement.id) === receiptId);
+  if (processedMovement) {
+    const samePayment = context.payment && String(processedMovement.paymentId) === String(context.payment.id);
+    if (!samePayment || String(processedMovement.studentId) !== String(context.student.id)) {
+      const error = new Error("Identificador de recebimento ja utilizado em outra operacao.");
+      error.code = "DUPLICATE_RECEIPT_ID";
+      throw error;
+    }
+    return {
+      payment: context.payment,
+      movement: processedMovement,
+      student: context.student,
+      receivedNow: Number(processedMovement.amount || 0),
+      idempotent: true
+    };
+  }
   if (context.payment && ["pago", "estornado", "cancelado"].includes(String(context.payment.status))) {
     const error = new Error("Este pagamento ja possui registro definitivo. Ajustes devem ser feitos pela administracao.");
     error.code = "PAYMENT_LOCKED";
     throw error;
   }
-  const amount = Number(payload.amount || context.suggestedAmount || 0);
-  const discount = Math.max(0, Number(payload.discount || 0));
-  const fine = Math.max(0, Number(payload.fine || 0));
-  const netAmount = Math.max(0, amount - discount + fine);
-  const paidAmount = Math.max(0, Number(payload.paidAmount || netAmount));
-  if (amount <= 0 || paidAmount <= 0 || paidAmount > netAmount) {
-    const error = new Error("Valores do recebimento sao invalidos.");
-    error.code = "INVALID_PAYMENT";
-    throw error;
-  }
+  const receipt = calculatePaymentReceipt(context.payment, payload, context.suggestedAmount);
   const profile = getStaffProfile(account);
   const now = new Date();
   const payment = Object.assign({}, context.payment || {}, {
-    id: context.payment && context.payment.id || Utilities.getUuid(),
+    id: context.payment && context.payment.id || payload.id || Utilities.getUuid(),
     studentId: context.student.id,
     reference: context.reference,
-    amount: amount,
-    discount: discount,
-    fine: fine,
-    netAmount: netAmount,
-    paidAmount: paidAmount,
+    amount: receipt.amount,
+    discount: receipt.discount,
+    fine: receipt.fine,
+    netAmount: receipt.netAmount,
+    paidAmount: receipt.paidAmount,
     dueDate: payload.dueDate || now.toISOString().slice(0, 10),
-    status: paidAmount < netAmount ? "parcial" : "pago",
+    status: receipt.status,
     method: String(payload.method || "pix"),
     paidAt: payload.paidAt || now.toISOString().slice(0, 10),
     recordedBy: profile && profile.name || account.id,
@@ -1107,12 +1164,12 @@ function receiveStudentPayment(account, payload) {
   });
   const savedPayment = upsertRow("payments", payment);
   const movement = upsertRow("movements", {
-    id: Utilities.getUuid(), date: payment.paidAt, time: Utilities.formatDate(now, Session.getScriptTimeZone() || "America/Sao_Paulo", "HH:mm"), type: "entrada", category: "mensalidade",
-    description: "Mensalidade " + payment.reference + " - " + context.student.name, amount: paidAmount, method: payment.method, account: "caixa-principal",
+    id: receiptId, date: payment.paidAt, time: Utilities.formatDate(now, Session.getScriptTimeZone() || "America/Sao_Paulo", "HH:mm"), type: "entrada", category: "mensalidade",
+    description: "Mensalidade " + payment.reference + " - " + context.student.name, amount: receipt.receivedNow, method: payment.method, account: "caixa-principal",
     studentId: payment.studentId, paymentId: payment.id, status: "confirmado", createdAt: now.toISOString(), updatedAt: now.toISOString(), updatedBy: account.id, source: "tablet-professor"
   });
-  appendLog(buildAuditLogEntry({ action: "receivePayment", resource: "payments", recordId: savedPayment.id, actor: account.id, result: "success", message: "Recebimento individual registrado pelo professor." }));
-  return { payment: savedPayment, movement: movement, student: context.student };
+  appendLog(buildAuditLogEntry({ action: "receivePayment", resource: "payments", recordId: savedPayment.id, actor: account.id, result: "success", message: "Recebimento individual de " + receipt.receivedNow + " registrado pelo professor." }));
+  return { payment: savedPayment, movement: movement, student: context.student, receivedNow: receipt.receivedNow, idempotent: false };
 }
 
 function upsertOwnStaffPresence(account, payload) {

@@ -812,11 +812,13 @@
     const discount = safeNumber(form.elements.discount.value);
     const fine = safeNumber(form.elements.fine.value);
     const net = Math.max(0, amount - discount + fine);
-    document.getElementById("profPaymentNetPreview").textContent = Store.currency(net);
+    const existingPaid = safeNumber(form.dataset.existingPaidAmount);
+    const balance = Math.max(0, net - existingPaid);
+    document.getElementById("profPaymentNetPreview").textContent = Store.currency(balance);
     if (form.dataset.paidAmountTouched !== "1") {
-      form.elements.paidAmount.value = net.toFixed(2);
+      form.elements.paidAmount.value = balance.toFixed(2);
     }
-    return net;
+    return { net, balance, existingPaid };
   }
 
   function populateProfessorPaymentForm(student, reference) {
@@ -829,9 +831,14 @@
     const discount = safeNumber(payment?.discount || 0);
     const fine = safeNumber(payment?.fine || 0);
     const net = Math.max(0, amount - discount + fine);
+    const existingPaid = Finance.paidAmount(payment);
+    const balance = Math.max(0, net - existingPaid);
 
     form.reset();
     form.dataset.paidAmountTouched = "0";
+    form.dataset.existingPaidAmount = existingPaid.toFixed(2);
+    delete form.dataset.receiptId;
+    delete form.dataset.receiptFingerprint;
     form.elements.id.value = payment?.id || "";
     form.elements.studentId.value = student.id;
     form.elements.status.value = "pago";
@@ -840,9 +847,7 @@
     form.elements.amount.value = amount || "";
     form.elements.method.value = payment?.method || latest?.method || "pix";
     form.elements.paidAt.value = payment?.paidAt || todayLocalISO();
-    form.elements.paidAmount.value = payment?.status === "pago"
-      ? safeNumber(payment.paidAmount ?? payment.netAmount ?? net).toFixed(2)
-      : net.toFixed(2);
+    form.elements.paidAmount.value = balance.toFixed(2);
     form.elements.recordedBy.value = payment?.recordedBy || getDefaultPaymentRecorder();
     form.elements.discount.value = discount;
     form.elements.fine.value = fine;
@@ -855,7 +860,9 @@
     document.getElementById("profPaymentContextReference").textContent = `Competência: ${selectedReference}`;
     document.getElementById("profPaymentContextDueDate").textContent = `Vencimento: ${Store.formatDate(form.elements.dueDate.value)}`;
     document.getElementById("profPaymentContextStatus").textContent = `Situação atual: ${getPaymentStatusLabel(status)}`;
-    document.getElementById("confirmProfessorPayment").textContent = status === "pago" ? "Atualizar recebimento" : "Confirmar recebimento";
+    const confirmButton = document.getElementById("confirmProfessorPayment");
+    confirmButton.disabled = status === "pago";
+    confirmButton.textContent = status === "pago" ? "Pagamento confirmado" : "Confirmar recebimento";
     updateProfessorPaymentPreview();
   }
 
@@ -933,6 +940,7 @@
   async function saveProfessorPayment(event) {
     event.preventDefault();
     const form = event.currentTarget;
+    if (form.dataset.busy === "true") return;
     const student = Store.findStudent(state, form.elements.studentId.value);
     if (!student) {
       showToast("Aluno não encontrado.", "warning");
@@ -943,7 +951,9 @@
     const discount = safeNumber(form.elements.discount.value);
     const fine = safeNumber(form.elements.fine.value);
     const calculated = Math.max(0, amount - discount + fine);
-    const paidAmount = Math.max(0, safeNumber(form.elements.paidAmount.value));
+    const existingPaid = Math.max(0, safeNumber(form.dataset.existingPaidAmount));
+    const receivedNow = Math.max(0, safeNumber(form.elements.paidAmount.value));
+    const balance = Math.max(0, calculated - existingPaid);
     const paidAt = form.elements.paidAt.value;
     const recordedBy = form.elements.recordedBy.value.trim();
 
@@ -960,6 +970,18 @@
       showToast("Informe o responsável pelo lançamento.", "warning");
       return;
     }
+    if (receivedNow <= 0 || receivedNow > balance + 0.009) {
+      form.elements.paidAmount.focus();
+      showToast(`Informe um valor entre R$ 0,01 e ${Store.currency(balance)}.`, "warning");
+      return;
+    }
+
+    const cumulativePaid = Math.min(calculated, existingPaid + receivedNow);
+    const receiptFingerprint = JSON.stringify([student.id, reference, receivedNow, paidAt, form.elements.method.value]);
+    if (form.dataset.receiptFingerprint !== receiptFingerprint) {
+      form.dataset.receiptId = Store.uid("REC");
+      form.dataset.receiptFingerprint = receiptFingerprint;
+    }
 
     const payment = Store.createPaymentRecord({
       id: form.elements.id.value || "",
@@ -969,9 +991,9 @@
       discount,
       fine,
       netAmount: calculated,
-      paidAmount,
+      paidAmount: cumulativePaid,
       dueDate: form.elements.dueDate.value,
-      status: paidAmount > 0 && paidAmount < calculated ? "parcial" : "pago",
+      status: cumulativePaid + 0.009 < calculated ? "parcial" : "pago",
       method: form.elements.method.value,
       paidAt,
       recordedBy,
@@ -979,15 +1001,22 @@
       notes: form.elements.notes.value.trim(),
       updatedAt: new Date().toISOString()
     });
+    payment.receivedNow = receivedNow;
+    payment.receiptId = form.dataset.receiptId;
 
+    Store.setFormBusy(form, true, "Confirmando...");
     try {
       const result = await Store.receivePaymentRemote(payment);
       state.payments = result.payment ? [result.payment] : [];
+      delete form.dataset.receiptId;
+      delete form.dataset.receiptFingerprint;
       closeProfessorPayment();
-      showToast(`Recebimento de ${Store.currency(result.payment?.paidAmount || paidAmount)} confirmado.`, "success");
+      showToast(`Recebimento de ${Store.currency(result.receivedNow ?? receivedNow)} confirmado.`, "success");
       await refreshData({ manual: false });
     } catch (error) {
       showToast(error.message || "Nao foi possivel confirmar o recebimento.", "warning");
+    } finally {
+      Store.setFormBusy(form, false);
     }
   }
 
