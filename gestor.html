@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="theme-color" content="#d8b53d"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Pro Fitness Gestor"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<title>Pro Fitness | Gestor Mobile</title>
+<link rel="apple-touch-icon" sizes="192x192" href="assets/images/pf-gestor-icon-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="assets/css/brand.css?v=20260724-gestor-financial-fit-v1" rel="stylesheet"/>
+<link href="assets/css/gestor.css?v=20260724-gestor-financial-fit-v1" rel="stylesheet"/>
+<link href="assets/css/login.css?v=20260724-gestor-financial-fit-v1" rel="stylesheet"/>
+<link href="assets/css/gestor-theme.css?v=20260724-gestor-financial-fit-v1" rel="stylesheet"/>
+<link href="gestor.webmanifest?v=20260724-gestor-financial-fit-v1" rel="manifest"/>
+</head>
+<body>
+<div class="environment-badge" data-environment-badge hidden></div>
+<section class="gestor-auth-view" id="gestorAuthView">
+  <div class="gestor-auth-shell">
+    <header class="gestor-auth-visual login-hero" aria-label="Pro Fitness Academia">
+      <img class="login-hero-photo" src="assets/images/pro-fitness-fachada.png" alt="Fachada da Pro Fitness Academia em Carmo, Rio de Janeiro"/>
+      <div class="login-hero-copy"><span class="login-role-badge">Gestão Pro Fitness</span><p>Pro Fitness Academia <i></i> Carmo-RJ</p><h1>A academia<br/>na palma<br/>da mão.</h1><small>Indicadores essenciais para acompanhar tudo de onde estiver.</small></div>
+    </header>
+    <div class="gestor-auth-card" id="gestorLoginCard">
+      <div class="login-form-brand" aria-hidden="true"><img src="assets/images/pro-fitness-logo-oficial.jpg" alt=""/><span><strong>PRO FITNESS</strong><small>ACADEMIA</small></span></div>
+      <span class="login-form-kicker">Painel móvel do gestor</span><h1>Acesse o resumo</h1><p class="login-form-intro">Use a mesma conta administrativa do painel principal.</p>
+      <form class="gestor-auth-form" id="gestorLoginForm"><label>Usuário ou e-mail<input autocomplete="username" name="login" required/></label><label>Senha<input autocomplete="current-password" name="password" type="password" required/></label><button class="primary-button" type="submit">Entrar no painel</button></form>
+      <p class="gestor-auth-feedback" id="gestorLoginFeedback" aria-live="polite"></p><p class="login-support">Acesso restrito à administração Pro Fitness.</p><p class="login-developer-credit">Desenvolvido por <strong>@almir.lk</strong></p>
+    </div>
+  </div>
+</section>
+<div class="gestor-shell" id="gestorAppShell" hidden>
+  <header class="gestor-topbar">
+    <div class="gestor-brand"><img src="assets/images/pro-fitness-logo-oficial.jpg" alt="Pro Fitness"/><span><strong>PRO FITNESS</strong><small>GESTÃO MOBILE</small></span></div>
+    <div class="gestor-top-actions"><button class="gestor-install-button" id="gestorInstall" type="button" aria-label="Instalar Gestor Mobile" title="Instalar Gestor Mobile"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v11"></path><path d="m8 10 4 4 4-4"></path><path d="M5 18v2h14v-2"></path></svg><span>Instalar</span></button><button id="gestorRefresh" type="button" aria-label="Atualizar dados" title="Atualizar dados">↻</button><button id="gestorLogout" type="button" aria-label="Sair" title="Sair">Sair</button></div>
+  </header>
+  <main class="gestor-main">
+    <section class="gestor-view active" data-view="resumo" id="gestorResumoView">
+      <header class="gestor-hero"><div><span>VISÃO DA OPERAÇÃO</span><h1>Olá, <strong id="gestorUserName">Gestor</strong></h1><p id="gestorDataLabel">Resumo de hoje</p></div><div class="live-status"><i id="gestorStatusDot"></i><span id="gestorStatusText">Atualizando</span></div></header>
+      <section class="executive-grid" aria-label="Indicadores principais">
+        <article class="executive-card primary"><span>Passaram hoje</span><strong id="metricStudentsToday">0</strong><small id="metricStudentsComparison">alunos</small></article>
+        <article class="executive-card"><span>Na academia agora</span><strong id="metricStudentsInside">0</strong><small>alunos presentes</small></article>
+        <article class="executive-card"><span>Recebido hoje</span><strong id="metricRevenueToday">R$ 0</strong><small id="metricPaymentsToday">0 mensalidades</small></article>
+        <article class="executive-card"><span>Saldo do caixa</span><strong id="metricCashBalance">R$ 0</strong><small id="metricCashStatus">posição atual</small></article>
+      </section>
+      <section class="gestor-card attention-card"><div class="card-heading"><div><span>ATENÇÃO</span><h2>O que precisa ser visto</h2></div><strong id="alertCount">0</strong></div><div class="alert-list" id="executiveAlerts"></div></section>
+      <section class="gestor-card"><div class="card-heading"><div><span>EQUIPE</span><h2>Professores hoje</h2></div><button data-open-view="academia" type="button">Ver todos</button></div><div class="compact-list" id="professorsSummary"></div></section>
+      <section class="gestor-card"><div class="card-heading"><div><span>MOVIMENTO</span><h2>Entradas por horário</h2></div><small id="peakHourLabel">Sem pico identificado</small></div><div class="hour-chart" id="hourChart"></div></section>
+      <p class="last-update" id="lastUpdateText">Dados ainda não atualizados.</p>
+    </section>
+
+    <section class="gestor-view" data-view="academia" id="gestorAcademiaView" hidden>
+      <header class="view-heading"><span>ACADEMIA</span><h1>Operação de hoje</h1><p>Alunos, professores e permanência.</p></header>
+      <section class="detail-metrics"><article><span>Permanência média</span><strong id="avgStudentStay">--</strong></article><article><span>Professores presentes</span><strong id="professorsInside">0</strong></article><article><span>Equipe no dia</span><strong id="professorsToday">0</strong></article></section>
+      <section class="gestor-card"><div class="card-heading"><h2>Alunos presentes agora</h2><strong id="insideStudentsCount">0</strong></div><div class="compact-list" id="insideStudents"></div></section>
+      <section class="gestor-card"><div class="card-heading"><h2>Permanência da equipe</h2></div><div class="staff-list" id="staffPresenceList"></div></section>
+      <section class="gestor-card"><div class="card-heading"><h2>Aulas de hoje</h2><strong id="classesTodayCount">0</strong></div><div class="compact-list" id="classesTodayList"></div></section>
+    </section>
+
+    <section class="gestor-view" data-view="financeiro" id="gestorFinanceiroView" hidden>
+      <header class="view-heading"><span>FINANCEIRO</span><h1>Caixa e mensalidades</h1><p>Valores recebidos e compromissos imediatos.</p></header>
+      <section class="detail-metrics finance"><article><span>Mensalidades pagas</span><strong id="paidCountToday">0</strong></article><article><span>Vencidas</span><strong id="overdueCount">0</strong></article><article><span>A vencer em 7 dias</span><strong id="dueSoonCount">0</strong></article></section>
+      <section class="gestor-card"><div class="card-heading"><h2>Recebimentos por forma</h2></div><div class="payment-methods" id="paymentMethods"></div></section>
+      <section class="gestor-card"><div class="card-heading"><h2>Movimentação do caixa</h2></div><div class="cash-summary" id="cashSummary"></div></section>
+      <section class="gestor-card"><div class="card-heading"><h2>Últimos pagamentos</h2></div><div class="compact-list" id="latestPayments"></div></section>
+    </section>
+
+    <section class="gestor-view" data-view="alertas" id="gestorAlertasView" hidden>
+      <header class="view-heading"><span>ALERTAS</span><h1>Pontos de atenção</h1><p>Prioridades administrativas em uma única lista.</p></header>
+      <div class="full-alert-list" id="allAlerts"></div>
+    </section>
+  </main>
+  <nav class="gestor-bottom-nav" aria-label="Navegação principal">
+    <button class="active" data-view-target="resumo" type="button"><span>⌂</span>Resumo</button>
+    <button data-view-target="academia" type="button"><span>◇</span>Academia</button>
+    <button data-view-target="financeiro" type="button"><span>R$</span>Financeiro</button>
+    <button data-view-target="alertas" type="button"><span>!</span>Alertas<i id="navAlertBadge" hidden>0</i></button>
+  </nav>
+</div>
+<div class="gestor-toast" id="gestorToast" role="status" aria-live="polite"></div>
+<script src="assets/js/app-config.js?v=20260724-gestor-financial-fit-v1"></script><script src="assets/js/demo-data.js?v=20260724-gestor-financial-fit-v1"></script><script src="assets/js/shared-data.js?v=20260724-gestor-financial-fit-v1"></script><script src="assets/js/gestor.js?v=20260724-gestor-financial-fit-v1"></script><script src="assets/js/pwa.js?v=20260724-gestor-financial-fit-v1"></script>
+</body></html>

@@ -10,7 +10,7 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="assets/css/brand.css?v=20260714-brand-harmony-v2" rel="stylesheet"/>
-<link href="assets/css/painel.css?v=20260714-titlebar-v1" rel="stylesheet"/>
+<link href="assets/css/painel.css?v=20260724-gestor-shortcut-v1" rel="stylesheet"/>
 <link href="assets/css/login.css?v=20260714-brand-harmony-v2" rel="stylesheet"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 </head>
@@ -56,6 +56,10 @@
 </nav>
 <div class="panel-utility-actions">
 <label class="global-student-search"><span class="visually-hidden">Busca global de aluno</span><input autocomplete="off" id="globalStudentSearch" list="globalStudentSearchList" placeholder="Localizar aluno" type="search"/><datalist id="globalStudentSearchList"></datalist></label>
+<a class="ghost-button gestor-mobile-link" href="gestor.html" target="_blank" rel="noopener" aria-label="Abrir o Gestor Mobile em uma nova aba">
+<svg aria-hidden="true" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.4"></rect><path d="M9.5 5.5h5"></path><circle cx="12" cy="18.5" r=".8"></circle></svg>
+<span>Gestor mobile</span>
+</a>
 <a class="ghost-button" href="index.html">Aluno</a>
 <details class="system-menu">
 <summary>Ferramentas</summary>
@@ -80,6 +84,11 @@
 <h2 id="overviewDate">Hoje na Pro Fitness</h2>
 </div>
 <div class="overview-lead-actions">
+<a class="gestor-overview-cta" href="gestor.html" target="_blank" rel="noopener" aria-label="Abrir o painel Gestor Mobile em uma nova aba">
+<span class="gestor-overview-cta-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.4"></rect><path d="M9.5 5.5h5"></path><circle cx="12" cy="18.5" r=".8"></circle></svg></span>
+<span class="gestor-overview-cta-copy"><strong>Abrir Gestor Mobile</strong><small>Acompanhe a academia pelo celular</small></span>
+<span class="gestor-overview-cta-arrow" aria-hidden="true">→</span>
+</a>
 <button class="primary-button" id="openStudentsOverviewButton" type="button">Matricular novo aluno</button>
 </div>
 </article>

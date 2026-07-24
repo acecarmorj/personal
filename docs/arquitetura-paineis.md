@@ -87,3 +87,8 @@ A matrícula de um novo aluno é concluída em uma única tela do painel adminis
 - exibição única da senha temporária ao concluir.
 
 As modalidades cadastradas em Config possuem valor mensal e também alimentam a seleção de modalidade da Grade semanal. O administrador não precisa mais sair da matrícula e abrir Config para gerar o primeiro acesso.
+
+
+## Painel executivo mobile do gestor (`gestor.html`)
+
+Quarto módulo do PersonalPro, otimizado para celular e autenticado com conta administrativa. Compartilha a mesma API, o mesmo snapshot e a mesma sessão administrativa de `painel.html`. Sua finalidade é consulta executiva: movimento do dia, alunos presentes, equipe e permanência, caixa, mensalidades e alertas. As operações administrativas completas permanecem em `painel.html`.

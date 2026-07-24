@@ -1,0 +1,457 @@
+/* ======================================================================
+   GESTOR MOBILE — IDENTIDADE VISUAL COMPARTILHADA
+   Mesma tipografia e paleta-base de index.html, prof.html e painel.html.
+   ====================================================================== */
+:root {
+  --gm-bg: var(--brand-canvas, #e7e8e5);
+  --gm-bg-deep: var(--brand-canvas-deep, #d5d7d3);
+  --gm-card: var(--brand-surface, #fcfcf9);
+  --gm-card-muted: var(--brand-surface-muted, #f1f2ee);
+  --gm-ink: var(--brand-ink, #292b28);
+  --gm-graphite: var(--brand-graphite, #565954);
+  --gm-muted: var(--brand-muted, #6e716d);
+  --gm-line: var(--brand-line, #d5d8d2);
+  --gm-gold: var(--brand-gold, #d8b53d);
+  --gm-gold-strong: var(--brand-gold-strong, #c49a19);
+  --gm-gold-deep: var(--brand-gold-deep, #735a12);
+  --gm-gold-soft: var(--brand-gold-soft, #f2e7bd);
+  --gm-danger: var(--brand-danger, #a9534d);
+  --gm-danger-soft: #f8ecea;
+  --gm-warn: var(--brand-warning, #98731e);
+  --gm-warn-soft: #f8f1dc;
+  --gm-ok: var(--brand-success, #66775f);
+  --gm-ok-soft: #eaf0e7;
+  --gm-shadow: 0 8px 24px rgba(51, 56, 51, .065);
+  --gm-font-sans: var(--brand-font-sans, "Sora", sans-serif);
+  --gm-font-mono: var(--brand-font-mono, "DM Mono", monospace);
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--gm-font-sans);
+}
+
+html {
+  background: var(--gm-bg);
+  color: var(--gm-ink);
+}
+
+body {
+  color: var(--gm-ink);
+  background:
+    radial-gradient(circle at 96% -8%, rgba(216, 181, 61, .14), transparent 28rem),
+    radial-gradient(circle at -8% 72%, rgba(86, 89, 84, .075), transparent 31rem),
+    linear-gradient(180deg, #f3f3ef 0, var(--gm-bg) 34rem);
+}
+
+/* Login: mantém o mesmo desenho dos demais módulos, sem pesos sintetizados. */
+.gestor-auth-view {
+  color: var(--gm-ink);
+  background:
+    radial-gradient(circle at 8% 12%, rgba(216, 181, 61, .14), transparent 25rem),
+    radial-gradient(circle at 92% 88%, rgba(86, 89, 84, .08), transparent 30rem),
+    linear-gradient(135deg, var(--gm-card-muted) 0%, var(--gm-bg) 100%) !important;
+}
+
+.gestor-auth-shell {
+  border-color: rgba(86, 89, 84, .14) !important;
+  background: var(--gm-card) !important;
+  box-shadow: 0 22px 64px rgba(51, 56, 51, .16) !important;
+}
+
+.gestor-auth-card,
+.gestor-auth-card h1,
+.gestor-auth-form,
+.gestor-auth-form label,
+.gestor-auth-form input,
+.gestor-auth-form button {
+  font-family: var(--gm-font-sans) !important;
+}
+
+.gestor-auth-card {
+  color: var(--gm-ink);
+  background: var(--gm-card) !important;
+}
+
+.gestor-auth-card h1 {
+  color: var(--gm-ink) !important;
+  font-weight: 700 !important;
+}
+
+.gestor-auth-form label {
+  color: var(--gm-graphite) !important;
+  font-weight: 600 !important;
+}
+
+.gestor-auth-form input {
+  color: var(--gm-ink) !important;
+  border-color: var(--gm-line) !important;
+  background: #fff !important;
+}
+
+.gestor-auth-form input:focus {
+  border-color: var(--gm-gold-strong) !important;
+  box-shadow: 0 0 0 4px rgba(216, 181, 61, .15) !important;
+}
+
+.gestor-auth-form button[type="submit"] {
+  color: var(--gm-ink) !important;
+  background: var(--gm-gold) !important;
+  box-shadow: 0 9px 20px rgba(148, 118, 27, .14) !important;
+  font-weight: 700 !important;
+}
+
+.login-role-badge,
+.login-form-kicker,
+.login-form-brand small,
+.login-support,
+.login-developer-credit {
+  font-family: var(--gm-font-mono) !important;
+}
+
+.login-form-kicker {
+  color: var(--gm-gold-deep) !important;
+}
+
+/* Cabeçalho: mesmo grafite suave do painel administrativo. */
+.gestor-topbar {
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, .16);
+  background: rgba(86, 89, 84, .97);
+  box-shadow: 0 8px 24px rgba(51, 56, 51, .12);
+}
+
+.gestor-brand strong {
+  font-weight: 700;
+}
+
+.gestor-brand small {
+  color: var(--gm-gold-soft);
+  font-family: var(--gm-font-mono);
+  font-weight: 500;
+}
+
+.gestor-top-actions button {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .2);
+  background: rgba(255, 255, 255, .09);
+  font-family: var(--gm-font-sans);
+  font-weight: 600;
+}
+
+.gestor-top-actions button:hover,
+.gestor-top-actions button:focus-visible {
+  border-color: rgba(255, 255, 255, .36);
+  background: rgba(255, 255, 255, .15);
+}
+
+.gestor-install-button.ready {
+  color: var(--gm-ink);
+  border-color: var(--gm-gold);
+  background: var(--gm-gold);
+}
+
+/* Títulos e rótulos: mesmos pesos disponíveis da Sora. */
+.gestor-hero h1,
+.view-heading h1,
+.card-heading h2 {
+  color: var(--gm-ink);
+  font-family: var(--gm-font-sans);
+  font-weight: 700;
+  letter-spacing: -.035em;
+}
+
+.gestor-hero span,
+.view-heading > span,
+.card-heading span {
+  color: var(--gm-gold-deep);
+  font-family: var(--gm-font-mono);
+  font-weight: 500;
+}
+
+.gestor-hero p,
+.view-heading p,
+.card-heading small,
+.executive-card span,
+.executive-card small,
+.list-row span,
+.staff-row span,
+.alert-row span,
+.method-card span,
+.last-update,
+.empty-state {
+  color: var(--gm-muted);
+}
+
+/* Indicadores principais claros, sem bloco preto pesado. */
+.executive-card,
+.gestor-card {
+  border-color: rgba(86, 89, 84, .13);
+  background: var(--gm-card);
+  box-shadow: var(--gm-shadow);
+}
+
+.executive-card.primary {
+  color: var(--gm-ink);
+  border-color: rgba(196, 154, 25, .26);
+  background: linear-gradient(145deg, var(--gm-gold-soft), #faf6e8);
+  box-shadow: var(--gm-shadow);
+}
+
+.executive-card.primary::before {
+  content: "";
+  width: 34px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--gm-gold-strong);
+}
+
+.executive-card.primary span,
+.executive-card.primary small {
+  color: var(--gm-gold-deep);
+}
+
+.executive-card strong,
+.detail-metrics strong,
+.method-card strong,
+.cash-line strong,
+.list-row > small,
+.staff-row > small,
+.card-heading > strong,
+.hour-bar span,
+.gestor-bottom-nav button > span,
+.gestor-bottom-nav i {
+  font-family: var(--gm-font-mono);
+  font-weight: 500;
+  letter-spacing: -.035em;
+}
+
+.executive-card strong {
+  color: var(--gm-ink);
+}
+
+.card-heading > strong {
+  color: var(--gm-gold-deep);
+  background: var(--gm-gold-soft);
+}
+
+.card-heading button {
+  color: var(--gm-gold-deep);
+  font-family: var(--gm-font-sans);
+  font-weight: 600;
+}
+
+.attention-card {
+  border-left-color: var(--gm-gold-strong);
+}
+
+.live-status {
+  color: var(--gm-graphite);
+  border-color: rgba(86, 89, 84, .14);
+  background: var(--gm-card);
+  box-shadow: 0 3px 12px rgba(51, 56, 51, .045);
+}
+
+.live-status i {
+  background: var(--gm-warn);
+}
+
+.live-status i.online {
+  background: var(--gm-ok);
+}
+
+/* Métricas secundárias em superfícies suaves, como professor e admin. */
+.detail-metrics article {
+  color: var(--gm-ink);
+  border: 1px solid rgba(86, 89, 84, .13);
+  background: var(--gm-card);
+  box-shadow: 0 4px 15px rgba(51, 56, 51, .045);
+}
+
+.detail-metrics article:first-child {
+  border-top: 3px solid var(--gm-gold-strong);
+}
+
+.detail-metrics article:nth-child(2) {
+  border-top: 3px solid var(--gm-ok);
+}
+
+.detail-metrics article:nth-child(3) {
+  border-top: 3px solid var(--gm-graphite);
+}
+
+.detail-metrics span {
+  color: var(--gm-muted);
+}
+
+.detail-metrics.finance article:nth-child(1) {
+  border-top-color: var(--gm-ok);
+  background: var(--gm-ok-soft);
+}
+
+.detail-metrics.finance article:nth-child(2) {
+  color: var(--gm-ink);
+  border-top-color: var(--gm-danger);
+  background: var(--gm-danger-soft);
+}
+
+.detail-metrics.finance article:nth-child(3) {
+  color: var(--gm-ink);
+  border-top-color: var(--gm-warn);
+  background: var(--gm-warn-soft);
+}
+
+.detail-metrics.finance article span {
+  color: var(--gm-graphite);
+}
+
+.method-card {
+  border: 1px solid rgba(86, 89, 84, .1);
+  background: var(--gm-card-muted);
+}
+
+.cash-line {
+  border-bottom-color: rgba(86, 89, 84, .12);
+}
+
+.list-row,
+.staff-row {
+  border-top-color: rgba(86, 89, 84, .11);
+}
+
+.list-row strong,
+.staff-row strong,
+.alert-row strong {
+  color: var(--gm-ink);
+  font-weight: 600;
+}
+
+.status-pill {
+  font-family: var(--gm-font-mono);
+  font-weight: 500;
+}
+
+.status-pill.inside {
+  color: #4d5d47;
+  background: var(--gm-ok-soft);
+}
+
+.status-pill.outside {
+  color: var(--gm-graphite);
+  background: var(--gm-card-muted);
+}
+
+.alert-row {
+  color: var(--gm-ink);
+  background: var(--gm-card-muted);
+}
+
+.alert-row.warning {
+  background: var(--gm-warn-soft);
+}
+
+.alert-row.danger {
+  background: var(--gm-danger-soft);
+}
+
+.alert-row.ok {
+  background: var(--gm-ok-soft);
+}
+
+.alert-icon {
+  color: var(--gm-gold-deep) !important;
+  background: rgba(255, 255, 255, .72);
+}
+
+.hour-bar i {
+  background: linear-gradient(180deg, var(--gm-gold), var(--gm-gold-strong));
+}
+
+/* Navegação inferior clara, como as superfícies dos outros módulos. */
+.gestor-bottom-nav {
+  border-top: 1px solid rgba(86, 89, 84, .16);
+  background: rgba(252, 252, 249, .96);
+  box-shadow: 0 -8px 24px rgba(51, 56, 51, .09);
+}
+
+.gestor-bottom-nav button {
+  color: var(--gm-muted);
+  font-family: var(--gm-font-sans);
+  font-weight: 600;
+}
+
+.gestor-bottom-nav button.active {
+  color: var(--gm-gold-deep);
+}
+
+.gestor-bottom-nav button.active::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  width: 28px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--gm-gold-strong);
+}
+
+.gestor-bottom-nav i {
+  color: #fff;
+  background: var(--gm-danger);
+}
+
+/* Avisos do PWA também seguem o grafite compartilhado. */
+.gestor-toast {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .16);
+  background: var(--gm-graphite);
+  box-shadow: 0 14px 34px rgba(51, 56, 51, .2);
+}
+
+.gestor-toast[data-tone="success"] {
+  border-color: rgba(255, 255, 255, .16);
+  background: var(--gm-ok);
+}
+
+.gestor-toast[data-tone="warning"] {
+  border-color: var(--gm-gold);
+  background: var(--gm-graphite);
+}
+
+@media (max-width: 800px) {
+  .gestor-auth-view {
+    background: var(--gm-card) !important;
+  }
+}
+
+/* Evita pesos artificiais: usa somente 400/500/600/700/800 carregados no projeto. */
+.executive-card span,
+.gestor-install-button span {
+  font-weight: 600;
+}
+
+/* 2026-07-24 — valores financeiros compactos nos cartões do resumo */
+.executive-card strong {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+  font-size: clamp(1.16rem, 5vw, 1.52rem);
+  line-height: 1.08;
+  font-variant-numeric: tabular-nums;
+}
+
+#metricRevenueToday,
+#metricCashBalance {
+  font-size: clamp(1rem, 4.45vw, 1.28rem);
+  letter-spacing: -.055em;
+}
+
+@media (max-width: 360px) {
+  #metricRevenueToday,
+  #metricCashBalance {
+    font-size: .96rem;
+  }
+}

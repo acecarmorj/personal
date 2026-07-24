@@ -19,10 +19,15 @@ const javascriptFiles = [
   "assets/js/app.js",
   "assets/js/painel.js",
   "assets/js/prof.js",
+  "assets/js/gestor.js",
   "assets/js/pwa.js",
   "sw.js",
   "tools/generate-demo-data.mjs"
 ];
+
+for (const requiredFile of ["index.html", "painel.html", "prof.html", "gestor.html", "manifest.webmanifest", "prof.webmanifest", "gestor.webmanifest", "sw.js", "assets/css/gestor.css", "assets/css/gestor-theme.css", "assets/js/gestor.js", "assets/images/pf-gestor-icon.svg", "assets/images/pf-gestor-icon-192.png", "assets/images/pf-gestor-icon-512.png"]) {
+  assert.ok(exists(requiredFile), `Arquivo obrigatorio ausente: ${requiredFile}`);
+}
 
 for (const file of javascriptFiles) {
   const result = spawnSync(process.execPath, ["--check", path.join(root, file)], { encoding: "utf8" });
@@ -296,7 +301,8 @@ assert.equal(migratedCheckin.source, "", "Source tecnico nao deve reutilizar aut
 const htmlPairs = [
   ["index.html", "assets/js/app.js"],
   ["painel.html", "assets/js/painel.js"],
-  ["prof.html", "assets/js/prof.js"]
+  ["prof.html", "assets/js/prof.js"],
+  ["gestor.html", "assets/js/gestor.js"]
 ];
 
 for (const [htmlFile, jsFile] of htmlPairs) {
@@ -310,7 +316,7 @@ for (const [htmlFile, jsFile] of htmlPairs) {
   assert.deepEqual(missing, [], `${jsFile} referencia IDs ausentes: ${missing.join(", ")}`);
 }
 
-for (const cssFile of ["assets/css/brand.css", "assets/css/style.css", "assets/css/painel.css", "assets/css/prof.css", "assets/css/login.css"]) {
+for (const cssFile of ["assets/css/brand.css", "assets/css/style.css", "assets/css/painel.css", "assets/css/prof.css", "assets/css/login.css", "assets/css/gestor.css", "assets/css/gestor-theme.css"]) {
   const css = read(cssFile);
   assert.equal((css.match(/\{/g) || []).length, (css.match(/\}/g) || []).length, `${cssFile} possui chaves desbalanceadas`);
 }
@@ -323,6 +329,10 @@ const studentJs = read("assets/js/app.js");
 const studentHtml = read("index.html");
 const professorJs = read("assets/js/prof.js");
 const professorHtml = read("prof.html");
+const gestorHtml = read("gestor.html");
+const gestorJs = read("assets/js/gestor.js");
+const gestorCss = read("assets/css/gestor.css");
+const gestorThemeCss = read("assets/css/gestor-theme.css");
 const studentCss = read("assets/css/style.css");
 const professorCss = read("assets/css/prof.css");
 const brandCss = read("assets/css/brand.css");
@@ -332,6 +342,16 @@ for (const html of [studentHtml, professorHtml, panelHtml]) {
   assert.match(html, /family=DM\+Mono[^\"]*family=Sora/, "Todos os modulos devem carregar Sora e DM Mono");
   assert.match(html, /content="#d8b53d" name="theme-color"|name="theme-color" content="#d8b53d"/, "Todos os modulos devem usar o dourado suave no tema do navegador");
 }
+assert.match(gestorHtml, /assets\/css\/brand\.css\?v=20260724-gestor-financial-fit-v1/, "Gestor deve carregar os tokens compartilhados da marca com cache atualizado");
+assert.match(gestorHtml, /family=DM\+Mono[^"]*family=Sora/, "Gestor deve carregar Sora e DM Mono");
+assert.match(gestorHtml, /name="theme-color" content="#d8b53d"/, "Gestor deve usar o dourado suave no tema do navegador");
+assert.match(gestorHtml, /assets\/css\/gestor-theme\.css\?v=20260724-gestor-financial-fit-v1/, "Gestor deve carregar a camada final da identidade visual compartilhada");
+assert.match(gestorThemeCss, /--gm-bg:\s*var\(--brand-canvas/, "Gestor deve herdar o canvas oficial da marca");
+assert.match(gestorThemeCss, /--gm-font-sans:\s*var\(--brand-font-sans/, "Gestor deve herdar Sora dos tokens compartilhados");
+assert.match(gestorThemeCss, /--gm-font-mono:\s*var\(--brand-font-mono/, "Gestor deve herdar DM Mono dos tokens compartilhados");
+assert.match(gestorThemeCss, /\.executive-card strong \{[\s\S]*white-space:\s*nowrap/, "Indicadores do resumo devem permanecer em uma unica linha");
+assert.match(gestorThemeCss, /#metricRevenueToday,[\s\S]*#metricCashBalance[\s\S]*font-size:\s*clamp/, "Valores financeiros devem usar tipografia compacta");
+
 assert.doesNotMatch(studentHtml, /Barlow\+Condensed|Manrope/, "Aluno nao deve restaurar a tipografia divergente");
 assert.match(brandCss, /--brand-font-sans:\s*"Sora"/, "Tokens devem definir Sora como fonte principal");
 assert.match(brandCss, /--brand-font-mono:\s*"DM Mono"/, "Tokens devem definir DM Mono para rotulos tecnicos");
@@ -452,8 +472,10 @@ assert.doesNotMatch(panelHtml, /adminDemoLoginButton|Acessar demonstracao admini
 assert.match(sharedJs, /getLocalDemoAccounts\(\)\[normalizedLogin\]/, "Credenciais demo digitadas devem abrir a demonstracao local");
 assert.match(sharedJs, /localDemoRuntimeSnapshot/, "Base demonstrativa grande deve permanecer somente em memoria");
 assert.doesNotMatch(sharedJs, /localStorage\.setItem\(LOCAL_DEMO_MASTER_KEY/, "Base demonstrativa completa nao deve ser duplicada no localStorage");
-assert.match(read("sw.js"), /profitness-shell-20260721-finance-receipts-v1/, "Service worker deve invalidar o cache da correcao financeira");
+assert.match(read("sw.js"), /profitness-shell-20260724-gestor-financial-fit-v1/, "Service worker deve invalidar o cache da instalacao do gestor");
+assert.match(read("sw.js"), /pathname\.endsWith\("\/gestor\.html"\)/, "Service worker deve manter o Gestor como fallback offline do atalho instalado");
 assert.match(read("sw.js"), /\.\/assets\/css\/brand\.css/, "Service worker deve disponibilizar os tokens de marca offline");
+assert.match(read("sw.js"), /\.\/assets\/css\/gestor-theme\.css/, "Service worker deve disponibilizar o tema suave do gestor offline");
 assert.match(professorJs, /renderHomeAgendaFlow/, "Agenda inicial deve interpretar agora, proxima atividade e encerramento");
 assert.match(professorJs, /aria-busy/, "Atualizacao do professor deve comunicar estado de carregamento");
 const professorManifest = JSON.parse(read("prof.webmanifest"));
@@ -462,6 +484,19 @@ assert.equal(professorManifest.theme_color, "#d8b53d", "PWA da equipe deve usar 
 assert.equal(JSON.parse(read("manifest.webmanifest")).theme_color, "#d8b53d", "PWA do aluno deve usar o dourado suave compartilhado");
 assert.equal(professorManifest.shortcuts.length, 3, "PWA da equipe deve oferecer tres atalhos operacionais");
 assert.ok(exists("assets/images/pf-prof-icon.svg"), "Icone instalavel do professor deve estar no pacote");
+const gestorManifest = JSON.parse(read("gestor.webmanifest"));
+assert.equal(gestorManifest.id, "./gestor.html", "PWA do gestor deve possuir identidade separada");
+assert.equal(gestorManifest.start_url, "./gestor.html?source=pwa", "PWA do gestor deve abrir diretamente no painel executivo");
+assert.equal(gestorManifest.theme_color, "#d8b53d", "PWA do gestor deve usar o dourado suave compartilhado");
+assert.equal(gestorManifest.background_color, "#e7e8e5", "PWA do gestor deve usar o canvas compartilhado");
+assert.equal(gestorManifest.shortcuts.length, 4, "PWA do gestor deve oferecer atalhos para as quatro areas");
+assert.ok(gestorManifest.icons.some((icon) => icon.sizes === "512x512" && /pf-gestor-icon-512\.png/.test(icon.src)), "PWA do gestor deve possuir icone PNG de 512px");
+assert.match(gestorHtml, /id="gestorInstall"/, "Gestor deve oferecer botao de instalacao no celular");
+assert.match(gestorHtml, /pf-gestor-icon-192\.png/, "Gestor deve usar icone proprio no iPhone");
+assert.match(gestorJs, /beforeinstallprompt/, "Gestor deve capturar o convite de instalacao do navegador");
+assert.match(gestorJs, /Adicionar à Tela de Início/, "Gestor deve orientar a instalacao no Safari do iPhone");
+assert.match(gestorJs, /initialGestorView/, "Atalhos do PWA devem abrir a area solicitada");
+assert.match(gestorCss, /INSTALACAO PWA DO GESTOR MOBILE/, "Gestor deve preservar o acabamento do fluxo de instalacao");
 
 assert.match(panelHtml, /Matricular novo aluno/, "Painel deve oferecer matricula administrativa direta");
 assert.match(panelHtml, /unlockStudentAccessButton/, "Ficha administrativa deve oferecer desbloqueio de acesso");
@@ -683,7 +718,7 @@ await validateDemoLoginWithSmallStorage("painel.html", "admin.demo", "admin");
 }
 
 if (packageMode) {
-  const allowedRootFiles = new Set(["index.html", "painel.html", "prof.html", "api.txt", "HISTORICO_DESENVOLVIMENTO.txt", "manifest.webmanifest", "prof.webmanifest", "sw.js"]);
+  const allowedRootFiles = new Set(["index.html", "painel.html", "prof.html", "gestor.html", "api.txt", "HISTORICO_DESENVOLVIMENTO.txt", "manifest.webmanifest", "prof.webmanifest", "gestor.webmanifest", "sw.js"]);
   const allowedRootDirectories = new Set([".github", "apps-script", "assets", "docs", "tests", "tools"]);
   for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     if (entry.isFile()) assert.ok(allowedRootFiles.has(entry.name), `Arquivo indevido na raiz: ${entry.name}`);
@@ -716,13 +751,16 @@ demoWaterExpenses.forEach((expense) => {
 });
 assert.match(read("painel.html"), /id="financeReviewDialog"/, "Painel deve possuir a janela de revisao financeira");
 assert.match(read("assets/js/painel.js"), /financial-reconciliation-repaired/, "Correcao financeira deve gerar registro de auditoria");
-assert.match(read("painel.html"), /painel\.css\?v=20260714-titlebar-v1/, "Painel deve invalidar o cache da nova barra institucional");
+assert.match(read("painel.html"), /painel\.css\?v=20260724-gestor-shortcut-v1/, "Painel deve invalidar o cache da nova barra institucional");
 assert.match(read("painel.html"), /painel\.js\?v=20260721-finance-receipts-v1/, "Painel deve invalidar o cache da correcao financeira");
 assert.match(read("prof.html"), /Valor recebido agora/, "Professor deve informar somente o valor recebido nesta operacao");
 assert.match(read("assets\/js\/prof.js"), /payment\.receivedNow = receivedNow/, "Professor deve enviar o valor incremental para a API");
 assert.match(read("assets\/js\/painel.js"), /movements\.length > 1 && movementAmount > expectedAmount/, "Conferencia deve aceitar varios recebimentos parciais que totalizam a mensalidade");
 assert.match(read("assets/css/painel.css"), /POLIMENTO VISUAL FINAL DO PAINEL ADMINISTRATIVO/, "Painel deve preservar a camada final de acabamento visual");
 assert.ok(read("assets/js/painel.js").includes("financeSearchFilter?.focus({ preventScroll: true });"), "A aba Mensalidades nao deve deslocar a pagina ao focar o filtro");
+assert.match(read("painel.html"), /class="gestor-overview-cta"/, "Painel deve destacar o acesso ao Gestor Mobile");
+assert.match(read("assets\/css\/login.css"), /LOGIN DO GESTOR ALINHADO AOS DEMAIS MODULOS/, "Gestor deve compartilhar o acabamento visual dos logins");
+assert.match(read("assets\/css\/gestor.css"), /POLIMENTO RESPONSIVO DO GESTOR MOBILE/, "Gestor deve preservar a revisao responsiva mobile");
 assert.match(read("painel.html"), /class="admin-panel-brand"/, "Painel deve usar o cabecalho institucional em HTML");
 assert.doesNotMatch(read("painel.html"), /class="official-header-banner"/, "Painel nao deve restaurar a fotografia na barra superior");
 assert.match(read("assets/css/painel.css"), /Barra institucional do painel/, "Painel deve preservar o acabamento da nova barra superior");

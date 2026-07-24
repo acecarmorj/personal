@@ -2,7 +2,7 @@
   "use strict";
   if (!("serviceWorker" in navigator) || location.protocol === "file:") return;
 
-  const RELOAD_KEY = "profitness-sw-reloaded-20260714-student-soft-v1";
+  const RELOAD_KEY = "profitness-sw-reloaded-20260724-gestor-install-v1";
 
   window.addEventListener("load", async () => {
     try {

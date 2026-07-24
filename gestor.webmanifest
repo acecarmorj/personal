@@ -1,0 +1,61 @@
+{
+  "name": "Pro Fitness Gestor Mobile",
+  "short_name": "Gestor",
+  "description": "Painel executivo móvel da Pro Fitness Academia para acompanhar operação, equipe, caixa e alertas.",
+  "lang": "pt-BR",
+  "id": "./gestor.html",
+  "start_url": "./gestor.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#e7e8e5",
+  "theme_color": "#d8b53d",
+  "categories": [
+    "business",
+    "productivity",
+    "finance"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "assets/images/pf-gestor-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/pf-gestor-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/images/pf-gestor-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Resumo",
+      "short_name": "Resumo",
+      "url": "./gestor.html?view=resumo&source=shortcut"
+    },
+    {
+      "name": "Academia",
+      "short_name": "Academia",
+      "url": "./gestor.html?view=academia&source=shortcut"
+    },
+    {
+      "name": "Financeiro",
+      "short_name": "Financeiro",
+      "url": "./gestor.html?view=financeiro&source=shortcut"
+    },
+    {
+      "name": "Alertas",
+      "short_name": "Alertas",
+      "url": "./gestor.html?view=alertas&source=shortcut"
+    }
+  ]
+}

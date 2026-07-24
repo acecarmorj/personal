@@ -2,7 +2,7 @@
   const RUNTIME_CONFIG = window.PROFITNESS_CONFIG || {};
   const ENVIRONMENT = String(RUNTIME_CONFIG.environment || "production").trim().toLowerCase() === "demo" ? "demo" : "production";
   const PAGE_NAME = String(window.location?.pathname || "").split("/").pop().toLowerCase();
-  const SURFACE = PAGE_NAME === "prof.html" ? "professor" : PAGE_NAME === "painel.html" ? "admin" : "student";
+  const SURFACE = PAGE_NAME === "prof.html" ? "professor" : ["painel.html", "gestor.html"].includes(PAGE_NAME) ? "admin" : "student";
   const STORAGE_NAMESPACE = `profitness-${ENVIRONMENT}-${SURFACE}`;
   const STORAGE_KEY = `${STORAGE_NAMESPACE}-data-v1`;
   const PRE_ENVIRONMENT_STORAGE_KEY = "profitness-data-v1";
@@ -151,6 +151,7 @@
     const page = String(window.location?.pathname || "").split("/").pop().toLowerCase();
     if (page === "prof.html") return "tablet-professor";
     if (page === "painel.html") return "painel-administrativo";
+    if (page === "gestor.html") return "gestor-mobile";
     if (page === "index.html" || !page) return "app-aluno";
     return "aplicacao-web";
   }

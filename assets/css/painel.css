@@ -10584,3 +10584,153 @@ body:has(#adminAppShell:not([hidden])) .environment-badge {
   background: rgba(54, 56, 52, 0.86);
   box-shadow: none;
 }
+
+
+/* 2026-07-24 - ACESSO DESTACADO AO GESTOR MOBILE */
+.panel-utility-actions > .gestor-mobile-link {
+  gap: 8px;
+  padding-inline: 13px;
+  color: #292a26;
+  border-color: rgba(145, 111, 11, .26);
+  background: linear-gradient(135deg, #ead475, #d8b53d);
+  box-shadow: 0 5px 14px rgba(132, 101, 9, .16);
+  font-weight: 820;
+  text-decoration: none;
+}
+
+.panel-utility-actions > .gestor-mobile-link:hover {
+  color: #20211e;
+  border-color: rgba(118, 88, 4, .34);
+  background: linear-gradient(135deg, #f0dc83, #dfbd47);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(132, 101, 9, .21);
+}
+
+.gestor-mobile-link svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gestor-overview-cta {
+  min-height: 52px;
+  padding: 7px 11px 7px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(137, 105, 10, .22);
+  border-radius: 13px;
+  color: #2d2e2a;
+  background: rgba(255, 255, 255, .84);
+  box-shadow: 0 6px 16px rgba(53, 49, 31, .08);
+  text-decoration: none;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.gestor-overview-cta:hover {
+  color: #242520;
+  border-color: rgba(137, 105, 10, .38);
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(53, 49, 31, .12);
+}
+
+.gestor-overview-cta-icon {
+  width: 37px;
+  height: 37px;
+  flex: 0 0 37px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: #282923;
+  background: linear-gradient(135deg, #ead475, #d8b53d);
+}
+
+.gestor-overview-cta-icon svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gestor-overview-cta-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.gestor-overview-cta-copy strong {
+  font-size: .79rem;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.gestor-overview-cta-copy small {
+  color: #74766f;
+  font-size: .6rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.gestor-overview-cta-arrow {
+  color: #846b1c;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .overview-lead.operational-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .overview-lead-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .gestor-overview-cta,
+  #openStudentsOverviewButton {
+    flex: 1 1 220px;
+  }
+
+  .gestor-overview-cta {
+    justify-content: flex-start;
+  }
+
+  .gestor-overview-cta-arrow {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .gestor-overview-cta,
+  #openStudentsOverviewButton {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .panel-utility-actions > .gestor-mobile-link span {
+    display: inline;
+  }
+}
+
+/* Ajustes de encaixe dos novos atalhos */
+.overview-lead-actions #openStudentsOverviewButton {
+  min-height: 52px;
+}
+
+@media (max-width: 1180px) {
+  .panel-utility-actions {
+    flex-wrap: wrap;
+  }
+}
